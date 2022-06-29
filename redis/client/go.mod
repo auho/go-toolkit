@@ -1,4 +1,4 @@
-module github.com/auho/go-toolkit/redis
+module github.com/auho/go-toolkit/redis/client
 
 go 1.16
 
