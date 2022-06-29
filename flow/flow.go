@@ -16,9 +16,9 @@ func WithSource(sf storage.Source) func(i *Flow) {
 	}
 }
 
-func WithTasker(t task.Tasker) func(i *Flow) {
-	return func(i *Flow) {
-		i.taskers = append(i.taskers, t)
+func WithTasker(t task.Tasker) func(*Flow) {
+	return func(f *Flow) {
+		f.actioners = append(f.actioners, action.NewAction(action.WithTasker(t)))
 	}
 }
 
@@ -26,7 +26,6 @@ type Flow struct {
 	source        storage.Source
 	stateTicker   *time.Ticker
 	refreshOutput *output.Refresh
-	taskers       []task.Tasker
 	actioners     []action.Actioner
 }
 
@@ -53,9 +52,6 @@ func (f *Flow) run() {
 func (f *Flow) process() {
 	f.stateTicker = time.NewTicker(time.Millisecond * 100)
 	f.refreshOutput = output.NewRefresh()
-	for _, t := range f.taskers {
-		f.actioners = append(f.actioners, action.NewAction(action.WithTasker(t)))
-	}
 
 	f.source.Scan()
 	for _, a := range f.actioners {
