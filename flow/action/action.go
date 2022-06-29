@@ -5,67 +5,71 @@ import (
 	"sync"
 )
 
-type Interfaceor interface {
-	Prepare()
-	Do()
-	Finish()
-	Done()
+type Actioner interface {
 	Receive([]map[string]interface{})
+	Do()
+	Done()
+	Finish()
+	State() []string
+	Output() []string
 }
 
-func WithTasker(t task.Tasker) func(i *Interface) {
-	return func(i *Interface) {
-		i.tasker = t
+func WithTasker(t task.Tasker) func(*Action) {
+	return func(a *Action) {
+		a.tasker = t
 	}
 }
 
-type Interface struct {
-	wg        sync.WaitGroup
-	itemsChan chan []map[string]interface{}
+type Action struct {
 	tasker    task.Tasker
-	doFunc    func([]map[string]interface{})
+	taskerWg  sync.WaitGroup
+	itemsChan chan []map[string]interface{}
 }
 
-func NewInterface(options ...func(i *Interface)) *Interface {
-	i := &Interface{}
+func NewAction(options ...func(i *Action)) *Action {
+	a := &Action{}
 
 	for _, o := range options {
-		o(i)
+		o(a)
 	}
 
-	return i
+	a.itemsChan = make(chan []map[string]interface{}, a.tasker.Concurrency())
+
+	return a
 }
 
-func (i *Interface) Prepare() {
-	i.itemsChan = make(chan []map[string]interface{}, 0)
+func (a *Action) Receive(msi []map[string]interface{}) {
+	a.itemsChan <- msi
 }
 
-func (i *Interface) Do() {
-	concurrency := i.tasker.Concurrency()
-	if concurrency <= 0 {
-		concurrency = 1
-	}
+func (a *Action) Do() {
+	for i := 0; i < a.tasker.Concurrency(); i++ {
+		a.taskerWg.Add(1)
 
-	for j := 0; j < concurrency; j++ {
-		i.wg.Add(1)
 		go func() {
-			for items := range i.itemsChan {
-				i.tasker.Do(items)
+			for items := range a.itemsChan {
+				a.tasker.Do(items)
 			}
 
-			i.wg.Done()
+			a.taskerWg.Done()
 		}()
 	}
 }
 
-func (i *Interface) Receive(items []map[string]interface{}) {
-	i.itemsChan <- items
+func (a *Action) Finish() {
+	close(a.itemsChan)
 }
 
-func (i *Interface) Finish() {
-	close(i.itemsChan)
+func (a *Action) Done() {
+	a.taskerWg.Wait()
+
+	a.tasker.AfterDo()
 }
 
-func (i *Interface) Done() {
-	i.wg.Wait()
+func (a *Action) State() []string {
+	return a.tasker.State()
+}
+
+func (a *Action) Output() []string {
+	return a.tasker.Output()
 }

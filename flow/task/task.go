@@ -2,15 +2,15 @@ package task
 
 import (
 	"fmt"
-	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/console/output"
+	"github.com/auho/go-toolkit/time/timing"
 	"sync/atomic"
 )
 
 type Tasker interface {
 	Concurrency() int
-	SetSource(storage.Source)
 	Do([]map[string]interface{})
-	AfterDone()
+	AfterDo()
 	State() []string
 	Output() []string
 }
@@ -22,57 +22,50 @@ func WithConcurrency(c int) func(i *Task) {
 }
 
 type Task struct {
-	Source        storage.Source
 	concurrency   int
 	amount        int64
 	failureAmount int64
-	state         []string
-	output        []string
+	duration      *timing.Duration
+	state         *output.MultilineText
+	output        *output.MultilineText
 }
 
-func NewTask(options ...func(*Task)) *Task {
-	i := &Task{}
-
+func (t *Task) init(options ...func(*Task)) {
 	for _, o := range options {
-		o(i)
+		o(t)
 	}
 
-	return i
+	t.duration = timing.NewDuration()
+	t.state = output.NewMultilineText()
+	t.output = output.NewMultilineText()
+
+	if t.concurrency <= 0 {
+		t.concurrency = 2
+	}
 }
 
 func (t *Task) Concurrency() int {
 	return t.concurrency
 }
 
-func (t *Task) SetSource(s storage.Source) {
-	t.Source = s
-}
-
-func (t *Task) SetState(line int, s string) {
-	stateLen := len(t.state)
-	if line > stateLen {
-		for j := 0; j < line-stateLen; j++ {
-			t.state = append(t.state, "")
-		}
-	}
-
-	t.state[line-1] = s
-}
-
 func (t *Task) State() []string {
-	return t.state
+	return t.state.Content()
 }
 
 func (t *Task) Output() []string {
-	return t.output
+	return t.output.Content()
+}
+
+func (t *Task) SetState(line int, s string) {
+	t.state.Print(line, s)
 }
 
 func (t *Task) Printf(format string, a ...interface{}) {
-	t.output = append(t.output, fmt.Sprintf(format, a...))
+	t.output.PrintNext(fmt.Sprintf(format, a...))
 }
 
 func (t *Task) Println(a ...interface{}) {
-	t.output = append(t.output, fmt.Sprint(a...))
+	t.output.PrintNext(fmt.Sprint(a...))
 }
 
 func (t *Task) AddAmount(a int64) {

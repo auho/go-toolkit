@@ -10,31 +10,31 @@ import (
 	"time"
 )
 
-func WithSourceInterface(sf storage.Source) func(i *Interface) {
-	return func(f *Interface) {
+func WithSource(sf storage.Source) func(i *Flow) {
+	return func(f *Flow) {
 		f.source = sf
 	}
 }
 
-func WithTasker(t task.Tasker) func(i *Interface) {
-	return func(i *Interface) {
+func WithTasker(t task.Tasker) func(i *Flow) {
+	return func(i *Flow) {
 		i.taskers = append(i.taskers, t)
 	}
 }
 
-type Interface struct {
+type Flow struct {
 	source        storage.Source
-	ticker        *time.Ticker
+	stateTicker   *time.Ticker
 	refreshOutput *output.Refresh
-	actionors     []action.Interfaceor
 	taskers       []task.Tasker
+	actioners     []action.Actioner
 }
 
-func RunInterface(options ...func(*Interface)) {
+func RunFlow(options ...func(*Flow)) {
 	d := timing.NewDuration()
 	d.Start()
 
-	i := &Interface{}
+	i := &Flow{}
 	for _, o := range options {
 		o(i)
 	}
@@ -44,51 +44,49 @@ func RunInterface(options ...func(*Interface)) {
 	d.StringStartToNowSeconds()
 }
 
-func (i *Interface) run() {
-	i.process()
-	i.transport()
-	i.done()
+func (f *Flow) run() {
+	f.process()
+	f.transport()
+	f.done()
 }
 
-func (i *Interface) process() {
-	i.ticker = time.NewTicker(time.Millisecond * 100)
-	i.refreshOutput = output.NewRefresh()
-	for _, t := range i.taskers {
-		t.SetSource(i.source)
-		i.actionors = append(i.actionors, action.NewInterface(action.WithTasker(t)))
+func (f *Flow) process() {
+	f.stateTicker = time.NewTicker(time.Millisecond * 100)
+	f.refreshOutput = output.NewRefresh()
+	for _, t := range f.taskers {
+		f.actioners = append(f.actioners, action.NewAction(action.WithTasker(t)))
 	}
 
-	i.source.Scan()
-	for _, a := range i.actionors {
-		a.Prepare()
+	f.source.Scan()
+	for _, a := range f.actioners {
 		a.Do()
 	}
 
-	i.refreshOutput.Start()
+	f.refreshOutput.Start()
 
 	go func() {
-		for range i.ticker.C {
-			i.taskerStatus()
+		for range f.stateTicker.C {
+			f.state()
 		}
 	}()
 }
 
-func (i *Interface) transport() {
+func (f *Flow) transport() {
 	needCopy := false
-	if len(i.actionors) > 1 {
+	if len(f.actioners) > 1 {
 		needCopy = true
 	}
 
 	go func() {
 		for {
-			items, ok := i.source.Next()
+			items, ok := f.source.Next()
 			if !ok {
 				break
 			}
 
-			for _, a := range i.actionors {
+			for _, a := range f.actioners {
 				if needCopy {
-					newItems := i.copySliceMapInterface(items)
+					newItems := f.copySliceMapInterface(items)
 					a.Receive(newItems)
 				} else {
 					a.Receive(items)
@@ -96,38 +94,30 @@ func (i *Interface) transport() {
 			}
 		}
 
-		i.actionorFinish()
+		f.actionerFinish()
 	}()
 }
 
-func (i *Interface) done() {
-	i.actionorDone()
-	i.taskerAfterDone()
-	i.ticker.Stop()
-	i.refreshOutput.Stop()
-	i.taskerOutput()
+func (f *Flow) done() {
+	f.actionerDone()
+	f.stateTicker.Stop()
+	f.refreshOutput.Stop()
+	f.output()
 }
 
-func (i *Interface) taskerStatus() {
-	lines := 1
+func (f *Flow) state() {
+	sss := []string{f.source.State()}
 
-	i.refreshOutput.Print(lines, i.source.State())
-	lines += 1
-
-	for _, t := range i.taskers {
-		for _, s := range t.State() {
-			i.refreshOutput.Print(lines, s)
-			lines += 1
-		}
-
-		i.refreshOutput.Print(lines, "")
-		lines += 1
+	for _, a := range f.actioners {
+		sss = append(sss, a.State()...)
 	}
+
+	f.refreshOutput.CoverAll(sss)
 }
 
-func (i *Interface) taskerOutput() {
-	for _, t := range i.taskers {
-		for _, s := range t.Output() {
+func (f *Flow) output() {
+	for _, a := range f.actioners {
+		for _, s := range a.Output() {
 			fmt.Println(s)
 		}
 
@@ -135,34 +125,28 @@ func (i *Interface) taskerOutput() {
 	}
 }
 
-func (i *Interface) actionorFinish() {
-	for _, a := range i.actionors {
-		a.Finish()
-	}
-}
-
-func (i *Interface) actionorDone() {
-	for _, a := range i.actionors {
+func (f *Flow) actionerDone() {
+	for _, a := range f.actioners {
 		a.Done()
 	}
 }
 
-func (i *Interface) taskerAfterDone() {
-	for _, t := range i.taskers {
-		t.AfterDone()
+func (f *Flow) actionerFinish() {
+	for _, a := range f.actioners {
+		a.Finish()
 	}
 }
 
-func (i *Interface) copySliceMapInterface(sm []map[string]interface{}) []map[string]interface{} {
+func (f *Flow) copySliceMapInterface(sm []map[string]interface{}) []map[string]interface{} {
 	newSM := make([]map[string]interface{}, len(sm))
 	for k, m := range sm {
-		newSM[k] = m
+		newSM[k] = f.copyMapInterface(m)
 	}
 
 	return newSM
 }
 
-func (i *Interface) copyMapInterface(m map[string]interface{}) map[string]interface{} {
+func (f *Flow) copyMapInterface(m map[string]interface{}) map[string]interface{} {
 	newM := make(map[string]interface{}, len(m))
 	for k, v := range m {
 		newM[k] = v

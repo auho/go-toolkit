@@ -6,8 +6,8 @@ import (
 )
 
 type Refresh struct {
+	MultilineText
 	currentLine      int
-	content          []string
 	lastRefreshTime  time.Time
 	ticker           *time.Ticker
 	isInterval       bool
@@ -23,23 +23,6 @@ func NewRefresh() *Refresh {
 	r.lastRefreshTime = time.Now()
 
 	return r
-}
-
-// Print 在第几行打印内容
-// line 从 1 开始
-func (r *Refresh) Print(line int, s string) {
-	if line < 0 {
-		line = 1
-	}
-
-	contentLen := len(r.content)
-	if line > contentLen {
-		for i := 0; i < line-contentLen; i++ {
-			r.content = append(r.content, "")
-		}
-	}
-
-	r.content[line-1] = s
 }
 
 // Start 开始刷新输出，定时刷新内容到输出

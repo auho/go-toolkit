@@ -103,6 +103,10 @@ func (s *Section) Scan() {
 	}()
 }
 
+func (s *Section) ReceiveChan() <-chan []map[string]interface{} {
+	return s.rowsChan
+}
+
 func (s *Section) Next() ([]map[string]interface{}, bool) {
 	ims, ok := <-s.rowsChan
 
