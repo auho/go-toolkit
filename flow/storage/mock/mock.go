@@ -87,6 +87,10 @@ func (m *Mock) Scan() {
 	}()
 }
 
+func (m *Mock) ReceiveChan() <-chan []map[string]interface{} {
+	return m.itemChan
+}
+
 func (m *Mock) Next() ([]map[string]interface{}, bool) {
 	s, ok := <-m.itemChan
 
