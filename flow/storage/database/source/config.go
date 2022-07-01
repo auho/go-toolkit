@@ -1,4 +1,4 @@
-package database
+package source
 
 type Config struct {
 	Concurrency int

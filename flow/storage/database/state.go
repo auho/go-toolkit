@@ -6,19 +6,21 @@ import (
 )
 
 type State struct {
-	title     string
-	page      int64
-	pageSize  int64
-	totalPage int64
-	total     int64
-	amount    int64
-	duration  timing.Duration
+	Concurrency int
+	Page        int64
+	PageSize    int64
+	TotalPage   int64
+	Total       int64
+	Amount      int64
+	Title       string
+	Status      string
+	Duration    timing.Duration
 }
 
-func newState() *State {
+func NewState() *State {
 	return &State{}
 }
 
 func (s *State) State() string {
-	return fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", s.amount, s.total, s.page, s.totalPage, s.pageSize)
+	return fmt.Sprintf("Concurrency: %d, Amount: %d/%d, Page: %d/%d(%d)", s.Concurrency, s.Amount, s.Total, s.Page, s.TotalPage, s.PageSize)
 }

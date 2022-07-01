@@ -1,9 +1,11 @@
-package database
+package source
 
 import (
+	"errors"
 	"fmt"
 	"github.com/auho/go-simple-db/simple"
-	"log"
+	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 	"math"
 	"strconv"
 	"strings"
@@ -13,6 +15,7 @@ import (
 
 // Section 分段查询
 type Section struct {
+	storage.Storage
 	simple.Driver
 	scanSw        sync.WaitGroup
 	idRangeSw     sync.WaitGroup
@@ -29,65 +32,67 @@ type Section struct {
 	failureLastId []int
 	idRangeChan   chan []int64
 	rowsChan      chan []map[string]interface{}
-	state         *State
+	state         *database.State
 }
 
-func NewSectionFromQuery(config FromQueryConfig) *Section {
-	m := newSource(config.Config)
-	m.query = config.Query
-
-	m.prepare()
-
-	return m
-}
-
-func NewSectionFromTable(config FromTableConfig) *Section {
-	m := newSource(config.Config)
-	m.fields = config.Fields
-
-	fieldsSting := fmt.Sprintf("`%s`", strings.Join(m.fields, "`,`"))
-	m.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, m.tableName, m.idName, m.idName)
-
-	m.prepare()
-
-	return m
-}
-
-func newSource(config Config) *Section {
-	var err error
-	m := &Section{}
-	m.state = newState()
-	m.config(config)
-
-	m.Driver, err = simple.NewDriver(config.Driver, config.Dsn)
+func NewSectionFromQuery(config FromQueryConfig) (*Section, error) {
+	s, err := newSource(config.Config)
 	if err != nil {
-		m.logFatalWithTitle(err)
+		return nil, err
 	}
 
-	m.idRangeChan = make(chan []int64, m.concurrency)
+	s.query = config.Query
 
-	return m
+	return s, nil
+}
+
+func NewSectionFromTable(config FromTableConfig) (*Section, error) {
+	s, err := newSource(config.Config)
+	if err != nil {
+		return nil, err
+	}
+
+	s.fields = config.Fields
+
+	fieldsSting := fmt.Sprintf("`%s`", strings.Join(s.fields, "`,`"))
+	s.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, s.tableName, s.idName, s.idName)
+
+	return s, nil
+}
+
+func newSource(config Config) (*Section, error) {
+	s := &Section{}
+	err := s.config(config)
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func (s *Section) GetDriver() simple.Driver {
 	return s.Driver
 }
 
-func (s *Section) State() string {
-	return s.state.State()
+func (s *Section) State() []string {
+	return []string{s.state.State()}
 }
 
-func (s *Section) Summary() string {
-	return fmt.Sprintf("%s: total: %d, total page: %d, page size: %d, start id: %d, end id: %d ",
-		s.title(),
+func (s *Section) Summary() []string {
+	return []string{fmt.Sprintf("%s: total: %d, total page: %d, page size: %d, start id: %d, end id: %d ",
+		s.Title(),
 		s.total,
 		s.totalPage,
 		s.pageSize,
 		s.startId,
-		s.maxId)
+		s.maxId)}
 }
 
 func (s *Section) Scan() {
+	s.state.Status = "scan"
+	s.state.Duration.Start()
+
+	go s.prepare()
+
 	s.rowsChan = make(chan []map[string]interface{}, s.concurrency)
 	for i := 0; i < s.concurrency; i++ {
 		s.scanSw.Add(1)
@@ -100,6 +105,9 @@ func (s *Section) Scan() {
 	go func() {
 		s.scanSw.Wait()
 		close(s.rowsChan)
+
+		s.state.Duration.Stop()
+		s.state.Status = "finish"
 	}()
 }
 
@@ -120,27 +128,29 @@ func (s *Section) scanRows() {
 			break
 		}
 
-		atomic.AddInt64(&s.state.page, 1)
+		atomic.AddInt64(&s.state.Page, 1)
 
 		leftId := idRange[0]
 		size := idRange[1]
 
 		rows, err := s.QueryInterface(s.query, leftId, size)
 		if err != nil {
-			s.logFatalWithTitle("left id:", leftId, err)
+			s.LogFatalWithTitle("left id:", leftId, err)
 		}
 
 		if len(rows) == 0 {
 			continue
 		}
 
-		atomic.AddInt64(&s.state.amount, int64(len(rows)))
+		atomic.AddInt64(&s.state.Amount, int64(len(rows)))
 
 		s.rowsChan <- rows
 	}
 }
 
 func (s *Section) prepare() {
+	s.idRangeChan = make(chan []int64, s.concurrency)
+
 	s.idRange()
 	s.queryPages()
 
@@ -149,10 +159,9 @@ func (s *Section) prepare() {
 		close(s.idRangeChan)
 	}()
 
-	s.state.title = s.title()
-	s.state.pageSize = s.pageSize
-	s.state.totalPage = s.totalPage
-	s.state.total = s.total
+	s.state.PageSize = s.pageSize
+	s.state.TotalPage = s.totalPage
+	s.state.Total = s.total
 }
 
 // queryPages 分段查询
@@ -195,7 +204,7 @@ func (s *Section) queryPage(startId, endId int64) {
 		query := fmt.Sprintf("SELECT MAX(`%s`) AS `id` FROM `%s` WHERE `%s` > ? AND `%s` <= ? ORDER BY `%s` DESC LIMIT 1", s.idName, s.tableName, s.idName, s.idName, s.idName)
 		res, err := s.QueryFieldInterface("id", query, leftId, rightId)
 		if err != nil {
-			s.logFatalWithTitle(fmt.Sprintf("source[] last startid %d endId %d id: %d left id: %d right id: %d", startId, endId, leftId, rightId, err))
+			s.LogFatalWithTitle(fmt.Sprintf("source[] last startid %d endId %d id: %d left id: %d right id: %d", startId, endId, leftId, rightId, err))
 		}
 
 		if res != nil {
@@ -210,7 +219,7 @@ func (s *Section) queryPage(startId, endId int64) {
 	}
 }
 
-func (s *Section) config(config Config) {
+func (s *Section) config(config Config) (err error) {
 	s.concurrency = config.Concurrency
 	s.total = config.Maximum
 	s.startId = config.StartId
@@ -219,38 +228,48 @@ func (s *Section) config(config Config) {
 	s.tableName = config.TableName
 	s.idName = config.IdName
 
+	s.Driver, err = simple.NewDriver(config.Driver, config.Dsn)
+	if err != nil {
+		return
+	}
+
 	if s.concurrency <= 0 {
-		s.logFatal(fmt.Sprintf("driver[%s] concurrency[%d] is error", config.Driver, s.concurrency))
+		err = errors.New(fmt.Sprintf("concurrency[%d] is error", s.concurrency))
+		return
 	}
 
 	if s.pageSize <= 0 {
-		s.logFatal(fmt.Sprintf("driver[%s] concurrency[%d] is error", config.Driver, s.pageSize))
+		err = errors.New(fmt.Sprintf("page size[%d] is error", s.pageSize))
+		return
 	}
 
 	if s.total > 0 && s.pageSize > s.total {
 		s.pageSize = s.total
 	}
 
-	if s.concurrency < 1 {
-		s.concurrency = 1
-	}
+	s.state = database.NewState()
+	s.state.Concurrency = s.concurrency
+	s.state.Title = s.Title()
+	s.state.Status = "config"
+
+	return
 }
 
 func (s *Section) idRange() {
 	query := fmt.Sprintf("SELECT MAX(`%s`) AS `maxId`, MIN(`%s`) AS `minId` FROM `%s`", s.idName, s.idName, s.tableName)
 	res, err := s.QueryInterfaceRow(query)
 	if err != nil {
-		s.logFatalWithTitle("mysql id:", err)
+		s.LogFatalWithTitle("mysql id:", err)
 	}
 
 	maxId, err := strconv.ParseInt(string(res["maxId"].([]uint8)), 10, 64)
 	if err != nil {
-		s.logFatalWithTitle("mysql max:", err)
+		s.LogFatalWithTitle("mysql max:", err)
 	}
 
 	minId, err := strconv.ParseInt(string(res["minId"].([]uint8)), 10, 64)
 	if err != nil {
-		s.logFatalWithTitle("mysql min:", err)
+		s.LogFatalWithTitle("mysql min:", err)
 	}
 
 	if minId > s.startId {
@@ -262,7 +281,7 @@ func (s *Section) idRange() {
 	}
 
 	if s.maxId < s.startId {
-		s.logFatalWithTitle(fmt.Sprintf("mysql max id %d < start id %d", s.maxId, s.startId))
+		s.LogFatalWithTitle(fmt.Sprintf("mysql max id %d < start id %d", s.maxId, s.startId))
 	}
 
 	total := s.maxId - s.startId + 1
@@ -283,14 +302,6 @@ func (s *Section) idRange() {
 	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.pageSize)))
 }
 
-func (s *Section) title() string {
+func (s *Section) Title() string {
 	return fmt.Sprintf("Source driver[%s]", s.DriverName())
-}
-
-func (s *Section) logFatalWithTitle(v ...any) {
-	log.Fatal(append([]interface{}{s.title()}, v...)...)
-}
-
-func (s *Section) logFatal(v ...any) {
-	log.Fatal(v...)
 }
