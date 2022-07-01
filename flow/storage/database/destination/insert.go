@@ -5,8 +5,8 @@ import (
 	"github.com/auho/go-simple-db/simple"
 )
 
-func iss(fields []string) desFunc[[][]interface{}] {
-	return func(sd simple.Driver, tableName string, items [][]interface{}) error {
+func iss(fields []string) desFunc[SliceEntries] {
+	return func(sd simple.Driver, tableName string, items SliceEntries) error {
 
 		_, err := sd.BulkInsertFromSliceSlice(tableName, fields, items)
 
@@ -14,12 +14,12 @@ func iss(fields []string) desFunc[[][]interface{}] {
 	}
 }
 
-func NewInsertSliceSlice(config Config, fields []string) (*Destination[[][]interface{}], error) {
+func NewInsertSliceSlice(config Config, fields []string) (*Destination[SliceEntries], error) {
 	if len(fields) <= 0 {
 		return nil, errors.New("fields is error")
 	}
 
-	d := &Destination[[][]interface{}]{}
+	d := &Destination[SliceEntries]{}
 	err := d.config(config)
 	if err != nil {
 		return nil, err
@@ -30,16 +30,16 @@ func NewInsertSliceSlice(config Config, fields []string) (*Destination[[][]inter
 	return d, nil
 }
 
-func ism() desFunc[[]map[string]interface{}] {
-	return func(sd simple.Driver, tableName string, items []map[string]interface{}) error {
+func ism() desFunc[MapEntries] {
+	return func(sd simple.Driver, tableName string, items MapEntries) error {
 		_, err := sd.BulkInsertFromSliceMap(tableName, items)
 
 		return err
 	}
 }
 
-func NewInsertSliceMap(config Config) (*Destination[[]map[string]interface{}], error) {
-	d := &Destination[[]map[string]interface{}]{}
+func NewInsertSliceMap(config Config) (*Destination[MapEntries], error) {
+	d := &Destination[MapEntries]{}
 	err := d.config(config)
 	if err != nil {
 		return nil, err

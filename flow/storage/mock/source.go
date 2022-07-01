@@ -7,25 +7,25 @@ import (
 	"time"
 )
 
-func WithPageSize(i int64) func(m *Mock) {
-	return func(m *Mock) {
+func WithPageSize(i int64) func(m *MockSource) {
+	return func(m *MockSource) {
 		m.pageSize = i
 	}
 }
 
-func WithTotal(t int64) func(m *Mock) {
-	return func(m *Mock) {
+func WithTotal(t int64) func(m *MockSource) {
+	return func(m *MockSource) {
 		m.total = t
 	}
 }
 
-func WithIdName(s string) func(m *Mock) {
-	return func(m *Mock) {
+func WithIdName(s string) func(m *MockSource) {
+	return func(m *MockSource) {
 		m.idName = s
 	}
 }
 
-type Mock struct {
+type MockSource struct {
 	id        int64
 	total     int64 // 最大数量(总数)
 	page      int64
@@ -36,8 +36,8 @@ type Mock struct {
 	itemChan  chan []map[string]interface{}
 }
 
-func NewMock(options ...func(*Mock)) *Mock {
-	m := &Mock{}
+func NewMock(options ...func(*MockSource)) *MockSource {
+	m := &MockSource{}
 
 	for _, o := range options {
 		o(m)
@@ -60,7 +60,7 @@ func NewMock(options ...func(*Mock)) *Mock {
 	return m
 }
 
-func (m *Mock) Scan() {
+func (m *MockSource) Scan() {
 	m.itemChan = make(chan []map[string]interface{})
 
 	go func() {
@@ -87,24 +87,18 @@ func (m *Mock) Scan() {
 	}()
 }
 
-func (m *Mock) ReceiveChan() <-chan []map[string]interface{} {
+func (m *MockSource) ReceiveChan() <-chan []map[string]interface{} {
 	return m.itemChan
 }
 
-func (m *Mock) Next() ([]map[string]interface{}, bool) {
-	s, ok := <-m.itemChan
-
-	return s, ok
-}
-
-func (m *Mock) Summary() string {
+func (m *MockSource) Summary() string {
 	return fmt.Sprintf("%s: max: %d, pageSize: %d", m.title(), m.total, m.pageSize)
 }
 
-func (m *Mock) State() string {
-	return fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", m.amount, m.total, m.page, m.totalPage, m.pageSize)
+func (m *MockSource) State() []string {
+	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", m.amount, m.total, m.page, m.totalPage, m.pageSize)}
 }
 
-func (m *Mock) title() string {
-	return "Mock"
+func (m *MockSource) title() string {
+	return "MockSource"
 }

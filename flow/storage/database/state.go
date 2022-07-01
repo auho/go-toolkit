@@ -2,19 +2,11 @@ package database
 
 import (
 	"fmt"
-	"github.com/auho/go-toolkit/time/timing"
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
 type State struct {
-	Concurrency int
-	Page        int64
-	PageSize    int64
-	TotalPage   int64
-	Total       int64
-	Amount      int64
-	Title       string
-	Status      string
-	Duration    timing.Duration
+	storage.PageState
 }
 
 func NewState() *State {

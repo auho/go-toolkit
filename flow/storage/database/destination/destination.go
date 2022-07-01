@@ -11,8 +11,11 @@ import (
 	"sync/atomic"
 )
 
+type SliceEntries [][]interface{}
+type MapEntries []map[string]interface{}
+
 type entries interface {
-	[][]interface{} | []map[string]interface{}
+	SliceEntries | MapEntries
 }
 
 type desFunc[E entries] func(driver simple.Driver, tableName string, items E) error

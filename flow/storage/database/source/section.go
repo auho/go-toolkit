@@ -115,12 +115,6 @@ func (s *Section) ReceiveChan() <-chan []map[string]interface{} {
 	return s.rowsChan
 }
 
-func (s *Section) Next() ([]map[string]interface{}, bool) {
-	ims, ok := <-s.rowsChan
-
-	return ims, ok
-}
-
 func (s *Section) scanRows() {
 	for {
 		idRange, ok := <-s.idRangeChan
