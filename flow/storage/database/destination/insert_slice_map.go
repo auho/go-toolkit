@@ -6,7 +6,6 @@ import (
 )
 
 type InsertSliceMap struct {
-	fields []string
 	Destination[storage.MapEntries]
 }
 
@@ -24,12 +23,12 @@ func (i *InsertSliceMap) withDesFunc() desFunc[storage.MapEntries] {
 
 func NewInsertSliceMap(config Config) (*InsertSliceMap, error) {
 	i := &InsertSliceMap{}
+	i.desFunc = i.withDesFunc()
+
 	err := i.config(config)
 	if err != nil {
 		return nil, err
 	}
-
-	i.desFunc = i.withDesFunc()
 
 	return i, nil
 }

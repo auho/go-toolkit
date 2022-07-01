@@ -7,8 +7,8 @@ import (
 )
 
 type InsertSliceSlice struct {
-	fields []string
 	Destination[storage.SliceEntries]
+	fields []string
 }
 
 func (i *InsertSliceSlice) Receive(items storage.SliceEntries) {
@@ -29,12 +29,13 @@ func NewInsertSliceSlice(config Config, fields []string) (*InsertSliceSlice, err
 	}
 
 	i := &InsertSliceSlice{}
+	i.fields = fields
+	i.desFunc = i.withDesFunc()
+
 	err := i.config(config)
 	if err != nil {
 		return nil, err
 	}
-
-	i.desFunc = i.withDesFunc()
 
 	return i, nil
 }
