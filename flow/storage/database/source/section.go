@@ -142,10 +142,14 @@ func (s *Section) scanRows() {
 	}
 }
 
-func (s *Section) prepare() {
+func (s *Section) prepare() error {
 	s.idRangeChan = make(chan []int64, s.concurrency)
 
-	s.idRange()
+	err := s.idRange()
+	if err != nil {
+		return err
+	}
+
 	s.queryPages()
 
 	go func() {
@@ -156,9 +160,11 @@ func (s *Section) prepare() {
 	s.state.PageSize = s.pageSize
 	s.state.TotalPage = s.totalPage
 	s.state.Total = s.total
+
+	return nil
 }
 
-// queryPages 分段查询
+// queryPages 分段
 func (s *Section) queryPages() {
 	shard := int64(math.Ceil(float64(s.totalPage) / float64(s.concurrency)))
 	shardSize := shard * s.pageSize
@@ -249,21 +255,21 @@ func (s *Section) config(config Config) (err error) {
 	return
 }
 
-func (s *Section) idRange() {
+func (s *Section) idRange() error {
 	query := fmt.Sprintf("SELECT MAX(`%s`) AS `maxId`, MIN(`%s`) AS `minId` FROM `%s`", s.idName, s.idName, s.tableName)
 	res, err := s.QueryInterfaceRow(query)
 	if err != nil {
-		s.LogFatalWithTitle("mysql id:", err)
+		return errors.New(fmt.Sprintf("mysql id: %s", err))
 	}
 
 	maxId, err := strconv.ParseInt(string(res["maxId"].([]uint8)), 10, 64)
 	if err != nil {
-		s.LogFatalWithTitle("mysql max:", err)
+		return errors.New(fmt.Sprintf("mysql max: %s", err))
 	}
 
 	minId, err := strconv.ParseInt(string(res["minId"].([]uint8)), 10, 64)
 	if err != nil {
-		s.LogFatalWithTitle("mysql min:", err)
+		return errors.New(fmt.Sprintf("mysql min: %s", err))
 	}
 
 	if minId > s.startId {
@@ -275,7 +281,7 @@ func (s *Section) idRange() {
 	}
 
 	if s.maxId < s.startId {
-		s.LogFatalWithTitle(fmt.Sprintf("mysql max id %d < start id %d", s.maxId, s.startId))
+		return errors.New(fmt.Sprintf("mysql max id %d < start id %d", s.maxId, s.startId))
 	}
 
 	total := s.maxId - s.startId + 1
@@ -294,6 +300,8 @@ func (s *Section) idRange() {
 	}
 
 	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.pageSize)))
+
+	return nil
 }
 
 func (s *Section) Title() string {

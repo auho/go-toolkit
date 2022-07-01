@@ -11,16 +11,9 @@ import (
 	"sync/atomic"
 )
 
-type SliceEntries [][]interface{}
-type MapEntries []map[string]interface{}
+type desFunc[E storage.Entries] func(driver simple.Driver, tableName string, items E) error
 
-type entries interface {
-	SliceEntries | MapEntries
-}
-
-type desFunc[E entries] func(driver simple.Driver, tableName string, items E) error
-
-type Destination[E entries] struct {
+type Destination[E storage.Entries] struct {
 	storage.Storage
 	simple.Driver
 	isDone      bool
@@ -87,10 +80,6 @@ func (d *Destination[E]) Accept() (err error) {
 	}
 
 	return nil
-}
-
-func (d *Destination[E]) Receive(items E) {
-	d.itemsChan <- items
 }
 
 func (d *Destination[E]) Done() {
