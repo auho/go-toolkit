@@ -1,15 +1,16 @@
 package action
 
 import (
-	"github.com/auho/go-toolkit/flow/task"
 	"sync"
+
+	"github.com/auho/go-toolkit/flow/task"
 )
 
 type Actioner interface {
 	Receive([]map[string]interface{})
 	Do()
-	Done()
 	Finish()
+	Done()
 	State() []string
 	Output() []string
 }
@@ -56,11 +57,11 @@ func (a *Action) Do() {
 	}
 }
 
-func (a *Action) Finish() {
+func (a *Action) Done() {
 	close(a.itemsChan)
 }
 
-func (a *Action) Done() {
+func (a *Action) Finish() {
 	a.taskerWg.Wait()
 
 	a.tasker.AfterDo()

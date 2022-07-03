@@ -2,12 +2,13 @@ package flow
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/auho/go-toolkit/console/output"
 	"github.com/auho/go-toolkit/flow/action"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/task"
 	"github.com/auho/go-toolkit/time/timing"
-	"time"
 )
 
 func WithSource(sf storage.Source) func(i *Flow) {
@@ -46,7 +47,7 @@ func RunFlow(options ...func(*Flow)) {
 func (f *Flow) run() {
 	f.process()
 	f.transport()
-	f.done()
+	f.Finish()
 }
 
 func (f *Flow) process() {
@@ -75,7 +76,7 @@ func (f *Flow) transport() {
 
 	go func() {
 		for {
-			items, ok := f.source.Next()
+			items, ok := <-f.source.ReceiveChan()
 			if !ok {
 				break
 			}
@@ -90,19 +91,19 @@ func (f *Flow) transport() {
 			}
 		}
 
-		f.actionerFinish()
+		f.actionerDone()
 	}()
 }
 
-func (f *Flow) done() {
-	f.actionerDone()
+func (f *Flow) Finish() {
+	f.actionerFinish()
 	f.stateTicker.Stop()
 	f.refreshOutput.Stop()
 	f.output()
 }
 
 func (f *Flow) state() {
-	sss := []string{f.source.State()}
+	sss := f.source.State()
 
 	for _, a := range f.actioners {
 		sss = append(sss, a.State()...)
@@ -121,15 +122,15 @@ func (f *Flow) output() {
 	}
 }
 
-func (f *Flow) actionerDone() {
-	for _, a := range f.actioners {
-		a.Done()
-	}
-}
-
 func (f *Flow) actionerFinish() {
 	for _, a := range f.actioners {
 		a.Finish()
+	}
+}
+
+func (f *Flow) actionerDone() {
+	for _, a := range f.actioners {
+		a.Done()
 	}
 }
 

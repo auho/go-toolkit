@@ -5,4 +5,6 @@ type Destination[E Entries] interface {
 	Receive(E)
 	Done()
 	Finish()
+	Summary() []string
+	State() []string
 }
