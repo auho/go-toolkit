@@ -108,34 +108,30 @@ func (d *Destination[E]) do() {
 	duration.Start()
 	var targetItems E
 
-	for {
-		if items, ok := <-d.itemsChan; ok {
-			duration.Begin()
+	for items := range d.itemsChan {
+		duration.Begin()
 
-			itemsLen := int64(len(items))
-			if itemsLen <= 0 {
-				continue
-			}
-
-			for start := int64(0); start < itemsLen; start += d.pageSize {
-				end := start + d.pageSize
-				if end >= itemsLen {
-					targetItems = items[start:]
-				} else {
-					targetItems = items[start:end]
-				}
-
-				err := d.desFunc(d.Driver, d.tableName, targetItems)
-				if err != nil {
-					panic(err)
-				}
-			}
-
-			atomic.AddInt64(&d.state.Amount, itemsLen)
-			duration.End()
-		} else {
-			break
+		itemsLen := int64(len(items))
+		if itemsLen <= 0 {
+			continue
 		}
+
+		for start := int64(0); start < itemsLen; start += d.pageSize {
+			end := start + d.pageSize
+			if end >= itemsLen {
+				targetItems = items[start:]
+			} else {
+				targetItems = items[start:end]
+			}
+
+			err := d.desFunc(d.Driver, d.tableName, targetItems)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		atomic.AddInt64(&d.state.Amount, itemsLen)
+		duration.End()
 	}
 
 	duration.Stop()

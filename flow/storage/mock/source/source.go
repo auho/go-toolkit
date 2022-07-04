@@ -100,5 +100,5 @@ func (m *Mock) State() []string {
 }
 
 func (m *Mock) title() string {
-	return "Mock"
+	return "Mock:source"
 }

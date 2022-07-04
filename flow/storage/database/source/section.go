@@ -116,12 +116,7 @@ func (s *Section) ReceiveChan() <-chan []map[string]interface{} {
 }
 
 func (s *Section) scanRows() {
-	for {
-		idRange, ok := <-s.idRangeChan
-		if !ok {
-			break
-		}
-
+	for idRange := range s.idRangeChan {
 		atomic.AddInt64(&s.state.Page, 1)
 
 		leftId := idRange[0]

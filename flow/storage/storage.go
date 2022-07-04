@@ -2,8 +2,11 @@ package storage
 
 import "log"
 
-type SliceEntries [][]interface{}
-type MapEntries []map[string]interface{}
+type SliceEntry []interface{}
+type MapEntry map[string]interface{}
+
+type SliceEntries []SliceEntry
+type MapEntries []MapEntry
 
 type Entries interface {
 	SliceEntries | MapEntries
