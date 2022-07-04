@@ -5,11 +5,11 @@ import "log"
 type SliceEntry []interface{}
 type MapEntry map[string]interface{}
 
-type SliceEntries []SliceEntry
-type MapEntries []MapEntry
+type SliceEntries [][]interface{}
+type MapEntries []map[string]interface{}
 
 type Entries interface {
-	SliceEntries | MapEntries
+	~[][]interface{} | ~[]map[string]interface{}
 }
 
 type Storage struct {
