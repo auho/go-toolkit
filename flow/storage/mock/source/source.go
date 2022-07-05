@@ -8,27 +8,28 @@ import (
 	"time"
 )
 
-var _ storage.Source = (*Mock)(nil)
+var _ storage.Source = (*Source)(nil)
 
-func WithPageSize(i int64) func(m *Mock) {
-	return func(m *Mock) {
+func WithPageSize(i int64) func(m *Source) {
+	return func(m *Source) {
 		m.pageSize = i
 	}
 }
 
-func WithTotal(t int64) func(m *Mock) {
-	return func(m *Mock) {
+func WithTotal(t int64) func(m *Source) {
+	return func(m *Source) {
 		m.total = t
 	}
 }
 
-func WithIdName(s string) func(m *Mock) {
-	return func(m *Mock) {
+func WithIdName(s string) func(m *Source) {
+	return func(m *Source) {
 		m.idName = s
 	}
 }
 
-type Mock struct {
+type Source struct {
+	storage.Storage
 	id        int64
 	total     int64 // 最大数量(总数)
 	page      int64
@@ -39,69 +40,69 @@ type Mock struct {
 	itemChan  chan []map[string]interface{}
 }
 
-func NewSource(options ...func(*Mock)) *Mock {
-	m := &Mock{}
+func NewSource(options ...func(*Source)) *Source {
+	s := &Source{}
 
 	for _, o := range options {
-		o(m)
+		o(s)
 	}
 
-	if m.total <= 0 {
-		m.total = 1e2
+	if s.total <= 0 {
+		s.total = 1e2
 	}
 
-	if m.pageSize <= 0 {
-		m.total = 1e1
+	if s.pageSize <= 0 {
+		s.total = 1e1
 	}
 
-	if m.idName == "" {
-		m.idName = "id"
+	if s.idName == "" {
+		s.idName = "id"
 	}
 
-	m.totalPage = int64(math.Ceil(float64(m.total) / float64(m.pageSize)))
+	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.pageSize)))
 
-	return m
+	return s
 }
 
-func (m *Mock) Scan() {
-	m.itemChan = make(chan []map[string]interface{})
+func (s *Source) Scan() {
+	s.itemChan = make(chan []map[string]interface{})
 
 	go func() {
-		for i := int64(0); i < m.total; i += m.pageSize {
-			size := m.pageSize
-			if i+m.pageSize > m.total {
-				size = m.total - i
+		for i := int64(0); i < s.total; i += s.pageSize {
+			size := s.pageSize
+			if i+s.pageSize > s.total {
+				size = s.total - i
 			}
 
 			items := make([]map[string]interface{}, size, size)
 			for j := int64(0); j < size; j++ {
 				item := make(map[string]interface{})
-				item[m.idName] = time.Now().Unix()*1e8 + atomic.AddInt64(&m.id, 1)
+				item[s.idName] = time.Now().Unix()*1e8 + atomic.AddInt64(&s.id, 1)
 				items[j] = item
 			}
 
-			m.itemChan <- items
+			s.itemChan <- items
 
-			atomic.AddInt64(&m.page, 1)
-			atomic.AddInt64(&m.amount, int64(len(items)))
+			atomic.AddInt64(&s.page, 1)
+			atomic.AddInt64(&s.amount, int64(len(items)))
 		}
 
-		close(m.itemChan)
+		close(s.itemChan)
 	}()
 }
 
-func (m *Mock) ReceiveChan() <-chan []map[string]interface{} {
-	return m.itemChan
+func (s *Source) ReceiveChan() <-chan []map[string]interface{} {
+	return s.itemChan
 }
 
-func (m *Mock) Summary() []string {
-	return []string{fmt.Sprintf("%s: max: %d, pageSize: %d", m.title(), m.total, m.pageSize)}
+func (s *Source) Summary() []string {
+	return []string{fmt.Sprintf("%s: max: %d, pageSize: %d", s.Title(), s.total, s.pageSize)}
 }
 
-func (m *Mock) State() []string {
-	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", m.amount, m.total, m.page, m.totalPage, m.pageSize)}
+func (s *Source) State() []string {
+	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", s.amount, s.total, s.page, s.totalPage, s.pageSize)}
 }
 
-func (m *Mock) title() string {
-	return "Mock:source"
+func (s *Source) Title() string {
+	return "Source:source"
 }
