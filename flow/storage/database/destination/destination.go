@@ -140,3 +140,13 @@ func (d *Destination[E]) do() {
 func (d *Destination[E]) Title() string {
 	return fmt.Sprintf("Destination driver[%s]", d.DriverName())
 }
+
+// TODO
+func (d *Destination[E]) Summary() []string {
+	return []string{}
+}
+
+// TODO
+func (d *Destination[E]) State() []string {
+	return []string{}
+}

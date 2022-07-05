@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 )
 
+var _ storage.Source = (*Section)(nil)
+
 // Section 分段查询
 type Section struct {
 	storage.Storage

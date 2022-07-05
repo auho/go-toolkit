@@ -2,10 +2,13 @@ package source
 
 import (
 	"fmt"
+	"github.com/auho/go-toolkit/flow/storage"
 	"math"
 	"sync/atomic"
 	"time"
 )
+
+var _ storage.Source = (*Mock)(nil)
 
 func WithPageSize(i int64) func(m *Mock) {
 	return func(m *Mock) {
