@@ -7,7 +7,7 @@ import (
 )
 
 type InsertSliceSlice struct {
-	Destination[storage.SliceEntries]
+	Destination[storage.SliceEntry]
 	fields []string
 }
 
@@ -15,7 +15,7 @@ func (i *InsertSliceSlice) Receive(items storage.SliceEntries) {
 	i.itemsChan <- items
 }
 
-func (i *InsertSliceSlice) withDesFunc() desFunc[storage.SliceEntries] {
+func (i *InsertSliceSlice) withDesFunc() desFunc[storage.SliceEntry] {
 	return func(sd simple.Driver, tableName string, items storage.SliceEntries) error {
 		_, err := sd.BulkInsertFromSliceSlice(tableName, i.fields, items)
 

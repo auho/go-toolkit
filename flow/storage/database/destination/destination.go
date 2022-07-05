@@ -11,9 +11,9 @@ import (
 	"sync/atomic"
 )
 
-type desFunc[E storage.Entries] func(driver simple.Driver, tableName string, items E) error
+type desFunc[E storage.Entry] func(driver simple.Driver, tableName string, items []E) error
 
-type Destination[E storage.Entries] struct {
+type Destination[E storage.Entry] struct {
 	storage.Storage
 	simple.Driver
 	isDone      bool
@@ -21,7 +21,7 @@ type Destination[E storage.Entries] struct {
 	concurrency int
 	pageSize    int64
 	tableName   string
-	itemsChan   chan E
+	itemsChan   chan []E
 	doWg        sync.WaitGroup
 	state       *database.State
 	desFunc     desFunc[E]
@@ -68,7 +68,7 @@ func (d *Destination[E]) Accept() (err error) {
 		}
 	}
 
-	d.itemsChan = make(chan E, d.concurrency)
+	d.itemsChan = make(chan []E, d.concurrency)
 
 	for i := 0; i < d.concurrency; i++ {
 		d.doWg.Add(1)
@@ -106,7 +106,7 @@ func (d *Destination[E]) Finish() {
 func (d *Destination[E]) do() {
 	duration := timing.NewDuration()
 	duration.Start()
-	var targetItems E
+	var descItems []E
 
 	for items := range d.itemsChan {
 		duration.Begin()
@@ -119,12 +119,12 @@ func (d *Destination[E]) do() {
 		for start := int64(0); start < itemsLen; start += d.pageSize {
 			end := start + d.pageSize
 			if end >= itemsLen {
-				targetItems = items[start:]
+				descItems = items[start:]
 			} else {
-				targetItems = items[start:end]
+				descItems = items[start:end]
 			}
 
-			err := d.desFunc(d.Driver, d.tableName, targetItems)
+			err := d.desFunc(d.Driver, d.tableName, descItems)
 			if err != nil {
 				panic(err)
 			}

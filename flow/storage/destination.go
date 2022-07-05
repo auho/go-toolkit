@@ -1,8 +1,8 @@
 package storage
 
-type Destination[E Entries] interface {
+type Destination[E Entry] interface {
 	Accept() error
-	Receive(E)
+	Receive([]E)
 	Done()
 	Finish()
 	Summary() []string

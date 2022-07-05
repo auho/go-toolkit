@@ -5,7 +5,7 @@ import (
 )
 
 type InsertSliceMap struct {
-	Destination[storage.MapEntries]
+	Destination[storage.MapEntry]
 }
 
 func (i *InsertSliceMap) Receive(items storage.MapEntries) {

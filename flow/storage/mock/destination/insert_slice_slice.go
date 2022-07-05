@@ -5,7 +5,7 @@ import (
 )
 
 type InsertSliceSlice struct {
-	Destination[storage.SliceEntries]
+	Destination[storage.SliceEntry]
 }
 
 func (i *InsertSliceSlice) Receive(items storage.SliceEntries) {

@@ -14,9 +14,17 @@ func TestNewInsertSliceSlice(t *testing.T) {
 	page = rand.Intn(49) + 1
 	pageSize = (rand.Intn(9) + 1) * pageSize
 
-	d, err := NewInsertSliceSlice()
+	var err error
+	var dd storage.Destination[storage.SliceEntry]
+
+	dd, err = NewInsertSliceSlice()
 	if err != nil {
 		t.Error(err)
+	}
+
+	d, ok := dd.(*InsertSliceSlice)
+	if !ok {
+		t.Error("InsertSliceSlice not interface of storage.Destination[storage.SliceEntry]")
 	}
 
 	err = d.Accept()
@@ -26,9 +34,9 @@ func TestNewInsertSliceSlice(t *testing.T) {
 
 	go func() {
 		for i := 0; i < page; i++ {
-			var sliceSlice storage.SliceEntries
+			var sliceSlice [][]interface{}
 			for j := 0; j < pageSize; j++ {
-				m := make(storage.SliceEntry, 0)
+				m := make([]interface{}, 0)
 				m = append(m, i*page+j)
 				sliceSlice = append(sliceSlice, m)
 			}

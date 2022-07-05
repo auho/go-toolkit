@@ -14,9 +14,17 @@ func TestNewInsertSliceMap(t *testing.T) {
 	page = rand.Intn(49) + 1
 	pageSize = (rand.Intn(9) + 1) * pageSize
 
-	d, err := NewInsertSliceMap()
+	var err error
+	var dd storage.Destination[storage.MapEntry]
+
+	dd, err = NewInsertSliceMap()
 	if err != nil {
 		t.Error(err)
+	}
+
+	d, ok := dd.(*InsertSliceMap)
+	if !ok {
+		t.Error("InsertSliceMap not interface of storage.Destination[storage.MapEntry]")
 	}
 
 	err = d.Accept()
@@ -26,9 +34,9 @@ func TestNewInsertSliceMap(t *testing.T) {
 
 	go func() {
 		for i := 0; i < page; i++ {
-			var sliceMap storage.MapEntries
+			var sliceMap []map[string]interface{}
 			for j := 0; j < pageSize; j++ {
-				m := make(storage.MapEntry)
+				m := make(map[string]interface{})
 				m[idName] = i*page + j
 				sliceMap = append(sliceMap, m)
 			}

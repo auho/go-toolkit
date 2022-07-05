@@ -7,20 +7,22 @@ import (
 	"sync/atomic"
 )
 
-type Destination[E storage.Entries] struct {
+type Destination[E storage.Entry] struct {
 	isDone    bool
 	amount    int64
-	itemsChan chan E
+	itemsChan chan []E
 	chanWg    sync.WaitGroup
 }
 
 func (d *Destination[E]) Accept() error {
-	d.itemsChan = make(chan E)
+	d.itemsChan = make(chan []E)
 
 	d.chanWg.Add(1)
 	go func() {
 		for items := range d.itemsChan {
-			atomic.AddInt64(&d.amount, int64(len(items)))
+			var descItems []E
+			descItems = items[0:]
+			atomic.AddInt64(&d.amount, int64(len(descItems)))
 		}
 
 		d.chanWg.Done()

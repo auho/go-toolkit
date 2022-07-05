@@ -92,7 +92,7 @@ func (m *Mock) ReceiveChan() <-chan []map[string]interface{} {
 }
 
 func (m *Mock) Summary() []string {
-	return []string{fmt.Sprintf("%m: max: %d, pageSize: %d", m.title(), m.total, m.pageSize)}
+	return []string{fmt.Sprintf("%s: max: %d, pageSize: %d", m.title(), m.total, m.pageSize)}
 }
 
 func (m *Mock) State() []string {
