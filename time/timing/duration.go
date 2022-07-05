@@ -9,10 +9,10 @@ import (
 var DefaultDuration Duration
 
 type Duration struct {
-	startTime  time.Time
-	finishTime time.Time
-	beginTime  time.Time
-	endTime    time.Time
+	startTime time.Time
+	stopTime  time.Time
+	beginTime time.Time
+	endTime   time.Time
 }
 
 func NewDuration() *Duration {
@@ -26,7 +26,7 @@ func (t *Duration) Start() {
 
 // Stop 停止 Duration
 func (t *Duration) Stop() {
-	t.finishTime = time.Now()
+	t.stopTime = time.Now()
 }
 
 // Begin 开始一小段计时
@@ -39,17 +39,54 @@ func (t *Duration) End() {
 	t.endTime = time.Now()
 }
 
-// SubBegin 从上一个小段 Begin 到现在的时长
+// SubBegin 从上一个小段 Begin 到结束的时长
 func (t *Duration) SubBegin() time.Duration {
-	return time.Now().Sub(t.beginTime)
+	if t.endTime == (time.Time{}) {
+		return time.Now().Sub(t.beginTime)
+	} else {
+		return t.endTime.Sub(t.beginTime)
+	}
 }
 
-// SubStart 从启动到现在的时长
+// SubStart 从启动到停止的时长
 func (t *Duration) SubStart() time.Duration {
-	return time.Now().Sub(t.startTime)
+	if t.stopTime == (time.Time{}) {
+		return time.Now().Sub(t.startTime)
+	} else {
+		return t.stopTime.Sub(t.startTime)
+	}
 }
 
-// StringStartToNowSeconds 从启动到现在的秒数
-func (t *Duration) StringStartToNowSeconds() string {
-	return fmt.Sprintf("duration %f 秒", t.SubStart().Seconds())
+// StringStartToStop 从启动到停止的时长
+func (t *Duration) StringStartToStop() string {
+	return t.stringPretty(t.SubStart())
+}
+
+// StringBeginToEnd 从开始到结束的时长
+func (t *Duration) StringBeginToEnd() string {
+	return t.stringPretty(t.SubBegin())
+}
+
+func (t *Duration) stringPretty(d time.Duration) string {
+	seconds := d.Seconds()
+	if seconds < 60 {
+		return fmt.Sprintf("duration %f 秒", seconds)
+	} else if seconds < 3600 {
+		m := int64(seconds / 60)
+		s := int64(seconds) % 60
+
+		return fmt.Sprintf("duration %d 分 %d 秒", m, s)
+	} else if seconds < 86400 {
+		h := int64(seconds / 3600)
+		m := (int64(seconds) % 3600) / 60
+		s := int64(seconds) % 60
+
+		return fmt.Sprintf("duration %d 小时 %d 分 %d 秒", h, m, s)
+	} else {
+		d := int64(seconds / 86400)
+		h := (int64(seconds) % 86400) / 3600
+		m := (int64(seconds) % 3600) / 60
+
+		return fmt.Sprintf("duration %d 天 %d 小时 %d 分 ", d, h, m)
+	}
 }
