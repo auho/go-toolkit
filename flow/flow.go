@@ -41,7 +41,7 @@ func RunFlow(options ...func(*Flow)) {
 
 	i.run()
 
-	d.StringStartToNowSeconds()
+	d.StringStartToStop()
 }
 
 func (f *Flow) run() {

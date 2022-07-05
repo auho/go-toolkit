@@ -76,7 +76,7 @@ func (s *Section) GetDriver() simple.Driver {
 }
 
 func (s *Section) State() []string {
-	return []string{s.state.State()}
+	return []string{s.state.Overview()}
 }
 
 func (s *Section) Summary() []string {
