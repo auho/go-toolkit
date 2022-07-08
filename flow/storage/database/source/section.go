@@ -89,13 +89,19 @@ func (s *Section) Summary() []string {
 		s.maxId)}
 }
 
-func (s *Section) Scan() {
+func (s *Section) Scan() error {
 	s.state.Status = "scan"
 	s.state.Duration.Start()
-
-	go s.prepare()
-
+	s.idRangeChan = make(chan []int64, s.concurrency)
 	s.rowsChan = make(chan []map[string]interface{}, s.concurrency)
+
+	err := s.idRange()
+	if err != nil {
+		return err
+	}
+
+	go s.idSection()
+
 	for i := 0; i < s.concurrency; i++ {
 		s.scanSw.Add(1)
 		go func() {
@@ -111,6 +117,8 @@ func (s *Section) Scan() {
 		s.state.Duration.Stop()
 		s.state.Status = "finish"
 	}()
+
+	return nil
 }
 
 func (s *Section) ReceiveChan() <-chan []map[string]interface{} {
@@ -139,14 +147,7 @@ func (s *Section) scanRows() {
 	}
 }
 
-func (s *Section) prepare() error {
-	s.idRangeChan = make(chan []int64, s.concurrency)
-
-	err := s.idRange()
-	if err != nil {
-		return err
-	}
-
+func (s *Section) idSection() {
 	s.queryPages()
 
 	go func() {
@@ -157,8 +158,6 @@ func (s *Section) prepare() error {
 	s.state.PageSize = s.pageSize
 	s.state.TotalPage = s.totalPage
 	s.state.Total = s.total
-
-	return nil
 }
 
 // queryPages 分段
@@ -281,7 +280,7 @@ func (s *Section) idRange() error {
 		return errors.New(fmt.Sprintf("mysql max id %d < start id %d", s.maxId, s.startId))
 	}
 
-	total := s.maxId - s.startId + 1
+	total := s.maxId - s.startId
 	if s.total == 0 {
 		s.total = total
 	} else {

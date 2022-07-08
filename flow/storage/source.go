@@ -7,7 +7,7 @@ import (
 var EOF = errors.New("EOF")
 
 type Source interface {
-	Scan()
+	Scan() error
 	ReceiveChan() <-chan []map[string]interface{}
 	Summary() []string
 	State() []string

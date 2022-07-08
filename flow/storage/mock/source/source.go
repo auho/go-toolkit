@@ -64,7 +64,7 @@ func NewSource(options ...func(*Source)) *Source {
 	return s
 }
 
-func (s *Source) Scan() {
+func (s *Source) Scan() error {
 	s.itemChan = make(chan []map[string]interface{})
 
 	go func() {
@@ -89,6 +89,8 @@ func (s *Source) Scan() {
 
 		close(s.itemChan)
 	}()
+
+	return nil
 }
 
 func (s *Source) ReceiveChan() <-chan []map[string]interface{} {
