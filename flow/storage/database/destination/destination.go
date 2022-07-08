@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
-	"github.com/auho/go-toolkit/flow/storage/database"
 	"github.com/auho/go-toolkit/time/timing"
 	"sync"
 	"sync/atomic"
@@ -23,7 +22,7 @@ type Destination[E storage.Entry] struct {
 	tableName   string
 	itemsChan   chan []E
 	doWg        sync.WaitGroup
-	state       *database.State
+	state       *storage.State
 	desFunc     desFunc[E]
 }
 
@@ -48,9 +47,8 @@ func (d *Destination[E]) config(config Config) (err error) {
 		return
 	}
 
-	d.state = database.NewState()
+	d.state = storage.NewState()
 	d.state.Concurrency = d.concurrency
-	d.state.PageSize = d.pageSize
 	d.state.Title = d.Title()
 	d.state.Status = "config"
 
@@ -141,12 +139,10 @@ func (d *Destination[E]) Title() string {
 	return fmt.Sprintf("Destination driver[%s]", d.DriverName())
 }
 
-// TODO
 func (d *Destination[E]) Summary() []string {
-	return []string{}
+	return []string{fmt.Sprintf("%s Concurrency:%d", d.Title(), d.concurrency)}
 }
 
-// TODO
 func (d *Destination[E]) State() []string {
-	return []string{}
+	return []string{d.state.Overview()}
 }

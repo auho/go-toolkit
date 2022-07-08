@@ -100,20 +100,5 @@ func buildData() {
 }
 
 func tearDown() {
-	//driver, err := simple.NewDriver(driverName, mysqlDsn)
-	//if err != nil {
-	//	log.Fatal("new driver tearDown ", err)
-	//}
-	//
-	//err = driver.Truncate(tableName)
-	//if err != nil {
-	//	log.Fatal("truncate table ", err)
-	//}
-
-	//_, err = driver.Exec(fmt.Sprintf("DROP DATABASE %s;", dbName))
-	//if err != nil {
-	//	log.Fatal("drop database ", err)
-	//}
-	//
 	log.Println("tear down")
 }

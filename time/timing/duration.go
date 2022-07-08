@@ -70,23 +70,23 @@ func (t *Duration) StringBeginToEnd() string {
 func (t *Duration) stringPretty(d time.Duration) string {
 	seconds := d.Seconds()
 	if seconds < 60 {
-		return fmt.Sprintf("duration %f 秒", seconds)
+		return fmt.Sprintf("%f 秒", seconds)
 	} else if seconds < 3600 {
 		m := int64(seconds / 60)
 		s := int64(seconds) % 60
 
-		return fmt.Sprintf("duration %d 分 %d 秒", m, s)
+		return fmt.Sprintf("%d 分 %d 秒", m, s)
 	} else if seconds < 86400 {
 		h := int64(seconds / 3600)
 		m := (int64(seconds) % 3600) / 60
 		s := int64(seconds) % 60
 
-		return fmt.Sprintf("duration %d 小时 %d 分 %d 秒", h, m, s)
+		return fmt.Sprintf("%d 小时 %d 分 %d 秒", h, m, s)
 	} else {
 		d := int64(seconds / 86400)
 		h := (int64(seconds) % 86400) / 3600
 		m := (int64(seconds) % 3600) / 60
 
-		return fmt.Sprintf("duration %d 天 %d 小时 %d 分 ", d, h, m)
+		return fmt.Sprintf("%d 天 %d 小时 %d 分 ", d, h, m)
 	}
 }

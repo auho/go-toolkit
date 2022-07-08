@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
-	"github.com/auho/go-toolkit/flow/storage/database"
 	"math"
 	"strconv"
 	"strings"
@@ -34,7 +33,7 @@ type Section struct {
 	failureLastId []int
 	idRangeChan   chan []int64
 	rowsChan      chan []map[string]interface{}
-	state         *database.State
+	state         *storage.PageState
 }
 
 func NewSectionFromQuery(config FromQueryConfig) (*Section, error) {
@@ -243,7 +242,7 @@ func (s *Section) config(config Config) (err error) {
 		s.pageSize = s.total
 	}
 
-	s.state = database.NewState()
+	s.state = storage.NewPageState()
 	s.state.Concurrency = s.concurrency
 	s.state.Title = s.Title()
 	s.state.Status = "config"

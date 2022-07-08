@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
+var driverName = mysql.DriverName
 var _mysqlDsn = "test:Test123$@tcp(127.0.0.1:3306)/"
 var mainMysqlDsn = _mysqlDsn + "mysql"
 var dbName = "_test_flow"
 var mysqlDsn = _mysqlDsn + dbName
-var tableName = "source"
-var driver simple.Driver
+var tableName = "destination"
 
 func TestMain(m *testing.M) {
 	setUp()
@@ -24,37 +24,45 @@ func TestMain(m *testing.M) {
 }
 
 func setUp() {
-	var err error
-	driver, err = simple.NewDriver(mysql.DriverName, mainMysqlDsn)
+	createTable()
+	buildData()
+}
+
+func createTable() {
+	driver, err := simple.NewDriver(driverName, mainMysqlDsn)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("new driver create table ", err)
 	}
 
-	_, err = driver.Exec(fmt.Sprintf("CREATE DATABASE `%s` DEFAULT CHARACTER SET `utf8mb4` COLLATE `utf8mb4_general_ci`;", dbName))
+	_, err = driver.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET `utf8mb4` COLLATE `utf8mb4_general_ci`;", dbName))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("create database ", err)
 	}
 
-	query := "CREATE TABLE IF NOT EXISTS `" + tableName + "` (" +
+	query := "CREATE TABLE IF NOT EXISTS `" + dbName + "`.`" + tableName + "` (" +
 		"	`id` int(11) unsigned NOT NULL AUTO_INCREMENT," +
 		"	`name` varchar(32) NOT NULL DEFAULT ''," +
 		"	`value` int(11) NOT NULL DEFAULT '0'," +
 		"	PRIMARY KEY (`id`)" +
-		") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+		") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;"
 	_, err = driver.Exec(query)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("create table ", err)
+	}
+}
+
+func buildData() {
+	driver, err := simple.NewDriver(driverName, mysqlDsn)
+	if err != nil {
+		log.Fatal("new driver build data ", err)
+	}
+
+	err = driver.Truncate(tableName)
+	if err != nil {
+		log.Fatal("build data truncate table ", err)
 	}
 }
 
 func tearDown() {
-	err := driver.Truncate(tableName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = driver.Exec(fmt.Sprintf("DROP DATABASE %s;", dbName))
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Println("tear down")
 }

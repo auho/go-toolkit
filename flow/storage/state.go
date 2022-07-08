@@ -18,8 +18,19 @@ type State struct {
 	Duration    timing.Duration
 }
 
+func NewState() *State {
+	return &State{}
+}
+
 func (s *State) GetStatus() string {
 	return s.Status
+}
+
+func (s *State) Overview() string {
+	return fmt.Sprintf("Concurrency: %d, Amount: %d, duration: %s",
+		s.Concurrency,
+		s.Amount,
+		s.Duration.StringStartToStop())
 }
 
 type PageState struct {
@@ -30,8 +41,12 @@ type PageState struct {
 	Total     int64
 }
 
+func NewPageState() *PageState {
+	return &PageState{}
+}
+
 func (p *PageState) Overview() string {
-	return fmt.Sprintf("Concurrency: %d, Amount: %d/%d, Page: %d/%d(%d, duration: %s)",
+	return fmt.Sprintf("Concurrency: %d, Amount: %d/%d, Page: %d/%d(%d), duration: %s",
 		p.Concurrency,
 		p.Amount,
 		p.Total,
