@@ -2,11 +2,12 @@ package destination
 
 import (
 	"fmt"
-	"github.com/auho/go-simple-db/mysql"
-	"github.com/auho/go-simple-db/simple"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/auho/go-simple-db/mysql"
+	"github.com/auho/go-simple-db/simple"
 )
 
 var driverName = mysql.DriverName
@@ -15,6 +16,9 @@ var mainMysqlDsn = _mysqlDsn + "mysql"
 var dbName = "_test_flow"
 var mysqlDsn = _mysqlDsn + dbName
 var tableName = "destination"
+var idName = "id"
+var nameName = "name"
+var valueName = "value"
 
 func TestMain(m *testing.M) {
 	setUp()

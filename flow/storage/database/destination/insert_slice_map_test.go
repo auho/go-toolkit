@@ -2,12 +2,13 @@ package destination
 
 import (
 	"fmt"
-	"github.com/auho/go-simple-db/simple"
 	"log"
 	"math/rand"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/auho/go-simple-db/simple"
 )
 
 func TestNewInsertSliceMap(t *testing.T) {
@@ -38,8 +39,8 @@ func TestNewInsertSliceMap(t *testing.T) {
 			data := make([]map[string]interface{}, pageSize, pageSize)
 			for j := int64(0); j < pageSize; j++ {
 				data[j] = map[string]interface{}{
-					"name":  fmt.Sprintf("name-%d-%d", i, j),
-					"value": i * j,
+					nameName:  fmt.Sprintf("name-%d-%d", i, j),
+					valueName: i * j,
 				}
 			}
 

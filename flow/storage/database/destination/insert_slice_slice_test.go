@@ -2,12 +2,13 @@ package destination
 
 import (
 	"fmt"
-	"github.com/auho/go-simple-db/simple"
 	"log"
 	"math/rand"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/auho/go-simple-db/simple"
 )
 
 func TestNewInsertSliceSlice(t *testing.T) {
@@ -18,7 +19,7 @@ func TestNewInsertSliceSlice(t *testing.T) {
 		TableName:   tableName,
 		Driver:      driverName,
 		Dsn:         mysqlDsn,
-	}, []string{"name", "value"})
+	}, []string{nameName, valueName})
 
 	if err != nil {
 		log.Fatal(err)
