@@ -15,7 +15,7 @@ import (
 var ussItemsChan = make(chan storage.MapEntries)
 var uss *UpdateSliceMap
 
-func TestNewUpdateSliceMap(t *testing.T) {
+func TestUpdateSliceMap(t *testing.T) {
 	var err error
 	uss, err = NewUpdateSliceMap(Config{
 		IsTruncate:  true,

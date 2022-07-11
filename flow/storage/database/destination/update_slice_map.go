@@ -12,10 +12,6 @@ type UpdateSliceMap struct {
 	idName string
 }
 
-func (u *UpdateSliceMap) Receive(items storage.MapEntries) {
-	u.itemsChan <- items
-}
-
 func (u *UpdateSliceMap) withDesFunc() desFunc[storage.MapEntry] {
 	return func(sd simple.Driver, tableName string, items storage.MapEntries) error {
 		return sd.BulkUpdateFromSliceMapById(tableName, u.idName, items)

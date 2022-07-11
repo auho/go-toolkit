@@ -2,6 +2,7 @@ package destination
 
 import (
 	"errors"
+
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
 )
@@ -11,10 +12,6 @@ var _ storage.Destination[storage.SliceEntry] = (*InsertSliceSlice)(nil)
 type InsertSliceSlice struct {
 	Destination[storage.SliceEntry]
 	fields []string
-}
-
-func (i *InsertSliceSlice) Receive(items storage.SliceEntries) {
-	i.itemsChan <- items
 }
 
 func (i *InsertSliceSlice) withDesFunc() desFunc[storage.SliceEntry] {

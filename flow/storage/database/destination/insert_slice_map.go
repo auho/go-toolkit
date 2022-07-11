@@ -11,10 +11,6 @@ type InsertSliceMap struct {
 	Destination[storage.MapEntry]
 }
 
-func (i *InsertSliceMap) Receive(items storage.MapEntries) {
-	i.itemsChan <- items
-}
-
 func (i *InsertSliceMap) withDesFunc() desFunc[storage.MapEntry] {
 	return func(sd simple.Driver, tableName string, items storage.MapEntries) error {
 		_, err := sd.BulkInsertFromSliceMap(tableName, items)

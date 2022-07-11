@@ -11,7 +11,7 @@ import (
 	"github.com/auho/go-simple-db/simple"
 )
 
-func TestNewInsertSliceMap(t *testing.T) {
+func TestInsertSliceMap(t *testing.T) {
 	iss, err := NewInsertSliceMap(Config{
 		IsTruncate:  true,
 		Concurrency: 4,

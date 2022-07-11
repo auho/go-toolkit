@@ -3,11 +3,12 @@ package destination
 import (
 	"errors"
 	"fmt"
+	"sync"
+	"sync/atomic"
+
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/time/timing"
-	"sync"
-	"sync/atomic"
 )
 
 type desFunc[E storage.Entry] func(driver simple.Driver, tableName string, items []E) error
@@ -78,6 +79,10 @@ func (d *Destination[E]) Accept() (err error) {
 	}
 
 	return nil
+}
+
+func (d *Destination[E]) Receive(items []E) {
+	d.itemsChan <- items
 }
 
 func (d *Destination[E]) Done() {

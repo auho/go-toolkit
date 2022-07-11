@@ -2,13 +2,14 @@ package destination
 
 import (
 	"fmt"
-	"github.com/auho/go-toolkit/flow/storage"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
-func TestNewInsertSliceSlice(t *testing.T) {
+func TestInsertSliceSlice(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	page = rand.Intn(49) + 1

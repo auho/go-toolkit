@@ -2,9 +2,10 @@ package destination
 
 import (
 	"fmt"
-	"github.com/auho/go-toolkit/flow/storage"
 	"sync"
 	"sync/atomic"
+
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
 type Destination[E storage.Entry] struct {
@@ -20,15 +21,17 @@ func (d *Destination[E]) Accept() error {
 	d.chanWg.Add(1)
 	go func() {
 		for items := range d.itemsChan {
-			var descItems []E
-			descItems = items[0:]
-			atomic.AddInt64(&d.amount, int64(len(descItems)))
+			atomic.AddInt64(&d.amount, int64(len(items)))
 		}
 
 		d.chanWg.Done()
 	}()
 
 	return nil
+}
+
+func (d *Destination[E]) Receive(items []E) {
+	d.itemsChan <- items
 }
 
 func (d *Destination[E]) Done() {

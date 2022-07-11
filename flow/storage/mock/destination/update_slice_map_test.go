@@ -9,7 +9,7 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-func TestInsertSliceMap(t *testing.T) {
+func TestUpdateSliceMap(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	page = rand.Intn(49) + 1
@@ -18,14 +18,14 @@ func TestInsertSliceMap(t *testing.T) {
 	var err error
 	var dd storage.Destination[storage.MapEntry]
 
-	dd, err = NewInsertSliceMap()
+	dd, err = NewUpdateSliceMap()
 	if err != nil {
 		t.Error(err)
 	}
 
-	d, ok := dd.(*InsertSliceMap)
+	d, ok := dd.(*UpdateSliceMap)
 	if !ok {
-		t.Error("InsertSliceMap not interface of storage.Destination[storage.MapEntry]")
+		t.Error("UpdateSliceMap not interface of storage.Destination[storage.MapEntry]")
 	}
 
 	err = d.Accept()
