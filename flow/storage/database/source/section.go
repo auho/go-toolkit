@@ -3,16 +3,17 @@ package source
 import (
 	"errors"
 	"fmt"
-	"github.com/auho/go-simple-db/simple"
-	"github.com/auho/go-toolkit/flow/storage"
 	"math"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/auho/go-simple-db/simple"
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Source = (*Section)(nil)
+var _ storage.Sourceor = (*Section)(nil)
 
 // Section 分段查询
 type Section struct {
@@ -300,5 +301,5 @@ func (s *Section) idRange() error {
 }
 
 func (s *Section) Title() string {
-	return fmt.Sprintf("Source driver[%s]", s.DriverName())
+	return fmt.Sprintf("Sourceor driver[%s]", s.DriverName())
 }

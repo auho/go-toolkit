@@ -11,7 +11,7 @@ import (
 	"github.com/auho/go-toolkit/time/timing"
 )
 
-func WithSource(sf storage.Source) func(i *Flow) {
+func WithSource(sf storage.Sourceor) func(i *Flow) {
 	return func(f *Flow) {
 		f.source = sf
 	}
@@ -24,7 +24,7 @@ func WithTasker(t task.Tasker) func(*Flow) {
 }
 
 type Flow struct {
-	source        storage.Source
+	source        storage.Sourceor
 	stateTicker   *time.Ticker
 	refreshOutput *output.Refresh
 	actioners     []action.Actioner

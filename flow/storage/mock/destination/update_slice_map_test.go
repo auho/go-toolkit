@@ -16,7 +16,7 @@ func TestUpdateSliceMap(t *testing.T) {
 	pageSize = (rand.Intn(9) + 1) * pageSize
 
 	var err error
-	var dd storage.Destination[storage.MapEntry]
+	var dd storage.Destinationer[storage.MapEntry]
 
 	dd, err = NewUpdateSliceMap()
 	if err != nil {
@@ -25,7 +25,7 @@ func TestUpdateSliceMap(t *testing.T) {
 
 	d, ok := dd.(*UpdateSliceMap)
 	if !ok {
-		t.Error("UpdateSliceMap not interface of storage.Destination[storage.MapEntry]")
+		t.Error("UpdateSliceMap not interface of storage.Destinationer[storage.MapEntry]")
 	}
 
 	err = d.Accept()

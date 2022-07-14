@@ -1,11 +1,11 @@
-package database
+package redis
 
 import (
-	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/redis/client"
 )
 
 type Source interface {
 	storage.Sourceor
-	GetDriver() simple.Driver
+	GetClient() *client.Redis
 }

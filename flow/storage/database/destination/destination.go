@@ -141,7 +141,7 @@ func (d *Destination[E]) do() {
 }
 
 func (d *Destination[E]) Title() string {
-	return fmt.Sprintf("Destination driver[%s]", d.DriverName())
+	return fmt.Sprintf("Destinationer driver[%s]", d.DriverName())
 }
 
 func (d *Destination[E]) Summary() []string {

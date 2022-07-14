@@ -16,7 +16,7 @@ func TestInsertSliceSlice(t *testing.T) {
 	pageSize = (rand.Intn(9) + 1) * pageSize
 
 	var err error
-	var dd storage.Destination[storage.SliceEntry]
+	var dd storage.Destinationer[storage.SliceEntry]
 
 	dd, err = NewInsertSliceSlice()
 	if err != nil {
@@ -25,7 +25,7 @@ func TestInsertSliceSlice(t *testing.T) {
 
 	d, ok := dd.(*InsertSliceSlice)
 	if !ok {
-		t.Error("InsertSliceSlice not interface of storage.Destination[storage.SliceEntry]")
+		t.Error("InsertSliceSlice not interface of storage.Destinationer[storage.SliceEntry]")
 	}
 
 	err = d.Accept()

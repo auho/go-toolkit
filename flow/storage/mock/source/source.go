@@ -2,13 +2,14 @@ package source
 
 import (
 	"fmt"
-	"github.com/auho/go-toolkit/flow/storage"
 	"math"
 	"sync/atomic"
 	"time"
+
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Source = (*Source)(nil)
+var _ storage.Sourceor = (*Source)(nil)
 
 func WithPageSize(i int64) func(m *Source) {
 	return func(m *Source) {
@@ -106,5 +107,5 @@ func (s *Source) State() []string {
 }
 
 func (s *Source) Title() string {
-	return "Source:source"
+	return "Sourceor:source"
 }

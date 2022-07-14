@@ -5,7 +5,7 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Destination[storage.MapEntry] = (*UpdateSliceMap)(nil)
+var _ storage.Destinationer[storage.MapEntry] = (*UpdateSliceMap)(nil)
 
 type UpdateSliceMap struct {
 	Destination[storage.MapEntry]
