@@ -6,9 +6,10 @@ import (
 
 var EOF = errors.New("EOF")
 
-type Sourceor interface {
+type Sourceor[E Entry] interface {
 	Scan() error
-	ReceiveChan() <-chan []map[string]interface{}
+	ReceiveChan() <-chan []E
 	Summary() []string
 	State() []string
+	Duplicate([]E) []E
 }

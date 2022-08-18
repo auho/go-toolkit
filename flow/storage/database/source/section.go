@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -13,10 +12,16 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Sourceor = (*Section)(nil)
+var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
+var _ storage.Sourceor[storage.SliceEntry] = (*Section[storage.SliceEntry])(nil)
+
+type sectioner[E storage.Entry] interface {
+	sourceFunc(driver simple.Driver, query string, startId, size int64) ([]E, error)
+	duplicate([]E) []E
+}
 
 // Section 分段查询
-type Section struct {
+type Section[E storage.Entry] struct {
 	storage.Storage
 	simple.Driver
 	scanSw        sync.WaitGroup
@@ -33,53 +38,20 @@ type Section struct {
 	fields        []string
 	failureLastId []int
 	idRangeChan   chan []int64
-	rowsChan      chan []map[string]interface{}
+	rowsChan      chan []E
 	state         *storage.PageState
+	sectioner     sectioner[E]
 }
 
-func NewSectionFromQuery(config FromQueryConfig) (*Section, error) {
-	s, err := newSource(config.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	s.query = config.Query
-
-	return s, nil
-}
-
-func NewSectionFromTable(config FromTableConfig) (*Section, error) {
-	s, err := newSource(config.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	s.fields = config.Fields
-
-	fieldsSting := fmt.Sprintf("`%s`", strings.Join(s.fields, "`,`"))
-	s.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, s.tableName, s.idName, s.idName)
-
-	return s, nil
-}
-
-func newSource(config Config) (*Section, error) {
-	s := &Section{}
-	err := s.config(config)
-	if err != nil {
-		return nil, err
-	}
-	return s, nil
-}
-
-func (s *Section) GetDriver() simple.Driver {
+func (s *Section[E]) GetDriver() simple.Driver {
 	return s.Driver
 }
 
-func (s *Section) State() []string {
+func (s *Section[E]) State() []string {
 	return []string{s.state.Overview()}
 }
 
-func (s *Section) Summary() []string {
+func (s *Section[E]) Summary() []string {
 	return []string{fmt.Sprintf("%s: total: %d, total page: %d, page size: %d, start id: %d, end id: %d ",
 		s.Title(),
 		s.total,
@@ -89,11 +61,15 @@ func (s *Section) Summary() []string {
 		s.maxId)}
 }
 
-func (s *Section) Scan() error {
+func (s *Section[E]) Duplicate(items []E) []E {
+	return s.sectioner.duplicate(items)
+}
+
+func (s *Section[E]) Scan() error {
 	s.state.Status = "scan"
 	s.state.Duration.Start()
 	s.idRangeChan = make(chan []int64, s.concurrency)
-	s.rowsChan = make(chan []map[string]interface{}, s.concurrency)
+	s.rowsChan = make(chan []E, s.concurrency)
 
 	err := s.idRange()
 	if err != nil {
@@ -121,18 +97,18 @@ func (s *Section) Scan() error {
 	return nil
 }
 
-func (s *Section) ReceiveChan() <-chan []map[string]interface{} {
+func (s *Section[E]) ReceiveChan() <-chan []E {
 	return s.rowsChan
 }
 
-func (s *Section) scanRows() {
+func (s *Section[E]) scanRows() {
 	for idRange := range s.idRangeChan {
 		atomic.AddInt64(&s.state.Page, 1)
 
 		leftId := idRange[0]
 		size := idRange[1]
 
-		rows, err := s.QueryInterface(s.query, leftId, size)
+		rows, err := s.sectioner.sourceFunc(s.Driver, s.query, leftId, size)
 		if err != nil {
 			s.LogFatalWithTitle("left id:", leftId, err)
 		}
@@ -147,7 +123,7 @@ func (s *Section) scanRows() {
 	}
 }
 
-func (s *Section) idSection() {
+func (s *Section[E]) idSection() {
 	s.queryPages()
 
 	go func() {
@@ -161,7 +137,7 @@ func (s *Section) idSection() {
 }
 
 // queryPages 分段
-func (s *Section) queryPages() {
+func (s *Section[E]) queryPages() {
 	shard := int64(math.Ceil(float64(s.totalPage) / float64(s.concurrency)))
 	shardSize := shard * s.pageSize
 
@@ -187,7 +163,7 @@ func (s *Section) queryPages() {
 }
 
 // queryPage 查询分段
-func (s *Section) queryPage(startId, endId int64) {
+func (s *Section[E]) queryPage(startId, endId int64) {
 	var rightId int64 = 0
 	leftId := startId
 
@@ -215,7 +191,7 @@ func (s *Section) queryPage(startId, endId int64) {
 	}
 }
 
-func (s *Section) config(config Config) (err error) {
+func (s *Section[E]) config(config Config) (err error) {
 	s.concurrency = config.Concurrency
 	s.total = config.Maximum
 	s.startId = config.StartId
@@ -251,7 +227,7 @@ func (s *Section) config(config Config) (err error) {
 	return
 }
 
-func (s *Section) idRange() error {
+func (s *Section[E]) idRange() error {
 	query := fmt.Sprintf("SELECT MAX(`%s`) AS `maxId`, MIN(`%s`) AS `minId` FROM `%s`", s.idName, s.idName, s.tableName)
 	res, err := s.QueryInterfaceRow(query)
 	if err != nil {
@@ -300,6 +276,6 @@ func (s *Section) idRange() error {
 	return nil
 }
 
-func (s *Section) Title() string {
+func (s *Section[E]) Title() string {
 	return fmt.Sprintf("Sourceor driver[%s]", s.DriverName())
 }

@@ -3,11 +3,12 @@ package action
 import (
 	"sync"
 
+	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/task"
 )
 
-type Actioner interface {
-	Receive([]map[string]interface{})
+type Actioner[E storage.Entry] interface {
+	Receive([]E)
 	Do()
 	Finish()
 	Done()
@@ -15,35 +16,35 @@ type Actioner interface {
 	Output() []string
 }
 
-func WithTasker(t task.Tasker) func(*Action) {
-	return func(a *Action) {
+func WithTasker[E storage.Entry](t task.Tasker[E]) func(*Action[E]) {
+	return func(a *Action[E]) {
 		a.tasker = t
 	}
 }
 
-type Action struct {
-	tasker    task.Tasker
+type Action[E storage.Entry] struct {
+	tasker    task.Tasker[E]
 	taskerWg  sync.WaitGroup
-	itemsChan chan []map[string]interface{}
+	itemsChan chan []E
 }
 
-func NewAction(options ...func(i *Action)) *Action {
-	a := &Action{}
+func NewAction[E storage.Entry](options ...func(i *Action[E])) *Action[E] {
+	a := &Action[E]{}
 
 	for _, o := range options {
 		o(a)
 	}
 
-	a.itemsChan = make(chan []map[string]interface{}, a.tasker.Concurrency())
+	a.itemsChan = make(chan []E, a.tasker.Concurrency())
 
 	return a
 }
 
-func (a *Action) Receive(msi []map[string]interface{}) {
+func (a *Action[E]) Receive(msi []E) {
 	a.itemsChan <- msi
 }
 
-func (a *Action) Do() {
+func (a *Action[E]) Do() {
 	for i := 0; i < a.tasker.Concurrency(); i++ {
 		a.taskerWg.Add(1)
 
@@ -57,20 +58,20 @@ func (a *Action) Do() {
 	}
 }
 
-func (a *Action) Done() {
+func (a *Action[E]) Done() {
 	close(a.itemsChan)
 }
 
-func (a *Action) Finish() {
+func (a *Action[E]) Finish() {
 	a.taskerWg.Wait()
 
 	a.tasker.AfterDo()
 }
 
-func (a *Action) State() []string {
+func (a *Action[E]) State() []string {
 	return a.tasker.State()
 }
 
-func (a *Action) Output() []string {
+func (a *Action[E]) Output() []string {
 	return a.tasker.Output()
 }

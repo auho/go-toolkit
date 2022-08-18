@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/tool"
 )
 
-var _ storage.Sourceor = (*Source)(nil)
+var _ storage.Sourceor[storage.MapEntry] = (*Source)(nil)
 
 func WithPageSize(i int64) func(m *Source) {
 	return func(m *Source) {
@@ -104,6 +105,10 @@ func (s *Source) Summary() []string {
 
 func (s *Source) State() []string {
 	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", s.amount, s.total, s.page, s.totalPage, s.pageSize)}
+}
+
+func (s *Source) Duplicate(items []map[string]interface{}) []map[string]interface{} {
+	return tool.DuplicateSliceMap(items)
 }
 
 func (s *Source) Title() string {

@@ -2,15 +2,21 @@ package task
 
 import (
 	"fmt"
-	"github.com/auho/go-toolkit/console/output"
-	"github.com/auho/go-toolkit/time/timing"
 	"sync/atomic"
+
+	"github.com/auho/go-toolkit/console/output"
+	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/time/timing"
 )
 
-type Tasker interface {
-	Concurrency() int
-	Do([]map[string]interface{})
+type Tasker[E storage.Entry] interface {
+	// Do need to be implemented
+	Do([]E)
+
+	// AfterDo need to be implemented
 	AfterDo()
+
+	Concurrency() int
 	State() []string
 	Output() []string
 }

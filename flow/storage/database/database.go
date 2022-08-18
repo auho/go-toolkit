@@ -5,7 +5,7 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-type Source interface {
-	storage.Sourceor
+type Source[E storage.Entry] interface {
+	storage.Sourceor[E]
 	GetDriver() simple.Driver
 }

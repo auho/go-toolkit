@@ -5,7 +5,7 @@ import (
 	"github.com/auho/go-toolkit/redis/client"
 )
 
-type Source interface {
-	storage.Sourceor
+type Source[E storage.Entry] interface {
+	storage.Sourceor[E]
 	GetClient() *client.Redis
 }

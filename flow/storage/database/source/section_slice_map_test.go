@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestSection(t *testing.T) {
-	s, err := NewSectionFromTable(
+func TestSectionSliceMap(t *testing.T) {
+	s, err := NewSectionSliceMapFromTable(
 		FromTableConfig{
 			Config: Config{
 				Concurrency: 4,
