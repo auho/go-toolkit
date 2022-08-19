@@ -13,7 +13,7 @@ import (
 )
 
 var ussItemsChan = make(chan storage.MapEntries)
-var uss *UpdateSliceMap
+var uss *Destination[storage.MapEntry]
 
 func TestUpdateSliceMap(t *testing.T) {
 	var err error

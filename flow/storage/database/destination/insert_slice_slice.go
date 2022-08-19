@@ -7,34 +7,28 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Destinationer[storage.SliceEntry] = (*InsertSliceSlice)(nil)
+var _ destinationer[storage.SliceEntry] = (*InsertSliceSlice)(nil)
 
 type InsertSliceSlice struct {
-	Destination[storage.SliceEntry]
 	fields []string
 }
 
-func (i *InsertSliceSlice) withDesFunc() desFunc[storage.SliceEntry] {
-	return func(sd simple.Driver, tableName string, items storage.SliceEntries) error {
-		_, err := sd.BulkInsertFromSliceSlice(tableName, i.fields, items)
+func (i *InsertSliceSlice) desFunc(sd simple.Driver, tableName string, items storage.SliceEntries) error {
+	_, err := sd.BulkInsertFromSliceSlice(tableName, i.fields, items)
 
-		return err
-	}
+	return err
 }
 
-func NewInsertSliceSlice(config Config, fields []string) (*InsertSliceSlice, error) {
+func NewInsertSliceSlice(config Config, fields []string) (*Destination[storage.SliceEntry], error) {
 	if len(fields) <= 0 {
 		return nil, errors.New("fields is error")
 	}
 
-	i := &InsertSliceSlice{}
-	i.fields = fields
-	i.desFunc = i.withDesFunc()
+	iss := &InsertSliceSlice{}
+	iss.fields = fields
 
-	err := i.config(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return i, nil
+	return newDestination[storage.SliceEntry](
+		withConfig[storage.SliceEntry](config),
+		withDestinationer[storage.SliceEntry](iss),
+	)
 }

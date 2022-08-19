@@ -30,7 +30,7 @@ type Flow[E storage.Entry] struct {
 	actioners     []action.Actioner[E]
 }
 
-func RunFlow[E storage.Entry](options ...func(*Flow[E])) {
+func RunFlow[E storage.Entry](options ...func(*Flow[E])) error {
 	d := timing.NewDuration()
 	d.Start()
 
@@ -39,22 +39,25 @@ func RunFlow[E storage.Entry](options ...func(*Flow[E])) {
 		o(i)
 	}
 
-	i.run()
+	err := i.run()
+	if err != nil {
+		return err
+	}
 
 	d.StringStartToStop()
+
+	return nil
 }
 
-func (f *Flow[E]) run() {
-	f.process()
-	f.transport()
-	f.Finish()
-}
-
-func (f *Flow[E]) process() {
+func (f *Flow[E]) run() error {
 	f.stateTicker = time.NewTicker(time.Millisecond * 100)
 	f.refreshOutput = output.NewRefresh()
 
-	f.source.Scan()
+	err := f.source.Scan()
+	if err != nil {
+		return err
+	}
+
 	for _, a := range f.actioners {
 		a.Do()
 	}
@@ -66,6 +69,11 @@ func (f *Flow[E]) process() {
 			f.state()
 		}
 	}()
+
+	f.transport()
+	f.Finish()
+
+	return nil
 }
 
 func (f *Flow[E]) transport() {

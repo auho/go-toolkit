@@ -11,20 +11,57 @@ import (
 	"github.com/auho/go-toolkit/time/timing"
 )
 
+var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
+var _ storage.Destinationer[storage.SliceEntry] = (*Destination[storage.SliceEntry])(nil)
+
 type desFunc[E storage.Entry] func(driver simple.Driver, tableName string, items []E) error
+
+type destinationer[E storage.Entry] interface {
+	desFunc(driver simple.Driver, tableName string, items []E) error
+}
+
+func withConfig[E storage.Entry](config Config) func(*Destination[E]) error {
+	return func(d *Destination[E]) error {
+		err := d.config(config)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+}
+
+func withDestinationer[E storage.Entry](der destinationer[E]) func(*Destination[E]) {
+	return func(d *Destination[E]) {
+		d.destinationer = der
+	}
+}
 
 type Destination[E storage.Entry] struct {
 	storage.Storage
 	simple.Driver
-	isDone      bool
-	isTruncate  bool
-	concurrency int
-	pageSize    int64
-	tableName   string
-	itemsChan   chan []E
-	doWg        sync.WaitGroup
-	state       *storage.State
-	desFunc     desFunc[E]
+	isDone        bool
+	isTruncate    bool
+	concurrency   int
+	pageSize      int64
+	tableName     string
+	itemsChan     chan []E
+	doWg          sync.WaitGroup
+	state         *storage.State
+	destinationer destinationer[E]
+	desFunc       desFunc[E]
+}
+
+func newDestination[E storage.Entry](c func(*Destination[E]) error, os ...func(*Destination[E])) (*Destination[E], error) {
+	d := &Destination[E]{}
+	err := c(d)
+	if err != nil {
+		return nil, err
+	}
+
+	d.options(os)
+
+	return d, nil
 }
 
 func (d *Destination[E]) config(config Config) (err error) {
@@ -127,7 +164,7 @@ func (d *Destination[E]) do() {
 				descItems = items[start:end]
 			}
 
-			err := d.desFunc(d.Driver, d.tableName, descItems)
+			err := d.destinationer.desFunc(d.Driver, d.tableName, descItems)
 			if err != nil {
 				panic(err)
 			}
@@ -150,4 +187,10 @@ func (d *Destination[E]) Summary() []string {
 
 func (d *Destination[E]) State() []string {
 	return []string{d.state.Overview()}
+}
+
+func (d *Destination[E]) options(os []func(*Destination[E])) {
+	for _, o := range os {
+		o(d)
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -14,6 +15,41 @@ import (
 
 var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
 var _ storage.Sourceor[storage.SliceEntry] = (*Section[storage.SliceEntry])(nil)
+
+func withConfigFromQuery[E storage.Entry](config FromQueryConfig) func(*Section[E]) error {
+	return func(s *Section[E]) error {
+		err := s.config(config.Config)
+		if err != nil {
+			return err
+		}
+
+		s.query = config.Query
+
+		return nil
+	}
+}
+
+func withConfigFromTable[E storage.Entry](config FromTableConfig) func(*Section[E]) error {
+	return func(s *Section[E]) error {
+		err := s.config(config.Config)
+		if err != nil {
+			return err
+		}
+
+		s.fields = config.Fields
+
+		fieldsSting := fmt.Sprintf("`%s`", strings.Join(s.fields, "`,`"))
+		s.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, s.tableName, s.idName, s.idName)
+
+		return nil
+	}
+}
+
+func withSectioner[E storage.Entry](ser sectioner[E]) func(*Section[E]) {
+	return func(s *Section[E]) {
+		s.sectioner = ser
+	}
+}
 
 type sectioner[E storage.Entry] interface {
 	sourceFunc(driver simple.Driver, query string, startId, size int64) ([]E, error)
@@ -41,6 +77,18 @@ type Section[E storage.Entry] struct {
 	rowsChan      chan []E
 	state         *storage.PageState
 	sectioner     sectioner[E]
+}
+
+func newSection[E storage.Entry](c func(*Section[E]) error, os ...func(*Section[E])) (*Section[E], error) {
+	s := &Section[E]{}
+	err := c(s)
+	if err != nil {
+		return nil, err
+	}
+
+	s.options(os)
+
+	return s, nil
 }
 
 func (s *Section[E]) GetDriver() simple.Driver {
@@ -278,4 +326,10 @@ func (s *Section[E]) idRange() error {
 
 func (s *Section[E]) Title() string {
 	return fmt.Sprintf("Sourceor driver[%s]", s.DriverName())
+}
+
+func (s *Section[E]) options(os []func(*Section[E])) {
+	for _, o := range os {
+		o(s)
+	}
 }

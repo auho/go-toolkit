@@ -5,28 +5,20 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Destinationer[storage.MapEntry] = (*InsertSliceMap)(nil)
+var _ destinationer[storage.MapEntry] = (*InsertSliceMap)(nil)
 
 type InsertSliceMap struct {
-	Destination[storage.MapEntry]
 }
 
-func (i *InsertSliceMap) withDesFunc() desFunc[storage.MapEntry] {
-	return func(sd simple.Driver, tableName string, items storage.MapEntries) error {
-		_, err := sd.BulkInsertFromSliceMap(tableName, items)
+func (i *InsertSliceMap) desFunc(sd simple.Driver, tableName string, items storage.MapEntries) error {
+	_, err := sd.BulkInsertFromSliceMap(tableName, items)
 
-		return err
-	}
+	return err
 }
 
-func NewInsertSliceMap(config Config) (*InsertSliceMap, error) {
-	i := &InsertSliceMap{}
-	i.desFunc = i.withDesFunc()
-
-	err := i.config(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return i, nil
+func NewInsertSliceMap(config Config) (*Destination[storage.MapEntry], error) {
+	return newDestination[storage.MapEntry](
+		withConfig[storage.MapEntry](config),
+		withDestinationer[storage.MapEntry](&InsertSliceMap{}),
+	)
 }
