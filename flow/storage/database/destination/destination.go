@@ -14,8 +14,6 @@ import (
 var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
 var _ storage.Destinationer[storage.SliceEntry] = (*Destination[storage.SliceEntry])(nil)
 
-type desFunc[E storage.Entry] func(driver simple.Driver, tableName string, items []E) error
-
 type destinationer[E storage.Entry] interface {
 	desFunc(driver simple.Driver, tableName string, items []E) error
 }
@@ -49,7 +47,6 @@ type Destination[E storage.Entry] struct {
 	doWg          sync.WaitGroup
 	state         *storage.State
 	destinationer destinationer[E]
-	desFunc       desFunc[E]
 }
 
 func newDestination[E storage.Entry](c func(*Destination[E]) error, os ...func(*Destination[E])) (*Destination[E], error) {
