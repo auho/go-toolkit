@@ -7,10 +7,12 @@ import (
 
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 	"github.com/auho/go-toolkit/time/timing"
 )
 
 var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
+var _ database.Databaseor = (*Destination[storage.MapEntry])(nil)
 
 type destinationer[E storage.Entry] interface {
 	desFunc(driver simple.Driver, tableName string, items []E) error
@@ -57,6 +59,10 @@ func newDestination[E storage.Entry](c func(*Destination[E]) error, os ...func(*
 	d.options(os)
 
 	return d, nil
+}
+
+func (s *Destination[E]) GetDriver() simple.Driver {
+	return s.Driver
 }
 
 func (d *Destination[E]) config(config Config) (err error) {

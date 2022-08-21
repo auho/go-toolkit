@@ -11,9 +11,11 @@ import (
 
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
+var _ database.Databaseor = (*Section[storage.MapEntry])(nil)
 
 func withConfigFromQuery[E storage.Entry](config FromQueryConfig) func(*Section[E]) error {
 	return func(s *Section[E]) error {

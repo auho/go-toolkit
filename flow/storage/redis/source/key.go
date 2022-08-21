@@ -4,10 +4,12 @@ import (
 	"fmt"
 
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/redis/client"
 )
 
 var _ storage.Sourceor[storage.MapEntry] = (*key[storage.MapEntry])(nil)
+var _ redis.Rediser = (*key[storage.MapEntry])(nil)
 
 type keyType string
 
@@ -49,6 +51,10 @@ func newKey[E storage.Entry](config Config, keyer keyer[E]) (*key[E], error) {
 	}
 
 	return k, nil
+}
+
+func (k *key[E]) GetClient() *client.Redis {
+	return k.client
 }
 
 func (k *key[E]) config(config Config) error {
