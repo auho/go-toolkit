@@ -16,7 +16,7 @@ func (ssm *SectionSliceMap) sourceFunc(driver simple.Driver, query string, start
 }
 
 func (ssm *SectionSliceMap) duplicate(items storage.MapEntries) storage.MapEntries {
-	return tool.DuplicateSliceMap(items)
+	return tool.DuplicateSliceMap[tool.InterfaceEntry](items)
 }
 
 func NewSectionSliceMapFromQuery(config FromQueryConfig) (*Section[storage.MapEntry], error) {

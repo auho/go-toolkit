@@ -108,7 +108,7 @@ func (s *Source) State() []string {
 }
 
 func (s *Source) Duplicate(items []map[string]interface{}) []map[string]interface{} {
-	return tool.DuplicateSliceMap(items)
+	return tool.DuplicateSliceMap[tool.InterfaceEntry](items)
 }
 
 func (s *Source) Title() string {

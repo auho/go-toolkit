@@ -1,27 +1,63 @@
 package source
 
 import (
-	"context"
+	"fmt"
 
+	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/redis/client"
 )
 
-type keyer interface {
-	Size() (int64, error)
-	Scan() map[string]string
+var _ storage.Sourceor[storage.MapEntry] = (*key[storage.MapEntry])(nil)
+
+type keyType string
+
+const keyTypeList keyType = "lists"
+const keyTypeSet keyType = "sets"
+const keyTypeSortedSets keyType = "sortedSets"
+const keyTypeHash keyType = "hashes"
+
+type keyer[E storage.Entry] interface {
+	// redis key type
+	keyType() keyType
+	// redis client, key name
+	len(redisClient *client.Redis, keyName string) (int64, error)
+	//chan []E, redis client, key name, amount, page size
+	scan(itemsChan chan<- []E, redisClient *client.Redis, keyName string, amount int64, pageSize int64)
+	// duplicate items
+	duplicate([]E) []E
+	stateAmount() int64
 }
 
-type key struct {
+type key[E storage.Entry] struct {
+	storage.Storage
 	concurrency int
 	pageSize    int64
+	total       int64
 	keyName     string
+	state       *storage.TotalState
 	client      *client.Redis
+	keyer       keyer[E]
+	itemsChan   chan []E
 }
 
-func (k *key) config(config Config) error {
+func newKey[E storage.Entry](config Config, keyer keyer[E]) (*key[E], error) {
+	k := &key[E]{}
+	k.keyer = keyer
+	err := k.config(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return k, nil
+}
+
+func (k *key[E]) config(config Config) error {
 	k.concurrency = config.Concurrency
 	k.pageSize = config.PageSize
 	k.keyName = config.Key
+
+	k.state.StatusConfig()
+	k.state.Title = k.Title()
 
 	var err error
 	k.client, err = client.NewRedisClient(config.Options)
@@ -32,29 +68,48 @@ func (k *key) config(config Config) error {
 	return nil
 }
 
-type sortedSetsKey struct {
-	key
-}
+func (k *key[E]) Scan() error {
+	k.state.StatusScan()
+	k.state.DurationStart()
+	k.itemsChan = make(chan []E, k.concurrency)
 
-func newSortedSets(config Config) (*sortedSetsKey, error) {
-	s := &sortedSetsKey{}
-	err := s.config(config)
+	var err error
+	k.total, err = k.keyer.len(k.client, k.keyName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return s, nil
+	k.state.Total = k.total
+
+	go func() {
+		k.keyer.scan(k.itemsChan, k.client, k.keyName, k.total, k.pageSize)
+
+		close(k.itemsChan)
+
+		k.state.DurationStop()
+		k.state.StatusFinish()
+	}()
+
+	return nil
 }
 
-func (s sortedSetsKey) Size() (int64, error) {
-	cmd := s.client.ZCard(context.Background(), s.keyName)
-	if cmd.Err() != nil {
-		return 0, cmd.Err()
-	}
-
-	return cmd.Val(), nil
+func (k *key[E]) ReceiveChan() <-chan []E {
+	return k.itemsChan
 }
 
-func (s sortedSetsKey) Scan() map[string]string {
+func (k *key[E]) Summary() []string {
+	return []string{fmt.Sprintf("%s: total: %d", k.Title(), k.total)}
+}
 
+func (k *key[E]) State() []string {
+	k.state.SetAmount(k.keyer.stateAmount())
+	return []string{k.state.Overview()}
+}
+
+func (k *key[E]) Duplicate(items []E) []E {
+	return k.keyer.duplicate(items)
+}
+
+func (k *key[E]) Title() string {
+	return fmt.Sprintf("Sourcer redis[%s]:%s", k.keyer.keyType(), k.keyName)
 }

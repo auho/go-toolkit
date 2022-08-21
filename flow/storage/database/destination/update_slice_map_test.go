@@ -52,8 +52,8 @@ func TestUpdateSliceMap(t *testing.T) {
 	fmt.Println(uss.Summary())
 	fmt.Println(uss.State())
 
-	if uss.state.Amount != page*pageSize {
-		t.Error(fmt.Sprintf("actual != expected %d != %d", uss.state.Amount, page*pageSize))
+	if uss.state.Amount() != page*pageSize {
+		t.Error(fmt.Sprintf("actual != expected %d != %d", uss.state.Amount(), page*pageSize))
 	}
 
 	driver, err := simple.NewDriver(driverName, mysqlDsn)
@@ -71,8 +71,8 @@ func TestUpdateSliceMap(t *testing.T) {
 		t.Error(fmt.Sprintf("db amount error %v", dbAmountRes))
 	}
 
-	if uss.state.Amount != dbAmount {
-		t.Error(fmt.Sprintf("total != db amount %d != %d", uss.state.Amount, dbAmount))
+	if uss.state.Amount() != dbAmount {
+		t.Error(fmt.Sprintf("total != db amount %d != %d", uss.state.Amount(), dbAmount))
 	}
 }
 

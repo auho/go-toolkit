@@ -52,7 +52,7 @@ func (d *Destination[E]) Summary() []string {
 }
 
 func (d *Destination[E]) State() []string {
-	return []string{fmt.Sprintf("Amount: %d", d.amount)}
+	return []string{fmt.Sprintf("amount: %d", d.amount)}
 }
 
 func (d *Destination[E]) title() string {

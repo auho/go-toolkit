@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"sync/atomic"
 
 	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
@@ -12,7 +11,6 @@ import (
 )
 
 var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
-var _ storage.Destinationer[storage.SliceEntry] = (*Destination[storage.SliceEntry])(nil)
 
 type destinationer[E storage.Entry] interface {
 	desFunc(driver simple.Driver, tableName string, items []E) error
@@ -85,14 +83,14 @@ func (d *Destination[E]) config(config Config) (err error) {
 	d.state = storage.NewState()
 	d.state.Concurrency = d.concurrency
 	d.state.Title = d.Title()
-	d.state.Status = "config"
+	d.state.StatusConfig()
 
 	return
 }
 
 func (d *Destination[E]) Accept() (err error) {
-	d.state.Status = "accept"
-	d.state.Duration.Start()
+	d.state.StatusAccept()
+	d.state.DurationStart()
 
 	if d.isTruncate {
 		err = d.Truncate(d.tableName)
@@ -120,7 +118,7 @@ func (d *Destination[E]) Receive(items []E) {
 }
 
 func (d *Destination[E]) Done() {
-	d.state.Status = "done"
+	d.state.StatusDone()
 
 	if d.isDone {
 		return
@@ -136,8 +134,8 @@ func (d *Destination[E]) Finish() {
 
 	d.Close()
 
-	d.state.Status = "finish"
-	d.state.Duration.Stop()
+	d.state.StatusFinish()
+	d.state.DurationStop()
 }
 
 func (d *Destination[E]) do() {
@@ -167,7 +165,8 @@ func (d *Destination[E]) do() {
 			}
 		}
 
-		atomic.AddInt64(&d.state.Amount, itemsLen)
+		d.state.AddAmount(itemsLen)
+
 		duration.End()
 	}
 

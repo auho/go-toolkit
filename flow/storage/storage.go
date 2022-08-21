@@ -3,13 +3,18 @@ package storage
 import "log"
 
 type SliceEntry = []interface{}
+type SliceOfStringsEntry = []string
+
 type MapEntry = map[string]interface{}
+type MapOfStringsEntry = map[string]string
 
 type SliceEntries = []SliceEntry
+type SliceOfStringsEntries = []SliceOfStringsEntry
 type MapEntries = []MapEntry
+type MapOfStringsEntries = []MapOfStringsEntry
 
 type Entry interface {
-	SliceEntry | MapEntry
+	SliceEntry | SliceOfStringsEntry | MapEntry | MapOfStringsEntry | string
 }
 
 type Storage struct {

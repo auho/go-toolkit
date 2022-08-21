@@ -55,8 +55,8 @@ func TestInsertSliceMap(t *testing.T) {
 	fmt.Println(iss.Summary())
 	fmt.Println(iss.State())
 
-	if iss.state.Amount != page*pageSize {
-		t.Error(fmt.Sprintf("actual != expected %d != %d", iss.state.Amount, page*pageSize))
+	if iss.state.Amount() != page*pageSize {
+		t.Error(fmt.Sprintf("actual != expected %d != %d", iss.state.Amount(), page*pageSize))
 	}
 
 	driver, err := simple.NewDriver(driverName, mysqlDsn)
@@ -74,7 +74,7 @@ func TestInsertSliceMap(t *testing.T) {
 		t.Error(fmt.Sprintf("db amount error %v", dbAmountRes))
 	}
 
-	if iss.state.Amount != dbAmount {
-		t.Error(fmt.Sprintf("total != db amount %d != %d", iss.state.Amount, dbAmount))
+	if iss.state.Amount() != dbAmount {
+		t.Error(fmt.Sprintf("total != db amount %d != %d", iss.state.Amount(), dbAmount))
 	}
 }

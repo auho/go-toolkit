@@ -14,7 +14,6 @@ import (
 )
 
 var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
-var _ storage.Sourceor[storage.SliceEntry] = (*Section[storage.SliceEntry])(nil)
 
 func withConfigFromQuery[E storage.Entry](config FromQueryConfig) func(*Section[E]) error {
 	return func(s *Section[E]) error {
@@ -114,8 +113,8 @@ func (s *Section[E]) Duplicate(items []E) []E {
 }
 
 func (s *Section[E]) Scan() error {
-	s.state.Status = "scan"
-	s.state.Duration.Start()
+	s.state.StatusScan()
+	s.state.DurationStart()
 	s.idRangeChan = make(chan []int64, s.concurrency)
 	s.rowsChan = make(chan []E, s.concurrency)
 
@@ -138,8 +137,8 @@ func (s *Section[E]) Scan() error {
 		s.scanSw.Wait()
 		close(s.rowsChan)
 
-		s.state.Duration.Stop()
-		s.state.Status = "finish"
+		s.state.DurationStop()
+		s.state.StatusFinish()
 	}()
 
 	return nil
@@ -165,7 +164,7 @@ func (s *Section[E]) scanRows() {
 			continue
 		}
 
-		atomic.AddInt64(&s.state.Amount, int64(len(rows)))
+		s.state.AddAmount(int64(len(rows)))
 
 		s.rowsChan <- rows
 	}
@@ -270,7 +269,7 @@ func (s *Section[E]) config(config Config) (err error) {
 	s.state = storage.NewPageState()
 	s.state.Concurrency = s.concurrency
 	s.state.Title = s.Title()
-	s.state.Status = "config"
+	s.state.StatusConfig()
 
 	return
 }

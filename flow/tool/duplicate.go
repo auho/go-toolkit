@@ -1,14 +1,33 @@
 package tool
 
-func DuplicateSliceMap(items []map[string]interface{}) []map[string]interface{} {
-	newItems := make([]map[string]interface{}, len(items))
-	for k, v := range items {
-		newItem := make(map[string]interface{}, len(v))
+type StringEntry = string
+type InterfaceEntry = interface{}
+
+type Entry interface {
+	StringEntry | InterfaceEntry
+}
+
+func DuplicateSliceMap[E Entry](items []map[string]E) []map[string]E {
+	newItems := make([]map[string]E, 0, len(items))
+	for _, v := range items {
+		newItem := make(map[string]E, len(v))
 		for k1, v1 := range v {
 			newItem[k1] = v1
 		}
 
-		newItems[k] = newItem
+		newItems = append(newItems, newItem)
+	}
+
+	return newItems
+}
+
+func DuplicateSliceSlice[E Entry](items [][]E) [][]E {
+	newItems := make([][]E, 0, len(items))
+	for _, v := range items {
+		newItem := make([]E, 0, len(v))
+		_ = copy(newItem, v)
+
+		newItems = append(newItems, newItem)
 	}
 
 	return newItems
