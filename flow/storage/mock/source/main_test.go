@@ -5,32 +5,34 @@ import (
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
-func TestSliceMap(t *testing.T) {
+func _testMock[E storage.Entry](t *testing.T, buildMock func(Config) *mock[E]) {
 	rand.Seed(time.Now().UnixNano())
 	factor := rand.Intn(10) + 1
 	total := factor * 100
 	pageSize := factor*factor + 1
-	s := NewSliceMap(Config{
+	m := buildMock(Config{
 		PageSize: int64(pageSize),
 		Total:    int64(total),
 	})
 
-	err := s.Scan()
+	err := m.Scan()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	amount := 0
-	for items := range s.ReceiveChan() {
+	for items := range m.ReceiveChan() {
 		amount = amount + len(items)
 	}
 
-	fmt.Println(s.Summary())
-	fmt.Println(s.State())
+	fmt.Println(m.Summary())
+	fmt.Println(m.State())
 
-	if s.amount != int64(amount) {
+	if m.amount != int64(amount) {
 		t.Error(" amount ")
 	}
 }
