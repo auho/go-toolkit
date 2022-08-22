@@ -7,14 +7,21 @@ import (
 	"time"
 )
 
-func TestMock(t *testing.T) {
+func TestSliceMap(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	factor := rand.Intn(10) + 1
 	total := factor * 100
 	pageSize := factor*factor + 1
-	s := NewSource(WithTotal(int64(total)), WithPageSize(int64(pageSize)))
+	s := NewSliceMap(Config{
+		PageSize: int64(pageSize),
+		Total:    int64(total),
+	})
 
-	s.Scan()
+	err := s.Scan()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	amount := 0
 	for items := range s.ReceiveChan() {
 		amount = amount + len(items)

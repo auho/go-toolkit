@@ -4,33 +4,19 @@ import (
 	"fmt"
 	"math"
 	"sync/atomic"
-	"time"
 
 	"github.com/auho/go-toolkit/flow/storage"
-	"github.com/auho/go-toolkit/flow/tool"
 )
 
-var _ storage.Sourceor[storage.MapEntry] = (*Source)(nil)
+var _ storage.Sourceor[storage.MapEntry] = (*mock[storage.MapEntry])(nil)
 
-func WithPageSize(i int64) func(m *Source) {
-	return func(m *Source) {
-		m.pageSize = i
-	}
+type mocker[E storage.Entry] interface {
+	// id name, id, page size => stopId, items
+	scan(string, *int64, int64) (*int64, []E)
+	duplicate([]E) []E
 }
 
-func WithTotal(t int64) func(m *Source) {
-	return func(m *Source) {
-		m.total = t
-	}
-}
-
-func WithIdName(s string) func(m *Source) {
-	return func(m *Source) {
-		m.idName = s
-	}
-}
-
-type Source struct {
+type mock[E storage.Entry] struct {
 	storage.Storage
 	id        int64
 	total     int64 // 最大数量(总数)
@@ -39,78 +25,73 @@ type Source struct {
 	totalPage int64
 	amount    int64
 	idName    string
-	itemChan  chan []map[string]interface{}
+	itemChan  chan []E
+	mocker    mocker[E]
 }
 
-func NewSource(options ...func(*Source)) *Source {
-	s := &Source{}
+func newMock[E storage.Entry](config Config, mocker mocker[E]) *mock[E] {
+	m := &mock[E]{}
+	m.idName = config.IdName
+	m.total = config.Total
+	m.pageSize = config.PageSize
+	m.mocker = mocker
 
-	for _, o := range options {
-		o(s)
+	if m.total <= 0 {
+		m.total = 1e2
 	}
 
-	if s.total <= 0 {
-		s.total = 1e2
+	if m.pageSize <= 0 {
+		m.total = 1e1
 	}
 
-	if s.pageSize <= 0 {
-		s.total = 1e1
+	if m.idName == "" {
+		m.idName = "id"
 	}
 
-	if s.idName == "" {
-		s.idName = "id"
-	}
+	m.totalPage = int64(math.Ceil(float64(m.total) / float64(m.pageSize)))
 
-	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.pageSize)))
-
-	return s
+	return m
 }
 
-func (s *Source) Scan() error {
-	s.itemChan = make(chan []map[string]interface{})
+func (m *mock[E]) Scan() error {
+	m.itemChan = make(chan []E)
 
 	go func() {
-		for i := int64(0); i < s.total; i += s.pageSize {
-			size := s.pageSize
-			if i+s.pageSize > s.total {
-				size = s.total - i
+		for i := int64(0); i < m.total; i += m.pageSize {
+			size := m.pageSize
+			if i+m.pageSize > m.total {
+				size = m.total - i
 			}
 
-			items := make([]map[string]interface{}, size, size)
-			for j := int64(0); j < size; j++ {
-				item := make(map[string]interface{})
-				item[s.idName] = time.Now().Unix()*1e8 + atomic.AddInt64(&s.id, 1)
-				items[j] = item
-			}
+			_, items := m.mocker.scan(m.idName, &m.id, size)
+			m.itemChan <- items
 
-			s.itemChan <- items
-
-			atomic.AddInt64(&s.page, 1)
-			atomic.AddInt64(&s.amount, int64(len(items)))
+			atomic.AddInt64(&m.page, 1)
+			atomic.AddInt64(&m.amount, int64(len(items)))
 		}
 
-		close(s.itemChan)
+		close(m.itemChan)
 	}()
 
 	return nil
 }
 
-func (s *Source) ReceiveChan() <-chan []map[string]interface{} {
-	return s.itemChan
+func (m *mock[E]) ReceiveChan() <-chan []E {
+	return m.itemChan
 }
 
-func (s *Source) Summary() []string {
-	return []string{fmt.Sprintf("%s: max: %d, pageSize: %d", s.Title(), s.total, s.pageSize)}
+func (m *mock[E]) Summary() []string {
+	return []string{fmt.Sprintf("%s: total: %d, pageSize: %d", m.Title(), m.total, m.pageSize)}
 }
 
-func (s *Source) State() []string {
-	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", s.amount, s.total, s.page, s.totalPage, s.pageSize)}
+func (m *mock[E]) State() []string {
+	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", m.amount, m.total, m.page, m.totalPage, m.pageSize)}
 }
 
-func (s *Source) Duplicate(items []map[string]interface{}) []map[string]interface{} {
-	return tool.DuplicateSliceMap[tool.InterfaceEntry](items)
+func (m *mock[E]) Duplicate(items []E) []E {
+	return m.mocker.duplicate(items)
 }
 
-func (s *Source) Title() string {
-	return "Sourceor:source"
+func (m *mock[E]) Title() string {
+	return "Source mock"
 }

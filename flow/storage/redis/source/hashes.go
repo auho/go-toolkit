@@ -12,8 +12,7 @@ var _ keyer[storage.MapOfStringsEntry] = (*hashesKey)(nil)
 
 type hashesKey struct {
 	storage.Storage
-	amount    int64
-	itemsChan chan storage.MapOfStringsEntries
+	amount int64
 }
 
 func NewHashes(config Config) (*key[storage.MapOfStringsEntry], error) {

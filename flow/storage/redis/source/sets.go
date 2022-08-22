@@ -11,8 +11,7 @@ var _ keyer[string] = (*setsKey)(nil)
 
 type setsKey struct {
 	storage.Storage
-	amount    int64
-	itemsChan chan []string
+	amount int64
 }
 
 func NewSets(config Config) (*key[string], error) {

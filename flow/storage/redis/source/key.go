@@ -117,5 +117,5 @@ func (k *key[E]) Duplicate(items []E) []E {
 }
 
 func (k *key[E]) Title() string {
-	return fmt.Sprintf("Sourcer redis[%s]:%s", k.keyer.keyType(), k.keyName)
+	return fmt.Sprintf("Source redis[%s]:%s", k.keyer.keyType(), k.keyName)
 }

@@ -11,8 +11,7 @@ var _ keyer[string] = (*listKey)(nil)
 
 type listKey struct {
 	storage.Storage
-	amount    int64
-	itemsChan chan []string
+	amount int64
 }
 
 func (l listKey) keyType() keyType {

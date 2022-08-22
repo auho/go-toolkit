@@ -12,8 +12,7 @@ var _ keyer[storage.MapOfStringsEntry] = (*sortedSetsKey)(nil)
 
 type sortedSetsKey struct {
 	storage.Storage
-	amount    int64
-	itemsChan chan storage.MapOfStringsEntries
+	amount int64
 }
 
 func NewSortedSets(config Config) (*key[storage.MapOfStringsEntry], error) {
