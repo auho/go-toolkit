@@ -17,8 +17,10 @@ func NewSliceString(config Config) *mock[string] {
 
 func (sm SliceString) scan(idName string, id *int64, amount int64) (*int64, []string) {
 	items := make([]string, amount, amount)
+
+	startString := time.Now().String()
 	for i := int64(0); i < amount; i++ {
-		items[i] = time.Now().String() + " " + strconv.FormatInt(atomic.AddInt64(id, 1), 10)
+		items[i] = startString + " " + strconv.FormatInt(atomic.AddInt64(id, 1), 10)
 	}
 
 	return id, items

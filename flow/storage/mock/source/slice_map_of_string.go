@@ -20,9 +20,13 @@ func NewSliceMapOfString(config Config) *mock[storage.MapOfStringsEntry] {
 
 func (sms SliceMapOfString) scan(idName string, id *int64, amount int64) (*int64, storage.MapOfStringsEntries) {
 	items := make([]storage.MapOfStringsEntry, amount, amount)
+
+	startString := time.Now().String()
 	for i := int64(0); i < amount; i++ {
 		item := make(storage.MapOfStringsEntry)
-		item[idName] = time.Now().String() + " " + strconv.FormatInt(atomic.AddInt64(id, 1), 10)
+		atomic.AddInt64(id, 1)
+		item[idName] = strconv.FormatInt(*id, 10)
+		item["content"] = startString + " " + item[idName]
 		items[i] = item
 	}
 
