@@ -11,16 +11,9 @@ import (
 var _ storage.Sourceor[storage.MapEntry] = (*key[storage.MapEntry])(nil)
 var _ redis.Rediser = (*key[storage.MapEntry])(nil)
 
-type keyType string
-
-const keyTypeList keyType = "lists"
-const keyTypeSet keyType = "sets"
-const keyTypeSortedSets keyType = "sortedSets"
-const keyTypeHash keyType = "hashes"
-
 type keyer[E storage.Entry] interface {
 	// redis key type
-	keyType() keyType
+	keyType() redis.KeyType
 	// redis client, key name
 	len(redisClient *client.Redis, keyName string) (int64, error)
 	//chan []E, redis client, key name, amount, page size
@@ -82,6 +75,7 @@ func (k *key[E]) config(config Config) error {
 
 	k.state = storage.NewTotalState()
 	k.state.StatusConfig()
+	k.state.Concurrency = k.concurrency
 	k.state.Title = k.Title()
 
 	var err error

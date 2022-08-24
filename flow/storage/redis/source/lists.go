@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/redis/client"
 )
 
@@ -18,8 +19,8 @@ func NewLists(config Config) (*key[string], error) {
 	return newKey[string](config, &listsKey{})
 }
 
-func (l *listsKey) keyType() keyType {
-	return keyTypeList
+func (l *listsKey) keyType() redis.KeyType {
+	return redis.KeyTypeList
 }
 
 func (l *listsKey) len(c *client.Redis, key string) (int64, error) {

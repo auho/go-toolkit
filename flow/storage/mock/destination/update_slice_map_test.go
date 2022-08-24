@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"testing"
 	"time"
-
-	"github.com/auho/go-toolkit/flow/storage"
 )
 
 func TestUpdateSliceMap(t *testing.T) {
@@ -15,17 +13,9 @@ func TestUpdateSliceMap(t *testing.T) {
 	page = rand.Intn(49) + 1
 	pageSize = (rand.Intn(9) + 1) * pageSize
 
-	var err error
-	var dd storage.Destinationer[storage.MapEntry]
-
-	dd, err = NewUpdateSliceMap()
+	d, err := NewUpdateSliceMap()
 	if err != nil {
 		t.Error(err)
-	}
-
-	d, ok := dd.(*UpdateSliceMap)
-	if !ok {
-		t.Error("UpdateSliceMap not interface of storage.Destinationer[storage.MapEntry]")
 	}
 
 	err = d.Accept()

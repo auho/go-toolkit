@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/flow/tool"
 	"github.com/auho/go-toolkit/redis/client"
 )
@@ -19,8 +20,8 @@ func NewSortedSets(config Config) (*key[storage.MapOfStringsEntry], error) {
 	return newKey[storage.MapOfStringsEntry](config, &sortedSetsKey{})
 }
 
-func (s *sortedSetsKey) keyType() keyType {
-	return keyTypeSortedSets
+func (s *sortedSetsKey) keyType() redis.KeyType {
+	return redis.KeyTypeSortedSets
 }
 
 func (s *sortedSetsKey) len(c *client.Redis, key string) (int64, error) {

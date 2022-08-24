@@ -1,4 +1,4 @@
-package source
+package destination
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/auho/go-toolkit/flow/storage"
-	"github.com/auho/go-toolkit/redis/client"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -40,13 +39,13 @@ func _testKey[E storage.Entry](
 	t *testing.T,
 	key string,
 	bFunc func(config Config) (*key[E], error),
-	lFunc func(ctx context.Context, c *client.Redis) (int64, error),
+	buildData func(k *key[E]) int64,
 ) {
 	ctx := context.Background()
 
 	k, err := bFunc(Config{
+		IsTruncate:  true,
 		Concurrency: 1,
-		Amount:      0,
 		PageSize:    0,
 		Key:         key,
 		Options:     &_redisOptions,
@@ -60,31 +59,34 @@ func _testKey[E storage.Entry](
 		t.Fatal("new", err)
 	}
 
-	err = k.Scan()
+	err = k.Accept()
 	if err != nil {
 		t.Fatal("scan", err)
 	}
 
-	amount := 0
-	for items := range k.ReceiveChan() {
-		l := len(items)
-		amount = amount + l
-	}
+	amount := int64(0)
+	go func() {
+		amount = buildData(k)
+
+		k.Done()
+	}()
+
+	k.Finish()
 
 	fmt.Println(k.Summary())
 	fmt.Println(k.State())
 
-	if k.total != k.state.Amount() || k.state.Amount() != int64(amount) {
-		t.Error(fmt.Sprintf("total != statusAmount != actual %d != %d != %d", k.total, k.state.Amount(), amount))
+	if k.state.Amount() != amount {
+		t.Error(fmt.Sprintf("actual != expected %d != %d", k.state.Amount(), amount))
 	}
 
-	dbAmount, err := lFunc(ctx, k.GetClient())
+	dbAmount, err := k.keyer.Len(ctx, k.client, k.keyName)
 	if err != nil {
-		t.Error("db statusAmount ", err)
+		t.Error("db amount ", err)
 	}
 
-	if k.total != dbAmount {
-		t.Error(fmt.Sprintf("total != db statusAmount %d != %d", k.total, dbAmount))
+	if k.state.Amount() != dbAmount {
+		t.Error(fmt.Sprintf("total != db amount %d != %d", k.state.Amount(), dbAmount))
 	}
 }
 

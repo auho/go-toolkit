@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/redis/client"
 )
 
@@ -18,8 +19,8 @@ func NewSets(config Config) (*key[string], error) {
 	return newKey[string](config, &setsKey{})
 }
 
-func (s *setsKey) keyType() keyType {
-	return keyTypeSet
+func (s *setsKey) keyType() redis.KeyType {
+	return redis.KeyTypeSet
 }
 
 func (s *setsKey) len(c *client.Redis, key string) (int64, error) {

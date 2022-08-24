@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"testing"
 	"time"
-
-	"github.com/auho/go-toolkit/flow/storage"
 )
 
 func TestInsertSliceSlice(t *testing.T) {
@@ -15,17 +13,9 @@ func TestInsertSliceSlice(t *testing.T) {
 	page = rand.Intn(49) + 1
 	pageSize = (rand.Intn(9) + 1) * pageSize
 
-	var err error
-	var dd storage.Destinationer[storage.SliceEntry]
-
-	dd, err = NewInsertSliceSlice()
+	d, err := NewInsertSliceSlice()
 	if err != nil {
 		t.Error(err)
-	}
-
-	d, ok := dd.(*InsertSliceSlice)
-	if !ok {
-		t.Error("InsertSliceSlice not interface of storage.Destinationer[storage.SliceEntry]")
 	}
 
 	err = d.Accept()

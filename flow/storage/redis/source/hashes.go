@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/flow/tool"
 	"github.com/auho/go-toolkit/redis/client"
 )
@@ -19,8 +20,8 @@ func NewHashes(config Config) (*key[storage.MapOfStringsEntry], error) {
 	return newKey[storage.MapOfStringsEntry](config, &hashesKey{})
 }
 
-func (h *hashesKey) keyType() keyType {
-	return keyTypeHash
+func (h *hashesKey) keyType() redis.KeyType {
+	return redis.KeyTypeHash
 }
 
 func (h *hashesKey) len(c *client.Redis, key string) (int64, error) {
