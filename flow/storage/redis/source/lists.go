@@ -7,22 +7,26 @@ import (
 	"github.com/auho/go-toolkit/redis/client"
 )
 
-var _ keyer[string] = (*listKey)(nil)
+var _ keyer[string] = (*listsKey)(nil)
 
-type listKey struct {
+type listsKey struct {
 	storage.Storage
 	amount int64
 }
 
-func (l listKey) keyType() keyType {
+func NewLists(config Config) (*key[string], error) {
+	return newKey[string](config, &listsKey{})
+}
+
+func (l *listsKey) keyType() keyType {
 	return keyTypeList
 }
 
-func (l listKey) len(c *client.Redis, key string) (int64, error) {
+func (l *listsKey) len(c *client.Redis, key string) (int64, error) {
 	return c.LLen(context.Background(), key).Result()
 }
 
-func (l listKey) scan(entriesChan chan<- []string, c *client.Redis, key string, amount int64, pageSize int64) {
+func (l *listsKey) scan(entriesChan chan<- []string, c *client.Redis, key string, amount int64, pageSize int64) {
 	start := int64(0)
 	stop := start + pageSize - 1
 
@@ -36,6 +40,7 @@ func (l listKey) scan(entriesChan chan<- []string, c *client.Redis, key string, 
 			break
 		}
 
+		l.amount += int64(len(items))
 		entriesChan <- items
 
 		start = stop + 1
@@ -47,13 +52,13 @@ func (l listKey) scan(entriesChan chan<- []string, c *client.Redis, key string, 
 	}
 }
 
-func (l listKey) duplicate(items []string) []string {
+func (l *listsKey) duplicate(items []string) []string {
 	newItems := make([]string, 0, len(items))
 	_ = copy(newItems, items)
 
 	return newItems
 }
 
-func (l listKey) stateAmount() int64 {
+func (l *listsKey) stateAmount() int64 {
 	return l.amount
 }

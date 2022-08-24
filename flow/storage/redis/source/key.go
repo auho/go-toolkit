@@ -34,6 +34,7 @@ type key[E storage.Entry] struct {
 	storage.Storage
 	concurrency int
 	pageSize    int64
+	amount      int64
 	total       int64
 	keyName     string
 	state       *storage.TotalState
@@ -61,7 +62,25 @@ func (k *key[E]) config(config Config) error {
 	k.concurrency = config.Concurrency
 	k.pageSize = config.PageSize
 	k.keyName = config.Key
+	k.amount = config.Amount
 
+	if k.concurrency <= 0 {
+		k.concurrency = 1
+	}
+
+	if k.pageSize <= 0 {
+		k.pageSize = 100
+	}
+
+	if k.keyName == "" {
+		k.LogFatalWithTitle("key name is empty")
+	}
+
+	if config.Options == nil {
+		k.LogFatalWithTitle("config options is nil")
+	}
+
+	k.state = storage.NewTotalState()
 	k.state.StatusConfig()
 	k.state.Title = k.Title()
 
@@ -83,6 +102,10 @@ func (k *key[E]) Scan() error {
 	k.total, err = k.keyer.len(k.client, k.keyName)
 	if err != nil {
 		return err
+	}
+
+	if k.amount > 0 && k.total >= k.amount {
+		k.total = k.amount
 	}
 
 	k.state.Total = k.total

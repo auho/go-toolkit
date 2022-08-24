@@ -24,13 +24,16 @@ func (h *hashesKey) keyType() keyType {
 }
 
 func (h *hashesKey) len(c *client.Redis, key string) (int64, error) {
-	return c.SCard(context.Background(), key).Result()
+	return c.HLen(context.Background(), key).Result()
 }
 
 func (h *hashesKey) scan(entriesChan chan<- storage.MapOfStringsEntries, c *client.Redis, key string, amount int64, count int64) {
+	var err error
+	var items []string
 	cursor := uint64(0)
+
 	for {
-		items, cursor, err := c.HScan(context.Background(), key, cursor, "", count).Result()
+		items, cursor, err = c.HScan(context.Background(), key, cursor, "", count).Result()
 		if err != nil {
 			h.LogFatal(err)
 		}

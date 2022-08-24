@@ -45,7 +45,7 @@ func TestSectionSliceMap(t *testing.T) {
 		t.Error(fmt.Sprintf("total != amount != actual %d != %d != %d", s.total, s.state.Amount(), amount))
 	}
 
-	dbAmountRes, err := s.Driver.QueryFieldInterface("_count", fmt.Sprintf("SELECT COUNT(*) AS `_count` FROM `%s`", tableName))
+	dbAmountRes, err := s.GetDriver().QueryFieldInterface("_count", fmt.Sprintf("SELECT COUNT(*) AS `_count` FROM `%s`", tableName))
 	if err != nil {
 		t.Error("db amount ", err)
 	}

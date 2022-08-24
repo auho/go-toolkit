@@ -27,9 +27,12 @@ func (s *setsKey) len(c *client.Redis, key string) (int64, error) {
 }
 
 func (s *setsKey) scan(entriesChan chan<- []string, c *client.Redis, key string, amount int64, count int64) {
+	var err error
+	var items []string
 	cursor := uint64(0)
+
 	for {
-		items, cursor, err := c.SScan(context.Background(), key, cursor, "", count).Result()
+		items, cursor, err = c.SScan(context.Background(), key, cursor, "", count).Result()
 		if err != nil {
 			s.LogFatal(err)
 		}
