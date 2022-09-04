@@ -8,6 +8,8 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
+var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
+
 type Destination[E storage.Entry] struct {
 	isDone    bool
 	amount    int64
@@ -53,6 +55,10 @@ func (d *Destination[E]) Summary() []string {
 
 func (d *Destination[E]) State() []string {
 	return []string{fmt.Sprintf("amount: %d", d.amount)}
+}
+
+func (d *Destination[E]) Close() error {
+	return nil
 }
 
 func (d *Destination[E]) title() string {

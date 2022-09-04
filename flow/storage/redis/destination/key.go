@@ -91,11 +91,6 @@ func (k *key[E]) Done() {
 func (k *key[E]) Finish() {
 	k.doWg.Wait()
 
-	err := k.client.Close()
-	if err != nil {
-		k.LogFatalWithTitle(err)
-	}
-
 	k.state.StatusFinish()
 	k.state.DurationStop()
 }
@@ -111,6 +106,10 @@ func (k *key[E]) State() []string {
 
 func (k *key[E]) Title() string {
 	return fmt.Sprintf("Destiantion redis[%s] %s", k.keyer.Type(), k.keyName)
+}
+
+func (k *key[E]) Close() error {
+	return k.client.Close()
 }
 
 func (k *key[E]) config(config Config) error {

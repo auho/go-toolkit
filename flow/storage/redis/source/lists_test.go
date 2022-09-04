@@ -8,7 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var _listsKey = "test:lists"
+var _listsKey = "test:source:lists"
 
 func _buildListsData(t *testing.T) {
 	ctx := context.Background()

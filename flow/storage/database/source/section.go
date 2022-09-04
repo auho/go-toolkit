@@ -60,7 +60,7 @@ type sectioner[E storage.Entry] interface {
 // Section 分段查询
 type Section[E storage.Entry] struct {
 	storage.Storage
-	simple.Driver
+	driver        simple.Driver
 	scanSw        sync.WaitGroup
 	idRangeSw     sync.WaitGroup
 	concurrency   int
@@ -93,7 +93,7 @@ func newSection[E storage.Entry](c func(*Section[E]) error, os ...func(*Section[
 }
 
 func (s *Section[E]) GetDriver() simple.Driver {
-	return s.Driver
+	return s.driver
 }
 
 func (s *Section[E]) State() []string {
@@ -157,7 +157,7 @@ func (s *Section[E]) scanRows() {
 		leftId := idRange[0]
 		size := idRange[1]
 
-		rows, err := s.sectioner.sourceFunc(s.Driver, s.query, leftId, size)
+		rows, err := s.sectioner.sourceFunc(s.driver, s.query, leftId, size)
 		if err != nil {
 			s.LogFatalWithTitle("left id:", leftId, err)
 		}
@@ -223,7 +223,7 @@ func (s *Section[E]) queryPage(startId, endId int64) {
 		}
 
 		query := fmt.Sprintf("SELECT MAX(`%s`) AS `id` FROM `%s` WHERE `%s` > ? AND `%s` <= ? ORDER BY `%s` DESC LIMIT 1", s.idName, s.tableName, s.idName, s.idName, s.idName)
-		res, err := s.QueryFieldInterface("id", query, leftId, rightId)
+		res, err := s.driver.QueryFieldInterface("id", query, leftId, rightId)
 		if err != nil {
 			s.LogFatalWithTitle(fmt.Sprintf("source[] last startid %d endId %d id: %d left id: %d right id: %d", startId, endId, leftId, rightId, err))
 		}
@@ -249,7 +249,7 @@ func (s *Section[E]) config(config Config) (err error) {
 	s.tableName = config.TableName
 	s.idName = config.IdName
 
-	s.Driver, err = simple.NewDriver(config.Driver, config.Dsn)
+	s.driver, err = simple.NewDriver(config.Driver, config.Dsn)
 	if err != nil {
 		return
 	}
@@ -278,7 +278,7 @@ func (s *Section[E]) config(config Config) (err error) {
 
 func (s *Section[E]) idRange() error {
 	query := fmt.Sprintf("SELECT MAX(`%s`) AS `maxId`, MIN(`%s`) AS `minId` FROM `%s`", s.idName, s.idName, s.tableName)
-	res, err := s.QueryInterfaceRow(query)
+	res, err := s.driver.QueryInterfaceRow(query)
 	if err != nil {
 		return errors.New(fmt.Sprintf("mysql id: %s", err))
 	}
@@ -326,7 +326,13 @@ func (s *Section[E]) idRange() error {
 }
 
 func (s *Section[E]) Title() string {
-	return fmt.Sprintf("Sourceor driver[%s]", s.DriverName())
+	return fmt.Sprintf("Sourceor driver[%s]", s.driver.DriverName())
+}
+
+func (s *Section[E]) Close() error {
+	s.driver.Close()
+
+	return nil
 }
 
 func (s *Section[E]) options(os []func(*Section[E])) {

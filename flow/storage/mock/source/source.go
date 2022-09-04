@@ -95,3 +95,7 @@ func (m *mock[E]) Duplicate(items []E) []E {
 func (m *mock[E]) Title() string {
 	return "Source mock"
 }
+
+func (m *mock[E]) Close() error {
+	return nil
+}

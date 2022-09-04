@@ -7,24 +7,25 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/redis/client"
+	redis2 "github.com/go-redis/redis/v8"
 )
 
-var _ keyer[storage.MapEntry] = (*hashes)(nil)
+var _ keyer[storage.ScoreMap] = (*sortedSets)(nil)
 
-type hashes struct {
-	redis.Hashes
+type sortedSets struct {
+	redis.SortedSets
 	amount int64
 }
 
-func (h *hashes) stateAmount() int64 {
+func (h *sortedSets) stateAmount() int64 {
 	return h.amount
 }
 
-func NewHashes(config Config) (*key[storage.MapEntry], error) {
-	return newKey[storage.MapEntry](config, &hashes{})
+func NewSortedSets(config Config) (*key[storage.ScoreMap], error) {
+	return newKey[storage.ScoreMap](config, &sortedSets{})
 }
 
-func (h *hashes) accept(itemsChan <-chan []storage.MapEntry, c *client.Redis, key string, pageSize int64) {
+func (h *sortedSets) accept(itemsChan <-chan []storage.ScoreMap, c *client.Redis, key string, pageSize int64) {
 	ctx := context.Background()
 	pipe := c.Pipeline()
 
@@ -39,7 +40,10 @@ func (h *hashes) accept(itemsChan <-chan []storage.MapEntry, c *client.Redis, ke
 			entries := items[i:end]
 			for _, entry := range entries {
 				for k, v := range entry {
-					pipe.HMSet(ctx, key, k, v)
+					pipe.ZAdd(ctx, key, &redis2.Z{
+						Score:  v,
+						Member: k,
+					})
 				}
 			}
 

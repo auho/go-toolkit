@@ -7,14 +7,22 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _hashesKey = "test:hashes"
+var _hashesKey = "test:destination:hashes"
 
 func _buildHashesData(k *key[storage.MapEntry]) int64 {
 	amount := _randAmount()
+	size := 100
+
 	for i := 0; i < amount; i += 100 {
-		items := make(storage.MapEntries, 0, 100)
-		for j := 0; j < 100; j++ {
-			a := i*100 + j
+		tSize := size
+
+		if i+size >= amount {
+			tSize = amount - i
+		}
+
+		items := make(storage.MapEntries, 0, tSize)
+		for j := 0; j < tSize; j++ {
+			a := i + j
 			items = append(items, map[string]interface{}{strconv.Itoa(a): a})
 		}
 

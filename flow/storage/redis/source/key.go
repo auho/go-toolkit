@@ -136,3 +136,7 @@ func (k *key[E]) Duplicate(items []E) []E {
 func (k *key[E]) Title() string {
 	return fmt.Sprintf("Source redis[%s]:%s", k.keyer.keyType(), k.keyName)
 }
+
+func (k *key[E]) Close() error {
+	return k.client.Close()
+}

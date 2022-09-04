@@ -10,7 +10,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var _hashesKey = "test:hashes"
+var _hashesKey = "test:source:hashes"
 
 func _buildHashesData(t *testing.T) {
 	ctx := context.Background()

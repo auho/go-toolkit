@@ -37,7 +37,7 @@ func withDestinationer[E storage.Entry](der destinationer[E]) func(*Destination[
 
 type Destination[E storage.Entry] struct {
 	storage.Storage
-	simple.Driver
+	driver        simple.Driver
 	isDone        bool
 	isTruncate    bool
 	concurrency   int
@@ -61,8 +61,8 @@ func newDestination[E storage.Entry](c func(*Destination[E]) error, os ...func(*
 	return d, nil
 }
 
-func (s *Destination[E]) GetDriver() simple.Driver {
-	return s.Driver
+func (d *Destination[E]) GetDriver() simple.Driver {
+	return d.driver
 }
 
 func (d *Destination[E]) config(config Config) (err error) {
@@ -71,7 +71,7 @@ func (d *Destination[E]) config(config Config) (err error) {
 	d.pageSize = config.PageSize
 	d.tableName = config.TableName
 
-	d.Driver, err = simple.NewDriver(config.Driver, config.Dsn)
+	d.driver, err = simple.NewDriver(config.Driver, config.Dsn)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (d *Destination[E]) Accept() (err error) {
 	d.state.DurationStart()
 
 	if d.isTruncate {
-		err = d.Truncate(d.tableName)
+		err = d.driver.Truncate(d.tableName)
 		if err != nil {
 			return
 		}
@@ -138,8 +138,6 @@ func (d *Destination[E]) Done() {
 func (d *Destination[E]) Finish() {
 	d.doWg.Wait()
 
-	d.Close()
-
 	d.state.StatusFinish()
 	d.state.DurationStop()
 }
@@ -165,7 +163,7 @@ func (d *Destination[E]) do() {
 				descItems = items[start:end]
 			}
 
-			err := d.destinationer.desFunc(d.Driver, d.tableName, descItems)
+			err := d.destinationer.desFunc(d.driver, d.tableName, descItems)
 			if err != nil {
 				panic(err)
 			}
@@ -180,7 +178,7 @@ func (d *Destination[E]) do() {
 }
 
 func (d *Destination[E]) Title() string {
-	return fmt.Sprintf("Destination driver[%s]", d.DriverName())
+	return fmt.Sprintf("Destination driver[%s]", d.driver.DriverName())
 }
 
 func (d *Destination[E]) Summary() []string {
@@ -189,6 +187,12 @@ func (d *Destination[E]) Summary() []string {
 
 func (d *Destination[E]) State() []string {
 	return []string{d.state.Overview()}
+}
+
+func (d *Destination[E]) Close() error {
+	d.driver.Close()
+
+	return nil
 }
 
 func (d *Destination[E]) options(os []func(*Destination[E])) {

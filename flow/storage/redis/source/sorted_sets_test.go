@@ -9,7 +9,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var _sortedSetsKey = "test:sortedSets"
+var _sortedSetsKey = "test:source:sortedSets"
 
 func _buildSortedSetsData(t *testing.T) {
 	ctx := context.Background()

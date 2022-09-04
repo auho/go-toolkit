@@ -9,6 +9,7 @@ var EOF = errors.New("EOF")
 type Sourceor[E Entry] interface {
 	Scan() error
 	ReceiveChan() <-chan []E
+	Close() error
 	Summary() []string
 	State() []string
 	Duplicate([]E) []E

@@ -4,30 +4,27 @@ import (
 	"context"
 	"sync/atomic"
 
-	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/redis"
 	"github.com/auho/go-toolkit/redis/client"
 )
 
-var _ keyer[storage.MapEntry] = (*hashes)(nil)
+var _ keyer[string] = (*sets)(nil)
 
-type hashes struct {
-	redis.Hashes
+type sets struct {
+	redis.Sets
 	amount int64
 }
 
-func (h *hashes) stateAmount() int64 {
+func (h *sets) stateAmount() int64 {
 	return h.amount
 }
 
-func NewHashes(config Config) (*key[storage.MapEntry], error) {
-	return newKey[storage.MapEntry](config, &hashes{})
+func NewSets(config Config) (*key[string], error) {
+	return newKey[string](config, &sets{})
 }
 
-func (h *hashes) accept(itemsChan <-chan []storage.MapEntry, c *client.Redis, key string, pageSize int64) {
+func (h *sets) accept(itemsChan <-chan []string, c *client.Redis, key string, pageSize int64) {
 	ctx := context.Background()
-	pipe := c.Pipeline()
-
 	for items := range itemsChan {
 		l := len(items)
 		for i := 0; i < l; i += int(pageSize) {
@@ -37,13 +34,13 @@ func (h *hashes) accept(itemsChan <-chan []storage.MapEntry, c *client.Redis, ke
 			}
 
 			entries := items[i:end]
+
+			entriesInterface := make([]interface{}, 0, end-i)
 			for _, entry := range entries {
-				for k, v := range entry {
-					pipe.HMSet(ctx, key, k, v)
-				}
+				entriesInterface = append(entriesInterface, entry)
 			}
 
-			_, err := pipe.Exec(ctx)
+			_, err := c.SAdd(ctx, key, entriesInterface...).Result()
 			if err != nil {
 				panic(err)
 			}
@@ -51,6 +48,4 @@ func (h *hashes) accept(itemsChan <-chan []storage.MapEntry, c *client.Redis, ke
 
 		atomic.AddInt64(&h.amount, int64(l))
 	}
-
-	_ = pipe.Close()
 }

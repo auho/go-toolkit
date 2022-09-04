@@ -86,6 +86,11 @@ func _testKey[E storage.Entry](
 	if k.total != dbAmount {
 		t.Error(fmt.Sprintf("total != db statusAmount %d != %d", k.total, dbAmount))
 	}
+
+	err = k.Close()
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func _randAmount() int {

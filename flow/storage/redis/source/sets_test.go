@@ -8,7 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var _setsKey = "test:sets"
+var _setsKey = "test:source:sets"
 
 func _buildSetsData(t *testing.T) {
 	ctx := context.Background()
