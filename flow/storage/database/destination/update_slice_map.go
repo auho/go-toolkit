@@ -16,8 +16,8 @@ func (u *UpdateSliceMap) desFunc(sd simple.Driver, tableName string, items stora
 }
 
 func NewUpdateSliceMap(config Config, idName string) (*Destination[storage.MapEntry], error) {
-	u := &UpdateSliceMap{}
-	u.idName = idName
+	usm := &UpdateSliceMap{}
+	usm.idName = idName
 
-	return newDestination[storage.MapEntry](withConfig[storage.MapEntry](config), withDestinationer[storage.MapEntry](u))
+	return newDestination[storage.MapEntry](config, usm)
 }

@@ -14,6 +14,7 @@ type Config struct {
 
 type FromQueryConfig struct {
 	Config
+	// SELECT `id` FROM `table` WHERE `id` > ? ORDER BY `id` ASC limit ?
 	Query string
 }
 

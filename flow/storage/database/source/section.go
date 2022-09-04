@@ -17,39 +17,33 @@ import (
 var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
 var _ database.Databaseor = (*Section[storage.MapEntry])(nil)
 
-func withConfigFromQuery[E storage.Entry](config FromQueryConfig) func(*Section[E]) error {
-	return func(s *Section[E]) error {
-		err := s.config(config.Config)
-		if err != nil {
-			return err
-		}
-
-		s.query = config.Query
-
-		return nil
+func configFromQuery[E storage.Entry](config FromQueryConfig, sectioner sectioner[E]) (*Section[E], error) {
+	s := &Section[E]{}
+	err := s.config(config.Config)
+	if err != nil {
+		return nil, err
 	}
+
+	s.query = config.Query
+	s.sectioner = sectioner
+
+	return s, nil
 }
 
-func withConfigFromTable[E storage.Entry](config FromTableConfig) func(*Section[E]) error {
-	return func(s *Section[E]) error {
-		err := s.config(config.Config)
-		if err != nil {
-			return err
-		}
-
-		s.fields = config.Fields
-
-		fieldsSting := fmt.Sprintf("`%s`", strings.Join(s.fields, "`,`"))
-		s.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, s.tableName, s.idName, s.idName)
-
-		return nil
+func configFromTable[E storage.Entry](config FromTableConfig, sectioner sectioner[E]) (*Section[E], error) {
+	s := &Section[E]{}
+	err := s.config(config.Config)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func withSectioner[E storage.Entry](ser sectioner[E]) func(*Section[E]) {
-	return func(s *Section[E]) {
-		s.sectioner = ser
-	}
+	s.fields = config.Fields
+
+	fieldsSting := fmt.Sprintf("`%s`", strings.Join(s.fields, "`,`"))
+	s.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, s.tableName, s.idName, s.idName)
+	s.sectioner = sectioner
+
+	return s, nil
 }
 
 type sectioner[E storage.Entry] interface {
@@ -78,18 +72,6 @@ type Section[E storage.Entry] struct {
 	rowsChan      chan []E
 	state         *storage.PageState
 	sectioner     sectioner[E]
-}
-
-func newSection[E storage.Entry](c func(*Section[E]) error, os ...func(*Section[E])) (*Section[E], error) {
-	s := &Section[E]{}
-	err := c(s)
-	if err != nil {
-		return nil, err
-	}
-
-	s.options(os)
-
-	return s, nil
 }
 
 func (s *Section[E]) GetDriver() simple.Driver {
@@ -333,10 +315,4 @@ func (s *Section[E]) Close() error {
 	s.driver.Close()
 
 	return nil
-}
-
-func (s *Section[E]) options(os []func(*Section[E])) {
-	for _, o := range os {
-		o(s)
-	}
 }

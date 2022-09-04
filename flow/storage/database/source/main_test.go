@@ -2,14 +2,16 @@ package source
 
 import (
 	"fmt"
-	"github.com/auho/go-simple-db/mysql"
-	"github.com/auho/go-simple-db/simple"
 	"log"
 	"math/rand"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/auho/go-simple-db/mysql"
+	"github.com/auho/go-simple-db/simple"
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
 var driverName = mysql.DriverName
@@ -18,6 +20,7 @@ var mainMysqlDsn = _mysqlDsn + "mysql"
 var dbName = "_test_flow"
 var mysqlDsn = _mysqlDsn + dbName
 var tableName = "source"
+var idName = "id"
 
 func TestMain(m *testing.M) {
 	setUp()
@@ -96,6 +99,43 @@ func buildData() {
 
 	if count != page*pageSize {
 		log.Fatal(fmt.Sprintf("build data bulk insert actual != expected [%d] != [%d]", count, pageSize*page))
+	}
+}
+
+func _testSection[E storage.Entry](
+	t *testing.T,
+	s *Section[E],
+) {
+	err := s.Scan()
+	if err != nil {
+		t.Error("scan ", err)
+	}
+
+	amount := 0
+	for items := range s.ReceiveChan() {
+		l := len(items)
+		amount = amount + l
+	}
+
+	fmt.Println(s.Summary())
+	fmt.Println(s.State())
+
+	if s.total != s.state.Amount() && s.state.Amount() != int64(amount) {
+		t.Error(fmt.Sprintf("total != amount != actual %d != %d != %d", s.total, s.state.Amount(), amount))
+	}
+
+	dbAmountRes, err := s.GetDriver().QueryFieldInterface("_count", fmt.Sprintf("SELECT COUNT(*) AS `_count` FROM `%s`", tableName))
+	if err != nil {
+		t.Error("db amount ", err)
+	}
+
+	dbAmount, err := strconv.ParseInt(string(dbAmountRes.([]uint8)), 10, 64)
+	if err != nil {
+		t.Error(fmt.Sprintf("db amount error %v", dbAmountRes))
+	}
+
+	if s.total != dbAmount {
+		t.Error(fmt.Sprintf("total != db amount %d != %d", s.total, dbAmount))
 	}
 }
 

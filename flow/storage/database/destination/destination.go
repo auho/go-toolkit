@@ -18,23 +18,6 @@ type destinationer[E storage.Entry] interface {
 	desFunc(driver simple.Driver, tableName string, items []E) error
 }
 
-func withConfig[E storage.Entry](config Config) func(*Destination[E]) error {
-	return func(d *Destination[E]) error {
-		err := d.config(config)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
-func withDestinationer[E storage.Entry](der destinationer[E]) func(*Destination[E]) {
-	return func(d *Destination[E]) {
-		d.destinationer = der
-	}
-}
-
 type Destination[E storage.Entry] struct {
 	storage.Storage
 	driver        simple.Driver
@@ -49,14 +32,14 @@ type Destination[E storage.Entry] struct {
 	destinationer destinationer[E]
 }
 
-func newDestination[E storage.Entry](c func(*Destination[E]) error, os ...func(*Destination[E])) (*Destination[E], error) {
+func newDestination[E storage.Entry](config Config, destinationer destinationer[E]) (*Destination[E], error) {
 	d := &Destination[E]{}
-	err := c(d)
+	err := d.config(config)
 	if err != nil {
 		return nil, err
 	}
 
-	d.options(os)
+	d.destinationer = destinationer
 
 	return d, nil
 }
@@ -193,10 +176,4 @@ func (d *Destination[E]) Close() error {
 	d.driver.Close()
 
 	return nil
-}
-
-func (d *Destination[E]) options(os []func(*Destination[E])) {
-	for _, o := range os {
-		o(d)
-	}
 }

@@ -2,11 +2,12 @@ package source
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
+
+	"github.com/auho/go-toolkit/flow/storage"
 )
 
-func TestSectionSliceMap(t *testing.T) {
+func TestSectionSliceMapFromTable(t *testing.T) {
 	s, err := NewSectionSliceMapFromTable(
 		FromTableConfig{
 			Config: Config{
@@ -16,7 +17,7 @@ func TestSectionSliceMap(t *testing.T) {
 				EndId:       100000,
 				PageSize:    337,
 				TableName:   tableName,
-				IdName:      "id",
+				IdName:      idName,
 				Driver:      driverName,
 				Dsn:         mysqlDsn,
 			},
@@ -27,35 +28,30 @@ func TestSectionSliceMap(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = s.Scan()
+	_testSection[storage.MapEntry](t, s)
+}
+
+func TestSectionSliceMapFromQuery(t *testing.T) {
+	s, err := NewSectionSliceMapFromQuery(
+		FromQueryConfig{
+			Config: Config{
+				Concurrency: 4,
+				Maximum:     100000,
+				StartId:     0,
+				EndId:       100000,
+				PageSize:    223,
+				TableName:   tableName,
+				IdName:      idName,
+				Driver:      driverName,
+				Dsn:         mysqlDsn,
+			},
+			Query: fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?",
+				"`id`, `name`, `value`", tableName, idName, idName),
+		})
+
 	if err != nil {
-		t.Error("scan ", err)
+		t.Error(err)
 	}
 
-	amount := 0
-	for items := range s.ReceiveChan() {
-		l := len(items)
-		amount = amount + l
-	}
-
-	fmt.Println(s.Summary())
-	fmt.Println(s.State())
-
-	if s.total != s.state.Amount() && s.state.Amount() != int64(amount) {
-		t.Error(fmt.Sprintf("total != amount != actual %d != %d != %d", s.total, s.state.Amount(), amount))
-	}
-
-	dbAmountRes, err := s.GetDriver().QueryFieldInterface("_count", fmt.Sprintf("SELECT COUNT(*) AS `_count` FROM `%s`", tableName))
-	if err != nil {
-		t.Error("db amount ", err)
-	}
-
-	dbAmount, err := strconv.ParseInt(string(dbAmountRes.([]uint8)), 10, 64)
-	if err != nil {
-		t.Error(fmt.Sprintf("db amount error %v", dbAmountRes))
-	}
-
-	if s.total != dbAmount {
-		t.Error(fmt.Sprintf("total != db amount %d != %d", s.total, dbAmount))
-	}
+	_testSection[storage.MapEntry](t, s)
 }

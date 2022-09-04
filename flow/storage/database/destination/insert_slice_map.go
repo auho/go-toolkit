@@ -17,8 +17,5 @@ func (i *InsertSliceMap) desFunc(sd simple.Driver, tableName string, items stora
 }
 
 func NewInsertSliceMap(config Config) (*Destination[storage.MapEntry], error) {
-	return newDestination[storage.MapEntry](
-		withConfig[storage.MapEntry](config),
-		withDestinationer[storage.MapEntry](&InsertSliceMap{}),
-	)
+	return newDestination[storage.MapEntry](config, &InsertSliceMap{})
 }

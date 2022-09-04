@@ -27,8 +27,5 @@ func NewInsertSliceSlice(config Config, fields []string) (*Destination[storage.S
 	iss := &InsertSliceSlice{}
 	iss.fields = fields
 
-	return newDestination[storage.SliceEntry](
-		withConfig[storage.SliceEntry](config),
-		withDestinationer[storage.SliceEntry](iss),
-	)
+	return newDestination[storage.SliceEntry](config, iss)
 }
