@@ -1,13 +1,14 @@
-package showdifference
+package showdiff
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/yudai/gojsondiff"
-	"github.com/yudai/gojsondiff/formatter"
 	"regexp"
 	"strings"
+
+	"github.com/yudai/gojsondiff"
+	"github.com/yudai/gojsondiff/formatter"
 )
 
 type Differ struct {
@@ -15,7 +16,7 @@ type Differ struct {
 
 // CompareAndHead 对比不同 json 的差异并截断
 // line 截断前多少行
-func (d *Differ) CompareAndHead(aJson, bJson []byte, s string, line int) (string, error) {
+func (d *Differ) CompareAndHead(aJson, bJson []byte, line int) (string, error) {
 	s, err := d.Compare(aJson, bJson)
 	if err != nil {
 		return s, err
