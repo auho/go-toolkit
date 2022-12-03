@@ -53,10 +53,6 @@ func _testKey[E storage.Entry](
 	})
 
 	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err != nil {
 		t.Fatal("new", err)
 	}
 
