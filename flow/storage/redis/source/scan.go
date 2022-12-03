@@ -40,6 +40,14 @@ func (s *scanKey) config(config Config) error {
 	s.keyPattern = config.Key
 	s.total = config.Amount
 
+	if s.concurrency <= 0 {
+		s.concurrency = 1
+	}
+
+	if s.pageSize <= 0 {
+		s.pageSize = 100
+	}
+
 	if config.Options == nil {
 		s.LogFatalWithTitle("config options is nil")
 	}
@@ -80,9 +88,14 @@ func (s *scanKey) Scan() error {
 			if cursor == 0 {
 				break
 			}
+
 			if len(keys) > 0 {
 				s.amount += int64(len(keys))
 				s.itemsChan <- keys
+			}
+
+			if s.total > 0 && s.amount >= s.total {
+				break
 			}
 		}
 
