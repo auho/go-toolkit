@@ -10,6 +10,9 @@ import (
 )
 
 type Tasker[E storage.Entry] interface {
+	// Prepare need to be implemented
+	Prepare()
+
 	// Do need to be implemented
 	Do([]E)
 
@@ -36,7 +39,7 @@ type Task struct {
 	output        *output.MultilineText
 }
 
-func (t *Task) init(options ...func(*Task)) {
+func (t *Task) Init(options ...func(*Task)) {
 	for _, o := range options {
 		o(t)
 	}

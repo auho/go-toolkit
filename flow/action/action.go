@@ -8,10 +8,11 @@ import (
 )
 
 type Actioner[E storage.Entry] interface {
+	Prepare()
 	Receive([]E)
 	Do()
-	Finish()
 	Done()
+	Finish()
 	State() []string
 	Output() []string
 }
@@ -42,6 +43,10 @@ func NewAction[E storage.Entry](options ...func(i *Action[E])) *Action[E] {
 
 func (a *Action[E]) Receive(msi []E) {
 	a.itemsChan <- msi
+}
+
+func (a *Action[E]) Prepare() {
+	a.tasker.Prepare()
 }
 
 func (a *Action[E]) Do() {

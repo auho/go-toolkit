@@ -59,6 +59,10 @@ func (f *Flow[E]) run() error {
 	}
 
 	for _, a := range f.actioners {
+		a.Prepare()
+	}
+
+	for _, a := range f.actioners {
 		a.Do()
 	}
 
