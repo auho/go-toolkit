@@ -15,7 +15,7 @@ func NewKey() *Key {
 	return k
 }
 
-func (k *Key) ExtractKey(key string) []string {
+func (k *Key) ExtractKey(key string) string {
 	keyNodes := make([]string, 0, 10)
 
 	nodes := strings.Split(key, ":")
@@ -23,7 +23,7 @@ func (k *Key) ExtractKey(key string) []string {
 		keyNodes = append(keyNodes, k.extractKeyNode(node))
 	}
 
-	return keyNodes
+	return strings.Join(keyNodes, ":")
 }
 
 func (k *Key) extractKeyNode(s string) string {
