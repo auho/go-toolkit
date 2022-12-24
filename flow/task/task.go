@@ -10,6 +10,9 @@ import (
 )
 
 type Tasker[E storage.Entry] interface {
+	// Title need to be implemented
+	Title() string
+
 	// Prepare need to be implemented
 	Prepare()
 
@@ -58,7 +61,12 @@ func (t *Task) Concurrency() int {
 }
 
 func (t *Task) State() []string {
-	return t.state.Content()
+	sss := t.state.Content()
+	if len(sss) <= 0 {
+		sss = append(sss, fmt.Sprintf("Amount: %d", t.amount))
+	}
+
+	return sss
 }
 
 func (t *Task) Output() []string {

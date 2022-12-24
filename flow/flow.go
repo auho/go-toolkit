@@ -23,6 +23,12 @@ func WithTasker[E storage.Entry](t task.Tasker[E]) func(*Flow[E]) {
 	}
 }
 
+func WithStateTickerDuration[E storage.Entry](d time.Duration) func(*Flow[E]) {
+	return func(f *Flow[E]) {
+		f.stateTicker = time.NewTicker(d)
+	}
+}
+
 type Flow[E storage.Entry] struct {
 	source        storage.Sourceor[E]
 	stateTicker   *time.Ticker
@@ -50,21 +56,21 @@ func RunFlow[E storage.Entry](options ...func(*Flow[E])) error {
 }
 
 func (f *Flow[E]) run() error {
-	f.stateTicker = time.NewTicker(time.Millisecond * 100)
+	if f.stateTicker == nil {
+		f.stateTicker = time.NewTicker(time.Millisecond * 200)
+	}
+
 	f.refreshOutput = output.NewRefresh()
+
+	f.summary()
 
 	err := f.source.Scan()
 	if err != nil {
 		return err
 	}
 
-	for _, a := range f.actioners {
-		a.Prepare()
-	}
-
-	for _, a := range f.actioners {
-		a.Do()
-	}
+	f.actionerPerpare()
+	f.actionerDo()
 
 	f.refreshOutput.Start()
 
@@ -75,7 +81,7 @@ func (f *Flow[E]) run() error {
 	}()
 
 	f.transport()
-	f.Finish()
+	f.finish()
 
 	return nil
 }
@@ -107,11 +113,23 @@ func (f *Flow[E]) transport() {
 	}()
 }
 
-func (f *Flow[E]) Finish() {
+func (f *Flow[E]) finish() {
 	f.actionerFinish()
 	f.stateTicker.Stop()
 	f.refreshOutput.Stop()
-	f.output()
+	f.actionerOutput()
+}
+
+func (f *Flow[E]) summary() {
+	sss := f.source.Summary()
+	sss = append(sss, "Tasks: ")
+	for _, a := range f.actioners {
+		sss = append(sss, a.Summary()...)
+	}
+
+	for _, s := range sss {
+		fmt.Println(s)
+	}
 }
 
 func (f *Flow[E]) state() {
@@ -124,13 +142,27 @@ func (f *Flow[E]) state() {
 	f.refreshOutput.CoverAll(sss)
 }
 
-func (f *Flow[E]) output() {
+func (f *Flow[E]) actionerOutput() {
+	fmt.Println("\nOutput: ")
+
 	for _, a := range f.actioners {
 		for _, s := range a.Output() {
 			fmt.Println(s)
 		}
 
 		fmt.Println()
+	}
+}
+
+func (f *Flow[E]) actionerDo() {
+	for _, a := range f.actioners {
+		a.Do()
+	}
+}
+
+func (f *Flow[E]) actionerPerpare() {
+	for _, a := range f.actioners {
+		a.Prepare()
 	}
 }
 

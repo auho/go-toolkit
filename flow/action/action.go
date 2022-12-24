@@ -13,6 +13,7 @@ type Actioner[E storage.Entry] interface {
 	Do()
 	Done()
 	Finish()
+	Summary() []string
 	State() []string
 	Output() []string
 }
@@ -71,6 +72,10 @@ func (a *Action[E]) Finish() {
 	a.taskerWg.Wait()
 
 	a.tasker.AfterDo()
+}
+
+func (a *Action[E]) Summary() []string {
+	return []string{a.tasker.Title()}
 }
 
 func (a *Action[E]) State() []string {

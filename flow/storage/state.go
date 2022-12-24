@@ -18,6 +18,7 @@ type Stater interface {
 	Overview() string
 }
 
+// baseState 基状态
 type baseState struct {
 	Concurrency int
 	Title       string
@@ -74,6 +75,7 @@ func (s *baseState) DurationStop() {
 	s.duration.Stop()
 }
 
+// State 状态
 type State struct {
 	baseState
 }
@@ -83,12 +85,14 @@ func NewState() *State {
 }
 
 func (s *State) Overview() string {
-	return fmt.Sprintf("Concurrency: %d, amount: %d, duration: %s",
+	return fmt.Sprintf("Status: %s, Concurrency: %d, Amount: %d, Duration: %s",
+		s.status,
 		s.Concurrency,
 		s.amount,
 		s.duration.StringStartToStop())
 }
 
+// TotalState 总数状态
 type TotalState struct {
 	baseState
 	Total int64
@@ -98,14 +102,16 @@ func NewTotalState() *TotalState {
 	return &TotalState{}
 }
 
-func (s *TotalState) Overview() string {
-	return fmt.Sprintf("Concurrentcy:%d, amount: %d/%d, duration: %s",
-		s.Concurrency,
-		s.amount,
-		s.Total,
-		s.duration.StringStartToStop())
+func (t *TotalState) Overview() string {
+	return fmt.Sprintf("Status: %s, Concurrentcy:%d, Amount: %d/%d, Duration: %s",
+		t.status,
+		t.Concurrency,
+		t.amount,
+		t.Total,
+		t.duration.StringStartToStop())
 }
 
+// PageState 分页状态
 type PageState struct {
 	baseState
 	Page      int64
@@ -119,7 +125,8 @@ func NewPageState() *PageState {
 }
 
 func (p *PageState) Overview() string {
-	return fmt.Sprintf("Concurrency: %d, amount: %d/%d, Page: %d/%d(%d), duration: %s",
+	return fmt.Sprintf("Status: %s, Concurrency: %d, Amount: %d/%d, Page: %d/%d(%d), Duration: %s",
+		p.status,
 		p.Concurrency,
 		p.amount,
 		p.Total,
