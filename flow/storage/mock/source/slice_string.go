@@ -27,7 +27,7 @@ func (sm SliceString) scan(idName string, id *int64, amount int64) (*int64, []st
 }
 
 func (sm SliceString) duplicate(items []string) []string {
-	newItems := make([]string, 0, len(items))
+	newItems := make([]string, len(items), len(items))
 	_ = copy(newItems, items)
 	return newItems
 }

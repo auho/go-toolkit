@@ -54,7 +54,7 @@ func (s *setsKey) scan(entriesChan chan<- []string, c *client.Redis, key string,
 }
 
 func (s *setsKey) duplicate(items []string) []string {
-	newItems := make([]string, 0, len(items))
+	newItems := make([]string, len(items), len(items))
 	_ = copy(newItems, items)
 
 	return newItems

@@ -22,9 +22,9 @@ func DuplicateSliceMap[E Entry](items []map[string]E) []map[string]E {
 }
 
 func DuplicateSliceSlice[E Entry](items [][]E) [][]E {
-	newItems := make([][]E, 0, len(items))
+	newItems := make([][]E, len(items), len(items))
 	for _, v := range items {
-		newItem := make([]E, 0, len(v))
+		newItem := make([]E, len(v), len(v))
 		_ = copy(newItem, v)
 
 		newItems = append(newItems, newItem)
