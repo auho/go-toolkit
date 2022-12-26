@@ -85,13 +85,13 @@ func (s *scanKey) Scan() error {
 				s.LogFatal(err)
 			}
 
-			if cursor == 0 {
-				break
-			}
-
 			if len(keys) > 0 {
 				s.amount += int64(len(keys))
 				s.itemsChan <- keys
+			}
+
+			if cursor == 0 {
+				break
 			}
 
 			if s.total > 0 && s.amount >= s.total {
