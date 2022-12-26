@@ -14,7 +14,7 @@ type Tasker[E storage.Entry] interface {
 	Title() string
 
 	// Prepare need to be implemented
-	Prepare()
+	Prepare() error
 
 	// Do need to be implemented
 	Do([]E)
@@ -22,6 +22,7 @@ type Tasker[E storage.Entry] interface {
 	// AfterDo need to be implemented
 	AfterDo()
 
+	HasBeenInit() bool
 	Concurrency() int
 	State() []string
 	Output() []string
@@ -40,6 +41,7 @@ type Task struct {
 	duration      *timing.Duration
 	state         *output.MultilineText
 	output        *output.MultilineText
+	hasBeenInit   bool
 }
 
 func (t *Task) Init(options ...func(*Task)) {
@@ -54,6 +56,12 @@ func (t *Task) Init(options ...func(*Task)) {
 	if t.concurrency <= 0 {
 		t.concurrency = 2
 	}
+
+	t.hasBeenInit = true
+}
+
+func (t *Task) HasBeenInit() bool {
+	return t.hasBeenInit
 }
 
 func (t *Task) Concurrency() int {

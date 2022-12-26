@@ -2,6 +2,7 @@ package flow
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/auho/go-toolkit/console/output"
@@ -162,7 +163,10 @@ func (f *Flow[E]) actionerDo() {
 
 func (f *Flow[E]) actionerPerpare() {
 	for _, a := range f.actioners {
-		a.Prepare()
+		err := a.Prepare()
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 

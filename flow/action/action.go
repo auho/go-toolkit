@@ -1,6 +1,7 @@
 package action
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/auho/go-toolkit/flow/storage"
@@ -8,7 +9,7 @@ import (
 )
 
 type Actioner[E storage.Entry] interface {
-	Prepare()
+	Prepare() error
 	Receive([]E)
 	Do()
 	Done()
@@ -46,8 +47,17 @@ func (a *Action[E]) Receive(msi []E) {
 	a.itemsChan <- msi
 }
 
-func (a *Action[E]) Prepare() {
-	a.tasker.Prepare()
+func (a *Action[E]) Prepare() error {
+	if !a.tasker.HasBeenInit() {
+		return errors.New("task of action has not been init")
+	}
+
+	err := a.tasker.Prepare()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Action[E]) Do() {
