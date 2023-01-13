@@ -16,5 +16,5 @@ func formatStruct(value reflect.Value) string {
 		elmsString[i] = `"` + fieldName + `": ` + format(fieldElem)
 	}
 
-	return "{" + strings.Join(elmsString, ", ") + "}"
+	return addBraces(strings.Join(elmsString, ", "))
 }

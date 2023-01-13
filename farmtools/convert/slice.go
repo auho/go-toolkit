@@ -13,5 +13,5 @@ func formatSlice(value reflect.Value) string {
 		elmsString[i] = format(value.Index(i))
 	}
 
-	return "[" + strings.Join(elmsString, ", ") + "]"
+	return addBrackets(strings.Join(elmsString, ", "))
 }

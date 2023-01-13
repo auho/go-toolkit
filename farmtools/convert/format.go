@@ -10,16 +10,18 @@ func format(value reflect.Value) string {
 
 	s := ""
 	switch {
-	case _isIndirect(elemKind):
+	case isIndirect(elemKind):
 		s = fmt.Sprintf("%v", value)
 	case elemKind == reflect.String:
 		s = fmt.Sprintf(`"%v"`, value)
-	case _isArrayOrSlice(elemKind):
+	case isArrayOrSlice(elemKind):
 		s = formatSlice(value)
 	case elemKind == reflect.Map:
 		s = formatMap(value)
 	case elemKind == reflect.Struct:
 		s = formatStruct(value)
+	case elemKind == reflect.Chan:
+		s = formatChan(value)
 	case elemKind == reflect.Pointer:
 		if value.IsNil() {
 			//value.Type().Elem().Kind()

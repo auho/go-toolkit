@@ -14,35 +14,35 @@ func formatMap(value reflect.Value) string {
 		k := iterator.Key()
 		v := iterator.Value()
 
-		ks, isLiteral := underlyingKindString(k)
-		if !isLiteral {
-			ks = `"- ` + ks + ` -"`
+		ks, _isLiteral := underlyingKindString(k)
+		if !_isLiteral {
+			ks = typeStringToSymbolString(ks)
 		}
 
 		elmsString[i] = ks + `: ` + format(v)
 		i++
 	}
 
-	return "{" + strings.Join(elmsString, ", ") + "}"
+	return addBraces(strings.Join(elmsString, ", "))
 }
 
-func underlyingKindString(value reflect.Value) (s string, isLiteral bool) {
-	isLiteral = false
+func underlyingKindString(value reflect.Value) (s string, _isLiteral bool) {
+	_isLiteral = false
 
 	kind := value.Kind()
 
 	switch {
-	case _isLiteral(kind):
+	case isLiteral(kind):
 		s = format(value)
-		isLiteral = true
+		_isLiteral = true
 	case kind == reflect.Pointer:
 		s, _ = underlyingKindString(value.Elem())
-		s = "*" + s
+		s = addPointerSymbol(s)
 	default:
 		if value.Type().Kind() == reflect.Interface {
 			if value.IsNil() {
 				s = CNull
-				isLiteral = true
+				_isLiteral = true
 			} else {
 				s = value.Type().Kind().String()
 			}
@@ -51,5 +51,5 @@ func underlyingKindString(value reflect.Value) (s string, isLiteral bool) {
 		}
 	}
 
-	return s, isLiteral
+	return s, _isLiteral
 }

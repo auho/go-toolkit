@@ -36,6 +36,9 @@ type structType struct {
 	structField     emptyStructType
 	ptrStructNotNil *emptyStructType // not nil
 	ptrStructIsNil  *emptyStructType // is nil
+
+	chanInt       chan int
+	chanMultiPtr1 chan anyMultiPtr1
 }
 
 type interfaceStruct struct {
@@ -119,4 +122,7 @@ var _struct = structType{
 	structField:     emptyStructType{},
 	ptrStructNotNil: &emptyStructType{},
 	ptrStructIsNil:  nil,
+
+	chanInt:       make(chan int, 10),
+	chanMultiPtr1: make(chan anyMultiPtr1),
 }
