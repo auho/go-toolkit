@@ -13,3 +13,14 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# golang
+go.work
+*.pprof
+
+# IDE
+.vscode
+.idea
+
+# Mac OS
+.DS_Store
