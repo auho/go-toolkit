@@ -16,6 +16,7 @@
 
 # golang
 go.work
+*.pprof
 
 # IDE
 .vscode

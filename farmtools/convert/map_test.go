@@ -6,6 +6,14 @@ import (
 )
 
 func Test_map(t *testing.T) {
+	_testMap(t, nil)
+}
+
+func Benchmark_map(b *testing.B) {
+	_testMap(nil, b)
+}
+
+func _testMap(t *testing.T, b *testing.B) {
 	type args struct {
 		value reflect.Value
 	}
@@ -31,10 +39,20 @@ func Test_map(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := format(tt.args.value); got != tt.want {
-				_assert(t, got, tt.want)
-			}
-		})
+		if t != nil {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := format(tt.args.value); got != tt.want {
+					_assert(t, got, tt.want)
+				}
+			})
+		}
+
+		if b != nil {
+			b.Run(tt.name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					format(tt.args.value)
+				}
+			})
+		}
 	}
 }

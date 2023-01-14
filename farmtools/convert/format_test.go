@@ -6,6 +6,14 @@ import (
 )
 
 func Test_format(t *testing.T) {
+	_testFormat(t, nil)
+}
+
+func Benchmark_format(b *testing.B) {
+	_testFormat(nil, b)
+}
+
+func _testFormat(t *testing.T, b *testing.B) {
 	type args struct {
 		value reflect.Value
 	}
@@ -34,10 +42,20 @@ func Test_format(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := format(tt.args.value); got != tt.want {
-				_assert(t, got, tt.want)
-			}
-		})
+		if t != nil {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := format(tt.args.value); got != tt.want {
+					_assert(t, got, tt.want)
+				}
+			})
+		}
+
+		if b != nil {
+			b.Run(tt.name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					format(tt.args.value)
+				}
+			})
+		}
 	}
 }

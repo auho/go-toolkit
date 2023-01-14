@@ -6,8 +6,16 @@ import (
 )
 
 func Test_struct(t *testing.T) {
+	_testStruct(t, nil)
+}
+
+func Benchmark_struct(b *testing.B) {
+	_testStruct(nil, b)
+}
+
+func _testStruct(t *testing.T, b *testing.B) {
 	type args struct {
-		itemElem reflect.Value
+		value reflect.Value
 	}
 
 	tests := []struct {
@@ -22,10 +30,20 @@ func Test_struct(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := format(tt.args.itemElem); got != tt.want {
-				_assert(t, got, tt.want)
-			}
-		})
+		if t != nil {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := format(tt.args.value); got != tt.want {
+					_assert(t, got, tt.want)
+				}
+			})
+		}
+
+		if b != nil {
+			b.Run(tt.name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					format(tt.args.value)
+				}
+			})
+		}
 	}
 }

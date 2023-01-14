@@ -6,10 +6,19 @@ import (
 )
 
 func Test_interface(t *testing.T) {
+	_testInterface(t, nil)
+}
+
+func Benchmark_interface(b *testing.B) {
+	_testInterface(nil, b)
+
+}
+
+func _testInterface(t *testing.T, b *testing.B) {
 	_anyMultiPtr3 = &_anyMultiPtr2
 
 	type args struct {
-		itemElem reflect.Value
+		value reflect.Value
 	}
 
 	tests := []struct {
@@ -46,10 +55,20 @@ func Test_interface(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := format(tt.args.itemElem); got != tt.want {
-				_assert(t, got, tt.want)
-			}
-		})
+		if t != nil {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := format(tt.args.value); got != tt.want {
+					_assert(t, got, tt.want)
+				}
+			})
+		}
+
+		if b != nil {
+			b.Run(tt.name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					format(tt.args.value)
+				}
+			})
+		}
 	}
 }

@@ -5,7 +5,15 @@ import (
 	"testing"
 )
 
-func Test__slice(t *testing.T) {
+func Test_slice(t *testing.T) {
+	_testSlice(t, nil)
+}
+
+func Benchmark_slice(b *testing.B) {
+	_testSlice(nil, b)
+}
+
+func _testSlice(t *testing.T, b *testing.B) {
 	type args struct {
 		value reflect.Value
 	}
@@ -22,10 +30,20 @@ func Test__slice(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := formatSlice(tt.args.value); got != tt.want {
-				_assert(t, got, tt.want)
-			}
-		})
+		if t != nil {
+			t.Run(tt.name, func(t *testing.T) {
+				if got := format(tt.args.value); got != tt.want {
+					_assert(t, got, tt.want)
+				}
+			})
+		}
+
+		if b != nil {
+			b.Run(tt.name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					format(tt.args.value)
+				}
+			})
+		}
 	}
 }
