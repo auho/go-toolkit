@@ -41,7 +41,7 @@ func _testMap(t *testing.T, b *testing.B) {
 	for _, tt := range tests {
 		if t != nil {
 			t.Run(tt.name, func(t *testing.T) {
-				if got := format(tt.args.value); got != tt.want {
+				if got := Format(tt.args.value); got != tt.want {
 					_assert(t, got, tt.want)
 				}
 			})
@@ -50,7 +50,7 @@ func _testMap(t *testing.T, b *testing.B) {
 		if b != nil {
 			b.Run(tt.name, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					format(tt.args.value)
+					Format(tt.args.value)
 				}
 			})
 		}

@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func format(value reflect.Value) string {
+func Format(value reflect.Value) string {
 	elemKind := value.Kind()
 
 	s := ""
@@ -42,13 +42,13 @@ func format(value reflect.Value) string {
 			//value.Type().Elem().Kind()
 			s = CObjectEmpty
 		} else {
-			s = format(value.Elem())
+			s = Format(value.Elem())
 		}
 	case reflect.Interface:
 		if value.IsNil() {
 			s = CNull
 		} else {
-			s = format(value.Elem())
+			s = Format(value.Elem())
 		}
 	default:
 		s = "__UNKNOWN_TYPE__"

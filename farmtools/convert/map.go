@@ -18,7 +18,7 @@ func formatMap(value reflect.Value) string {
 		}
 
 		b.WriteString(", " + ks + `: `)
-		b.WriteString(format(v))
+		b.WriteString(Format(v))
 	}
 
 	if b.Len() <= 0 {
@@ -35,7 +35,7 @@ func underlyingKindString(value reflect.Value) (s string, _isLiteral bool) {
 
 	switch {
 	case isLiteral(kind):
-		s = format(value)
+		s = Format(value)
 		_isLiteral = true
 	case kind == reflect.Pointer:
 		s, _ = underlyingKindString(value.Elem())

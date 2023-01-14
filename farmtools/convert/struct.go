@@ -15,7 +15,7 @@ func formatStruct(value reflect.Value) string {
 		fieldName := _valueType.Field(i).Name
 
 		b.WriteString(`, "` + fieldName + `": `)
-		b.WriteString(format(fieldElem))
+		b.WriteString(Format(fieldElem))
 	}
 
 	if b.Len() <= 0 {

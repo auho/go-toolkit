@@ -11,7 +11,7 @@ func formatSlice(value reflect.Value) string {
 	var b strings.Builder
 	for i := 0; i < _len; i++ {
 		b.WriteString(", ")
-		b.WriteString(format(value.Index(i)))
+		b.WriteString(Format(value.Index(i)))
 	}
 
 	if b.Len() <= 0 {
