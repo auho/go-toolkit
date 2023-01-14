@@ -7,14 +7,20 @@ import (
 
 func formatStruct(value reflect.Value) string {
 	_filedNum := value.NumField()
-	elmsString := make([]string, _filedNum)
+	_valueType := value.Type()
 
+	var b strings.Builder
 	for i := 0; i < _filedNum; i++ {
 		fieldElem := value.Field(i)
-		fieldName := value.Type().Field(i).Name
+		fieldName := _valueType.Field(i).Name
 
-		elmsString[i] = `"` + fieldName + `": ` + format(fieldElem)
+		b.WriteString(`, "` + fieldName + `": `)
+		b.WriteString(format(fieldElem))
 	}
 
-	return addBraces(strings.Join(elmsString, ", "))
+	if b.Len() <= 0 {
+		return addBraces("")
+	} else {
+		return addBraces(b.String()[2:])
+	}
 }

@@ -3,41 +3,48 @@ package convert
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 func format(value reflect.Value) string {
 	elemKind := value.Kind()
 
 	s := ""
-	switch {
-	case isIndirect(elemKind):
+	switch elemKind {
+	case reflect.Bool:
+		if value.Bool() {
+			s = cBoolTrue
+		} else {
+			s = CBoolFalse
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		s = strconv.FormatInt(value.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		s = strconv.FormatUint(value.Uint(), 10)
+	case reflect.Float32:
+		s = strconv.FormatFloat(value.Float(), 'E', -1, 32)
+	case reflect.Float64:
+		s = strconv.FormatFloat(value.Float(), 'E', -1, 64)
+	case reflect.Complex64, reflect.Complex128:
 		s = fmt.Sprintf("%v", value)
-	case elemKind == reflect.String:
-		s = fmt.Sprintf(`"%v"`, value)
-	case isArrayOrSlice(elemKind):
+	case reflect.String:
+		s = `"` + value.String() + `"`
+	case reflect.Slice, reflect.Array:
 		s = formatSlice(value)
-	case elemKind == reflect.Map:
+	case reflect.Map:
 		s = formatMap(value)
-	case elemKind == reflect.Struct:
+	case reflect.Struct:
 		s = formatStruct(value)
-	case elemKind == reflect.Chan:
+	case reflect.Chan:
 		s = formatChan(value)
-	case elemKind == reflect.Pointer:
+	case reflect.Pointer:
 		if value.IsNil() {
 			//value.Type().Elem().Kind()
 			s = CObjectEmpty
 		} else {
-			elemKind = value.Elem().Kind()
-			switch elemKind {
-			case reflect.Struct:
-				s = format(value.Elem())
-			case reflect.Pointer:
-				s = format(value.Elem())
-			default:
-				s = format(value.Elem())
-			}
+			s = format(value.Elem())
 		}
-	case elemKind == reflect.Interface:
+	case reflect.Interface:
 		if value.IsNil() {
 			s = CNull
 		} else {

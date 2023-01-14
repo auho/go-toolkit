@@ -6,9 +6,7 @@ import (
 )
 
 func formatMap(value reflect.Value) string {
-	elmsString := make([]string, value.Len())
-
-	i := 0
+	var b strings.Builder
 	iterator := value.MapRange()
 	for iterator.Next() {
 		k := iterator.Key()
@@ -19,11 +17,15 @@ func formatMap(value reflect.Value) string {
 			ks = typeStringToSymbolString(ks)
 		}
 
-		elmsString[i] = ks + `: ` + format(v)
-		i++
+		b.WriteString(", " + ks + `: `)
+		b.WriteString(format(v))
 	}
 
-	return addBraces(strings.Join(elmsString, ", "))
+	if b.Len() <= 0 {
+		return addBraces("")
+	} else {
+		return addBraces(b.String()[2:])
+	}
 }
 
 func underlyingKindString(value reflect.Value) (s string, _isLiteral bool) {
@@ -44,7 +46,7 @@ func underlyingKindString(value reflect.Value) (s string, _isLiteral bool) {
 				s = CNull
 				_isLiteral = true
 			} else {
-				s = value.Type().Kind().String()
+				s = value.Kind().String()
 			}
 		} else {
 			s = value.Type().String()

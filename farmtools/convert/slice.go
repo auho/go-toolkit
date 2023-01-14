@@ -7,11 +7,16 @@ import (
 
 func formatSlice(value reflect.Value) string {
 	_len := value.Len()
-	elmsString := make([]string, _len)
 
+	var b strings.Builder
 	for i := 0; i < _len; i++ {
-		elmsString[i] = format(value.Index(i))
+		b.WriteString(", ")
+		b.WriteString(format(value.Index(i)))
 	}
 
-	return addBrackets(strings.Join(elmsString, ", "))
+	if b.Len() <= 0 {
+		return addBraces("")
+	} else {
+		return addBraces(b.String()[2:])
+	}
 }

@@ -6,6 +6,8 @@ import (
 
 const CNull = "null"
 const CObjectEmpty = "{}"
+const CBoolFalse = "false"
+const cBoolTrue = "true"
 
 func isFigure(kind reflect.Kind) bool {
 	return (kind >= reflect.Int && kind <= reflect.Uint64) || (kind >= reflect.Float32 && kind <= reflect.Complex128)

@@ -29,10 +29,12 @@ func _testFormat(t *testing.T, b *testing.B) {
 		args args
 		want string
 	}{
-		{"bool false", args{reflect.ValueOf(false)}, ""},
 		{"bool true", args{reflect.ValueOf(true)}, ""},
 		{"uint", args{reflect.ValueOf(1)}, ""},
 		{"int", args{reflect.ValueOf(-1)}, ""},
+		{"float 32", args{reflect.ValueOf(float32(-1.1))}, ""},
+		{"float 64", args{reflect.ValueOf(-1.1)}, ""},
+		{"string", args{reflect.ValueOf("s1")}, ""},
 
 		{"struct interface empty", args{reflect.ValueOf(structAnyEmpty)}, ""},
 		{"struct interface", args{reflect.ValueOf(structAny)}, ""},
