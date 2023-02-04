@@ -28,9 +28,15 @@ type Tasker[E storage.Entry] interface {
 	Output() []string
 }
 
+type WithTaskOption func(*Task)
+
 func WithConcurrency(c int) func(i *Task) {
 	return func(i *Task) {
 		i.concurrency = c
+
+		if i.concurrency <= 0 {
+			i.concurrency = 2
+		}
 	}
 }
 
@@ -44,17 +50,15 @@ type Task struct {
 	hasBeenInit   bool
 }
 
-func (t *Task) Init(options ...func(*Task)) {
+func (t *Task) Init(options ...WithTaskOption) {
 	for _, o := range options {
 		o(t)
 	}
 
-	t.duration = timing.NewDuration()
-	t.state = output.NewMultilineText()
-	t.output = output.NewMultilineText()
-
-	if t.concurrency <= 0 {
-		t.concurrency = 2
+	if !t.HasBeenInit() {
+		t.duration = timing.NewDuration()
+		t.state = output.NewMultilineText()
+		t.output = output.NewMultilineText()
 	}
 
 	t.hasBeenInit = true
