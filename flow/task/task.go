@@ -47,6 +47,7 @@ type Task struct {
 	duration      *timing.Duration
 	state         *output.MultilineText
 	output        *output.MultilineText
+	log           *output.MultilineText
 	hasBeenInit   bool
 }
 
@@ -59,6 +60,7 @@ func (t *Task) Init(options ...WithTaskOption) {
 		t.duration = timing.NewDuration()
 		t.state = output.NewMultilineText()
 		t.output = output.NewMultilineText()
+		t.log = output.NewMultilineText()
 	}
 
 	t.hasBeenInit = true
@@ -70,6 +72,10 @@ func (t *Task) HasBeenInit() bool {
 
 func (t *Task) Concurrency() int {
 	return t.concurrency
+}
+
+func (t *Task) SetState(line int, s string) {
+	t.state.Print(line, s)
 }
 
 func (t *Task) State() []string {
@@ -85,8 +91,8 @@ func (t *Task) Output() []string {
 	return t.output.Content()
 }
 
-func (t *Task) SetState(line int, s string) {
-	t.state.Print(line, s)
+func (t *Task) Log() []string {
+	return t.log.Content()
 }
 
 func (t *Task) Printf(format string, a ...interface{}) {
@@ -95,6 +101,14 @@ func (t *Task) Printf(format string, a ...interface{}) {
 
 func (t *Task) Println(a ...interface{}) {
 	t.output.PrintNext(fmt.Sprint(a...))
+}
+
+func (t *Task) Logf(format string, a ...interface{}) {
+	t.log.PrintNext(fmt.Sprintf(format, a...))
+}
+
+func (t *Task) Logln(a ...interface{}) {
+	t.log.PrintNext(fmt.Sprint(a...))
 }
 
 func (t *Task) AddAmount(a int64) {
