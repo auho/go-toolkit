@@ -1,19 +1,19 @@
-package convert
+package hommization
 
 import (
 	"reflect"
 	"testing"
 )
 
-func Test_slice(t *testing.T) {
-	_testSlice(t, nil)
+func Test_struct(t *testing.T) {
+	_testStruct(t, nil)
 }
 
-func Benchmark_slice(b *testing.B) {
-	_testSlice(nil, b)
+func Benchmark_struct(b *testing.B) {
+	_testStruct(nil, b)
 }
 
-func _testSlice(t *testing.T, b *testing.B) {
+func _testStruct(t *testing.T, b *testing.B) {
 	type args struct {
 		value reflect.Value
 	}
@@ -23,10 +23,10 @@ func _testSlice(t *testing.T, b *testing.B) {
 		args args
 		want string
 	}{
-		{"bool", args{reflect.ValueOf([]bool{false, false, true, true})}, ""},
-		{"int", args{reflect.ValueOf([]int{1, 2, 3, 4, 5})}, ""},
-		{"string", args{reflect.ValueOf([]string{"s1", "s2", "s3", "s4", "s5"})}, ""},
-		{"struct", args{reflect.ValueOf([]structType{_struct})}, ""},
+		{"struct empty", args{reflect.ValueOf(_structEmpty)}, ""},
+		{"struct", args{reflect.ValueOf(_struct)}, ""},
+		{"struct pointer empty", args{reflect.ValueOf(&_structEmpty)}, ""},
+		{"struct pointer", args{reflect.ValueOf(&_struct)}, ""},
 	}
 
 	for _, tt := range tests {
