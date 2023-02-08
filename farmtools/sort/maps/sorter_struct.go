@@ -4,7 +4,7 @@ import (
 	sort2 "github.com/auho/go-toolkit/farmtools/sort"
 )
 
-type SorterMapStruct[keyE sort2.KeyEntity, valE sort2.ValEntity] map[keyE]Comparable[valE]
+type SorterMapStruct[keyE sort2.KeyEntity, valE sort2.ValEntity] map[keyE]sort2.ValueSorter[valE]
 
 func NewSorterStructByKey[keyE sort2.KeyEntity, valE sort2.ValEntity](
 	m SorterMapStruct[keyE, valE], sortedOrder string,

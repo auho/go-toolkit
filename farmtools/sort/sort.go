@@ -22,3 +22,7 @@ type KeyEntity interface {
 type ValEntity interface {
 	KeyEntity
 }
+
+type ValueSorter[valE ValEntity] interface {
+	SortedVal() valE
+}
