@@ -10,8 +10,9 @@ type Comparable[valE sort2.ValEntity] interface {
 }
 
 type Sorter[keyE sort2.KeyEntity, valE sort2.ValEntity] struct {
-	items    []Item[keyE, valE]
-	sortedBy string
+	items       []Item[keyE, valE]
+	sortedBy    string
+	sortedOrder string
 }
 
 type Item[keyE sort2.KeyEntity, valE sort2.ValEntity] struct {
