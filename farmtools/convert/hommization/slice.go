@@ -15,8 +15,8 @@ func formatSlice(value reflect.Value) string {
 	}
 
 	if b.Len() <= 0 {
-		return addBraces("")
+		return addBrackets("")
 	} else {
-		return addBraces(b.String()[2:])
+		return addBrackets(b.String()[2:])
 	}
 }

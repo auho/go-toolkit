@@ -6,6 +6,12 @@ import (
 	"strconv"
 )
 
+func Convert(a any) string {
+	aRef := reflect.ValueOf(a)
+
+	return Format(aRef)
+}
+
 func Format(value reflect.Value) string {
 	elemKind := value.Kind()
 
