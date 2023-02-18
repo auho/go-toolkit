@@ -14,13 +14,35 @@ type Item[keyE sort2.KeyEntity, valE sort2.ValEntity] struct {
 	Val valE
 }
 
+type Items[keyE sort2.KeyEntity, valE sort2.ValEntity] []Item[keyE, valE]
+
+func (is Items[keyE, valE]) Keys() []keyE {
+	keys := make([]keyE, 0, len(is))
+
+	for _, item := range is {
+		keys = append(keys, item.Key)
+	}
+
+	return keys
+}
+
+func (is Items[keyE, valE]) Values() []valE {
+	values := make([]valE, 0, len(is))
+
+	for _, item := range is {
+		values = append(values, item.Val)
+	}
+
+	return values
+}
+
 type sorter[keyE sort2.KeyEntity, valE sort2.ValEntity] struct {
-	items       []Item[keyE, valE]
+	items       Items[keyE, valE]
 	sortedBy    string
 	sortedOrder string
 }
 
-func (s *sorter[keyE, valE]) sort() []Item[keyE, valE] {
+func (s *sorter[keyE, valE]) sort() Items[keyE, valE] {
 	sort.Sort(s)
 	return s.items
 }
