@@ -24,26 +24,22 @@ func Test_SorterStruct(t *testing.T) {
 		nm[k] = m[k]
 	}
 
-	s := NewSorterStructByValue[string](nm, sort.SortedOrderAsc)
-	ss := s.Sort()
+	ss := SorterStructByValueAsc[string](nm)
 	if ss[0].Val != 1 {
 		t.Error("value asc error")
 	}
 
-	s = NewSorterStructByValue[string](nm, sort.SortedOrderDesc)
-	ss = s.Sort()
+	ss = SorterStructByValueDesc[string](nm)
 	if ss[0].Val != 3 {
 		t.Error("value desc error")
 	}
 
-	s = NewSorterStructByKey[string](nm, sort.SortedOrderAsc)
-	ss = s.Sort()
+	ss = SorterStructByKeyAsc[string](nm)
 	if ss[0].Key != "1" {
 		t.Error("key desc error")
 	}
 
-	s = NewSorterStructByKey[string](nm, sort.SortedOrderDesc)
-	ss = s.Sort()
+	ss = SorterStructByKeyDesc[string](nm)
 	if ss[0].Key != "3" {
 		t.Error("key desc error")
 	}

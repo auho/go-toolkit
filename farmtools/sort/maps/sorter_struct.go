@@ -6,22 +6,26 @@ import (
 
 type SorterMapStruct[keyE sort2.KeyEntity, valE sort2.ValEntity] map[keyE]sort2.ValueSorter[valE]
 
-func NewSorterStructByKey[keyE sort2.KeyEntity, valE sort2.ValEntity](
-	m SorterMapStruct[keyE, valE], sortedOrder string,
-) *Sorter[keyE, valE] {
-	return newSorterStruct[keyE, valE](m, sortedByKey, sortedOrder)
+func SorterStructByKeyAsc[keyE sort2.KeyEntity, valE sort2.ValEntity](m SorterMapStruct[keyE, valE]) []Item[keyE, valE] {
+	return newSorterStruct[keyE, valE](m, sortedByKey, sort2.SortedOrderAsc)
 }
 
-func NewSorterStructByValue[keyE sort2.KeyEntity, valE sort2.ValEntity](
-	m SorterMapStruct[keyE, valE], sortedOrder string,
-) *Sorter[keyE, valE] {
-	return newSorterStruct[keyE, valE](m, sortedByValue, sortedOrder)
+func SorterStructByKeyDesc[keyE sort2.KeyEntity, valE sort2.ValEntity](m SorterMapStruct[keyE, valE]) []Item[keyE, valE] {
+	return newSorterStruct[keyE, valE](m, sortedByKey, sort2.SortedOrderDesc)
+}
+
+func SorterStructByValueAsc[keyE sort2.KeyEntity, valE sort2.ValEntity](m SorterMapStruct[keyE, valE]) []Item[keyE, valE] {
+	return newSorterStruct[keyE, valE](m, sortedByValue, sort2.SortedOrderAsc)
+}
+
+func SorterStructByValueDesc[keyE sort2.KeyEntity, valE sort2.ValEntity](m SorterMapStruct[keyE, valE]) []Item[keyE, valE] {
+	return newSorterStruct[keyE, valE](m, sortedByValue, sort2.SortedOrderDesc)
 }
 
 func newSorterStruct[keyE sort2.KeyEntity, valE sort2.ValEntity](
 	m SorterMapStruct[keyE, valE], sortedBy string, sortedOrder string,
-) *Sorter[keyE, valE] {
-	ms := &Sorter[keyE, valE]{}
+) []Item[keyE, valE] {
+	ms := &sorter[keyE, valE]{}
 	ms.sortedBy = sortedBy
 	ms.sortedOrder = sortedOrder
 
@@ -30,5 +34,5 @@ func newSorterStruct[keyE sort2.KeyEntity, valE sort2.ValEntity](
 		ms.items = append(ms.items, Item[keyE, valE]{Key: k, Val: v.SortedVal()})
 	}
 
-	return ms
+	return ms.sort()
 }
