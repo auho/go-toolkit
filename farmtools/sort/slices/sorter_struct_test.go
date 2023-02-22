@@ -19,18 +19,13 @@ func (s sortedStruct) SortedVal() int {
 func Test_sorterStruct(t *testing.T) {
 	s := []sortedStruct{{2}, {1}, {3}}
 
-	ns := make([]sort.ValueSorter[int], 0, len(s))
-	for _, v := range s {
-		ns = append(ns, v)
-	}
-
-	SorterStructAsc(ns)
-	if s[0].SortedVal() == 1 {
+	SorterStructAsc[int](s)
+	if s[0].SortedVal() != 1 {
 		t.Error("asc error")
 	}
 
-	SorterStructDesc(ns)
-	if s[0].SortedVal() == 3 {
+	SorterStructDesc[int](s)
+	if s[0].SortedVal() != 3 {
 		t.Error("desc error")
 	}
 }

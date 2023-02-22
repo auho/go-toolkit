@@ -6,26 +6,26 @@ import (
 	sort2 "github.com/auho/go-toolkit/farmtools/sort"
 )
 
-type sorterStruct[valE sort2.ValEntity] struct {
+type sorterStruct[valE sort2.ValEntity, sortE sort2.ValueSorter[valE]] struct {
 	sorter[valE]
-	origin []sort2.ValueSorter[valE]
+	origin []sortE
 }
 
-func (s *sorterStruct[valE]) Swap(i, j int) {
+func (s *sorterStruct[valE, sortE]) Swap(i, j int) {
 	s.items[i], s.items[j] = s.items[j], s.items[i]
 	s.origin[i], s.origin[j] = s.origin[j], s.origin[i]
 }
 
-func SorterStructAsc[valE sort2.ValEntity](s []sort2.ValueSorter[valE]) {
-	newSorterStruct(s, sort2.SortedOrderAsc)
+func SorterStructAsc[valE sort2.ValEntity, sortE sort2.ValueSorter[valE]](s []sortE) {
+	newSorterStruct[valE, sortE](s, sort2.SortedOrderAsc)
 }
 
-func SorterStructDesc[valE sort2.ValEntity](s []sort2.ValueSorter[valE]) {
-	newSorterStruct(s, sort2.SortedOrderDesc)
+func SorterStructDesc[valE sort2.ValEntity, sortE sort2.ValueSorter[valE]](s []sortE) {
+	newSorterStruct[valE, sortE](s, sort2.SortedOrderDesc)
 }
 
-func newSorterStruct[valE sort2.ValEntity](s []sort2.ValueSorter[valE], sortedOrder string) {
-	ss := &sorterStruct[valE]{}
+func newSorterStruct[valE sort2.ValEntity, sortE sort2.ValueSorter[valE]](s []sortE, sortedOrder string) {
+	ss := &sorterStruct[valE, sortE]{}
 	ss.sortedOrder = sortedOrder
 	ss.origin = s
 
