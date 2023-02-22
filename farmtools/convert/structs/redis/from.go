@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 func ConvertFromHash(s interface{}, m map[string]interface{}) (err error) {
@@ -54,6 +55,10 @@ func ConvertFromHash(s interface{}, m map[string]interface{}) (err error) {
 				_convertFloat(fieldRef, v)
 			case reflect.String:
 				_convertString(fieldRef, v)
+			case reflect.Struct:
+				_convertStruct(fieldRef, v)
+			default:
+				panic(fmt.Sprintf("unknow type %s[%T %v]", fieldType.String(), v, v))
 			}
 		}
 	}
@@ -76,7 +81,7 @@ func _convertInt(fieldRef reflect.Value, v interface{}) {
 	case string:
 		tempInt, _ = strconv.ParseInt(tmpVal, 10, 64)
 	default:
-		panic(fmt.Sprintf("convert string type error[%v]", v))
+		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
 	}
 
 	fieldRef.SetInt(tempInt)
@@ -109,9 +114,31 @@ func _convertString(fieldRef reflect.Value, v interface{}) {
 	switch tmpVal := v.(type) {
 	case string:
 		tempString = tmpVal
+	case float64:
+		tempString = strconv.FormatFloat(tmpVal, 'E', -1, 64)
 	default:
-		panic(fmt.Sprintf("convert string type error[%v]", v))
+		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
 	}
 
 	fieldRef.SetString(tempString)
+}
+
+func _convertStruct(fieldRef reflect.Value, v interface{}) {
+	switch fieldRef.Interface().(type) {
+	case time.Time:
+		switch nv := v.(type) {
+		case string:
+			timeLayout := "2006-01-02 15:04:05"
+			loc, _ := time.LoadLocation("Local")
+			nt, _ := time.ParseInLocation(timeLayout, nv, loc)
+			fieldRef.Set(reflect.ValueOf(nt))
+		case int, float32, float64:
+			fieldRef.Set(reflect.ValueOf(time.Unix(0, 0)))
+		default:
+			panic(fmt.Sprintf("convert time.Time error[%T %v]", v, v))
+		}
+
+	default:
+		panic(fmt.Sprintf("convert struct type error[%T %v]", v, v))
+	}
 }
