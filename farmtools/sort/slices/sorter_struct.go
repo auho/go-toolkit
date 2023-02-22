@@ -25,8 +25,9 @@ func SorterStructDesc[valE sort2.ValEntity](s []sort2.ValueSorter[valE]) {
 }
 
 func newSorterStruct[valE sort2.ValEntity](s []sort2.ValueSorter[valE], sortedOrder string) {
-	ss := &sorter[valE]{}
+	ss := &sorterStruct[valE]{}
 	ss.sortedOrder = sortedOrder
+	ss.origin = s
 
 	ss.items = make([]valE, 0, len(s))
 	for _, v := range s {
