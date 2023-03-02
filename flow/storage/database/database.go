@@ -1,42 +1,24 @@
 package database
 
 import (
-	"gorm.io/gorm"
+	goSimpleDb "github.com/auho/go-simple-db/v2"
 )
 
 type BuildDb func() (*DB, error)
 
 type DB struct {
-	*gorm.DB
+	*goSimpleDb.SimpleDB
 }
 
-func (d *DB) Ping() error {
-	sqlDb, err := d.DB.DB()
-	if err != nil {
-		return err
-	}
-
-	return sqlDb.Ping()
-}
-
-func NewDB(d gorm.Dialector, c *gorm.Config) (*DB, error) {
-	if c == nil {
-		c = &gorm.Config{}
-	}
-
-	db, err := gorm.Open(d, c)
+func NewDB(fn func() (*goSimpleDb.SimpleDB, error)) (*DB, error) {
+	sd, err := fn()
 	if err != nil {
 		return nil, err
 	}
 
-	return &DB{DB: db}, nil
-
+	return &DB{SimpleDB: sd}, nil
 }
 
-func (d *DB) Close() error {
-	return nil
-}
-
-type Databaseor interface {
+type Driver interface {
 	DB() *DB
 }

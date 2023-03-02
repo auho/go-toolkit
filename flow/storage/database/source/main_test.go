@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/auho/go-toolkit/flow/storage/database"
-	"gorm.io/driver/mysql"
-
+	go_simple_db "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 var _mysqlDsn = "test:Test123$@tcp(127.0.0.1:3306)/"
@@ -33,7 +32,9 @@ func setUp() {
 }
 
 func createTable() {
-	db, err := database.NewDB(mysql.Open(mysqlDsn), nil)
+	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
+		return go_simple_db.NewMysql(mysqlDsn)
+	})
 	if err != nil {
 		log.Fatal("new db create table ", err)
 	}
@@ -44,10 +45,11 @@ func createTable() {
 	}
 
 	query := "CREATE TABLE IF NOT EXISTS `" + dbName + "`.`" + tableName + "` (" +
-		"	`id` int(11) unsigned NOT NULL AUTO_INCREMENT," +
-		"	`name` varchar(32) NOT NULL DEFAULT ''," +
-		"	`value` int(11) NOT NULL DEFAULT '0'," +
-		"	PRIMARY KEY (`id`)" +
+		"`id` int(11) unsigned NOT NULL AUTO_INCREMENT," +
+		"`name` varchar(32) NOT NULL DEFAULT ''," +
+		"`value` int(11) NOT NULL DEFAULT '0'," +
+		"`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+		"PRIMARY KEY (`id`)" +
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;"
 	err = db.Exec(query).Error
 	if err != nil {
@@ -56,7 +58,9 @@ func createTable() {
 }
 
 func buildData() {
-	db, err := database.NewDB(mysql.Open(mysqlDsn), nil)
+	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
+		return go_simple_db.NewMysql(mysqlDsn)
+	})
 	if err != nil {
 		log.Fatal("new db build data ", err)
 	}

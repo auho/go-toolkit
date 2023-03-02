@@ -1,6 +1,9 @@
 package source
 
-import "github.com/auho/go-toolkit/flow/storage/database"
+import (
+	"github.com/auho/go-toolkit/flow/storage/database"
+	"gorm.io/gorm"
+)
 
 type Config struct {
 	Concurrency int
@@ -19,7 +22,7 @@ type QueryConfig struct {
 	Order  string // "field1 desc"
 }
 
-func (q *QueryConfig) querior(db *database.DB) *database.DB {
+func (q *QueryConfig) querior(db *database.DB) *gorm.DB {
 	tx := db.Table(q.TableName)
 	if len(q.Fields) > 0 {
 		tx = tx.Select(q.Fields)
@@ -33,5 +36,5 @@ func (q *QueryConfig) querior(db *database.DB) *database.DB {
 		tx = tx.Order(q.Order)
 	}
 
-	return &database.DB{DB: tx}
+	return tx
 }

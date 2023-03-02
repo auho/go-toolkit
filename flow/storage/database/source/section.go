@@ -11,7 +11,7 @@ import (
 )
 
 var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
-var _ database.Databaseor = (*Section[storage.MapEntry])(nil)
+var _ database.Driver = (*Section[storage.MapEntry])(nil)
 
 type sectionQuery[E storage.Entry] interface {
 	query(se *Section[E], startId, size int64) ([]E, error)
@@ -38,9 +38,9 @@ type Section[E storage.Entry] struct {
 	sr            sectionQuery[E]
 }
 
-func newSection[E storage.Entry](config *QueryConfig, sr sectionQuery[E], newDb database.BuildDb) (*Section[E], error) {
+func newSection[E storage.Entry](config *QueryConfig, sr sectionQuery[E], b database.BuildDb) (*Section[E], error) {
 	s := &Section[E]{}
-	err := s.config(config, newDb)
+	err := s.config(config, b)
 	if err != nil {
 		return nil, err
 	}
@@ -203,14 +203,14 @@ func (s *Section[E]) queryPage(startId, endId int64) {
 	}
 }
 
-func (s *Section[E]) config(config *QueryConfig, newDb database.BuildDb) (err error) {
+func (s *Section[E]) config(config *QueryConfig, b database.BuildDb) (err error) {
 	s.conf = config
 
 	s.total = config.Maximum
 	s.startId = config.StartId
 	s.maxId = config.EndId
 
-	s.db, err = newDb()
+	s.db, err = b()
 	if err != nil {
 		return
 	}

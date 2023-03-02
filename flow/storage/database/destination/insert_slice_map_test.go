@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"strconv"
 	"testing"
 	"time"
 
-	"github.com/auho/go-simple-db/simple"
+	"github.com/auho/go-simple-db/v2"
+	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 func TestInsertSliceMap(t *testing.T) {
@@ -17,8 +17,10 @@ func TestInsertSliceMap(t *testing.T) {
 		Concurrency: 4,
 		PageSize:    337,
 		TableName:   tableName,
-		Driver:      driverName,
-		Dsn:         mysqlDsn,
+	}, func() (*database.DB, error) {
+		return database.NewDB(func() (*go_simple_db.SimpleDB, error) {
+			return go_simple_db.NewMysql(mysqlDsn)
+		})
 	})
 
 	if err != nil {
@@ -59,19 +61,10 @@ func TestInsertSliceMap(t *testing.T) {
 		t.Error(fmt.Sprintf("actual != expected %d != %d", iss.state.Amount(), page*pageSize))
 	}
 
-	driver, err := simple.NewDriver(driverName, mysqlDsn)
-	if err != nil {
-		t.Error(err)
-	}
-
-	dbAmountRes, err := driver.QueryFieldInterface("_count", fmt.Sprintf("SELECT COUNT(*) AS `_count` FROM `%s`", tableName))
+	var dbAmount int64
+	err = iss.db.Table(tableName).Count(&dbAmount).Error
 	if err != nil {
 		t.Error("db amount ", err)
-	}
-
-	dbAmount, err := strconv.ParseInt(string(dbAmountRes.([]uint8)), 10, 64)
-	if err != nil {
-		t.Error(fmt.Sprintf("db amount error %v", dbAmountRes))
 	}
 
 	if iss.state.Amount() != dbAmount {
