@@ -44,7 +44,7 @@ func newDestination[E storage.Entry](config Config, destinationer destinationer[
 	return d, nil
 }
 
-func (d *Destination[E]) GetDriver() simple.Driver {
+func (d *Destination[E]) DB() simple.Driver {
 	return d.driver
 }
 
