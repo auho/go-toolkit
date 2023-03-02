@@ -6,48 +6,32 @@ import (
 	sort2 "github.com/auho/go-toolkit/farmtools/sort"
 )
 
-const sortedByKey = "key"
-const sortedByValue = "value"
-
-var _ sort.Interface = (*SorterAsc[string])(nil)
-var _ sort.Interface = (*SorterDesc[string])(nil)
+var _ sort.Interface = (*sorter[string])(nil)
 
 type Comparable[valE sort2.ValEntity] interface {
 	SortedVal() valE
 }
 
-type SorterAsc[valE sort2.ValEntity] []valE
-
-func (s SorterAsc[valE]) Len() int {
-	return len(s)
+type sorter[valE sort2.ValEntity] struct {
+	items       []valE
+	sortedOrder string
 }
 
-func (s SorterAsc[valE]) Less(i, j int) bool {
-	return s[i] < s[j]
+func (s *sorter[valE]) Len() int {
+	return len(s.items)
 }
 
-func (s SorterAsc[valE]) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
+func (s *sorter[valE]) Less(i, j int) bool {
+	iv := s.items[i]
+	jv := s.items[j]
+
+	if s.sortedOrder == sort2.SortedOrderAsc {
+		return iv < jv
+	} else {
+		return iv > jv
+	}
 }
 
-type SorterDesc[valE sort2.ValEntity] []valE
-
-func (s SorterDesc[valE]) Len() int {
-	return len(s)
-}
-
-func (s SorterDesc[valE]) Less(i, j int) bool {
-	return s[i] > s[j]
-}
-
-func (s SorterDesc[valE]) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func NewSorterAsc[valE sort2.ValEntity](s SorterAsc[valE]) {
-	sort.Sort(s)
-}
-
-func NewSorterDesc[valE sort2.ValEntity](s SorterDesc[valE]) {
-	sort.Sort(s)
+func (s *sorter[valE]) Swap(i, j int) {
+	s.items[i], s.items[j] = s.items[j], s.items[i]
 }
