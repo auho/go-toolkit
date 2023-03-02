@@ -1,38 +1,32 @@
 package source
 
 import (
-	"github.com/auho/go-simple-db/simple"
+	"fmt"
+
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 	"github.com/auho/go-toolkit/flow/tool"
 )
 
-var _ sectioner[storage.MapEntry] = (*sectionSliceMap)(nil)
+var _ sectionQuery[storage.MapEntry] = (*sectionSliceMap)(nil)
 
-type sectionSliceMap struct {
-}
+type sectionSliceMap struct{}
 
-func (ssm *sectionSliceMap) sourceFunc(driver simple.Driver, query string, startId, size int64) ([]storage.MapEntry, error) {
-	return driver.QueryInterface(query, startId, size)
+func (ssm *sectionSliceMap) query(se *Section[storage.MapEntry], startId, size int64) ([]storage.MapEntry, error) {
+	var rows storage.MapEntries
+
+	tx := se.conf.querior(se.db)
+	err := tx.Where(fmt.Sprintf("%s > ?", se.conf.IdName), startId).
+		Limit(int(size)).
+		Scan(&rows).Error
+
+	return rows, err
 }
 
 func (ssm *sectionSliceMap) duplicate(items storage.MapEntries) storage.MapEntries {
 	return tool.DuplicateSliceMap[tool.InterfaceEntry](items)
 }
 
-func NewSectionSliceMapFromQuery(config FromQueryConfig) (*Section[storage.MapEntry], error) {
-	s, err := configFromQuery[storage.MapEntry](config, &sectionSliceMap{})
-	if err != nil {
-		return nil, err
-	}
-
-	return s, nil
-}
-
-func NewSectionSliceMapFromTable(config FromTableConfig) (*Section[storage.MapEntry], error) {
-	s, err := configFromTable[storage.MapEntry](config, &sectionSliceMap{})
-	if err != nil {
-		return nil, err
-	}
-
-	return s, nil
+func NewSectionSliceMap(config *QueryConfig, newDb database.BuildDb) (*Section[storage.MapEntry], error) {
+	return newSection[storage.MapEntry](config, &sectionSliceMap{}, newDb)
 }

@@ -1,5 +1,10 @@
 package source
 
+import (
+	"github.com/auho/go-toolkit/flow/storage/database"
+	"gorm.io/gorm"
+)
+
 type Config struct {
 	Concurrency int
 	Maximum     int64
@@ -8,17 +13,28 @@ type Config struct {
 	PageSize    int64
 	TableName   string
 	IdName      string
-	Driver      string
-	Dsn         string
 }
 
-type FromQueryConfig struct {
-	Config
-	// SELECT `id` FROM `table` WHERE `id` > ? ORDER BY `id` ASC limit ?
-	Query string
-}
-
-type FromTableConfig struct {
+type QueryConfig struct {
 	Config
 	Fields []string
+	Where  string // "field1 = ? and field2 = ?"
+	Order  string // "field1 desc"
+}
+
+func (q *QueryConfig) querior(db *database.DB) *gorm.DB {
+	tx := db.Table(q.TableName)
+	if len(q.Fields) > 0 {
+		tx = tx.Select(q.Fields)
+	}
+
+	if q.Where != "" {
+		tx = tx.Where(q.Where)
+	}
+
+	if q.Order != "" {
+		tx = tx.Order(q.Order)
+	}
+
+	return tx
 }

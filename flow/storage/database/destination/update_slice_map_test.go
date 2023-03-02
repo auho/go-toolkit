@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"strconv"
 	"testing"
 	"time"
 
-	"github.com/auho/go-simple-db/simple"
+	"github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 var ussItemsChan = make(chan storage.MapEntries)
@@ -22,9 +22,11 @@ func TestUpdateSliceMap(t *testing.T) {
 		Concurrency: 4,
 		PageSize:    7,
 		TableName:   tableName,
-		Driver:      driverName,
-		Dsn:         mysqlDsn,
-	}, idName)
+	}, idName, func() (*database.DB, error) {
+		return database.NewDB(func() (*go_simple_db.SimpleDB, error) {
+			return go_simple_db.NewMysql(mysqlDsn)
+		})
+	})
 
 	if err != nil {
 		log.Fatal(err)
@@ -56,19 +58,10 @@ func TestUpdateSliceMap(t *testing.T) {
 		t.Error(fmt.Sprintf("actual != expected %d != %d", uss.state.Amount(), page*pageSize))
 	}
 
-	driver, err := simple.NewDriver(driverName, mysqlDsn)
+	var dbAmount int64
+	err = uss.DB().Table(uss.table).Count(&dbAmount).Error
 	if err != nil {
 		t.Error(err)
-	}
-
-	dbAmountRes, err := driver.QueryFieldInterface("_count", fmt.Sprintf("SELECT COUNT(*) AS `_count` FROM `%s` WHERE `%s` = 2", tableName, valueName))
-	if err != nil {
-		t.Error("db amount ", err)
-	}
-
-	dbAmount, err := strconv.ParseInt(string(dbAmountRes.([]uint8)), 10, 64)
-	if err != nil {
-		t.Error(fmt.Sprintf("db amount error %v", dbAmountRes))
 	}
 
 	if uss.state.Amount() != dbAmount {
@@ -77,7 +70,9 @@ func TestUpdateSliceMap(t *testing.T) {
 }
 
 func _buildDataForUpdateSliceMap(t *testing.T, page, pageSize int64) {
-	d, err := simple.NewDriver(driverName, mysqlDsn)
+	d, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
+		return go_simple_db.NewMysql(mysqlDsn)
+	})
 	if err != nil {
 		t.Error(err)
 	}
@@ -91,15 +86,20 @@ func _buildDataForUpdateSliceMap(t *testing.T, page, pageSize int64) {
 			}
 		}
 
-		_, err = d.BulkInsertFromSliceSlice(tableName, []string{"name", "value"}, rows)
+		err = d.BulkInsertFromSliceSlice(tableName, []string{"name", "value"}, rows, 100)
 		if err != nil {
 			t.Error(err)
 		}
 	}
 
-	query := fmt.Sprintf("SELECT `id`, `name`, `value` FROM `%s` WHERE `%s` > ? ORDER BY %s ASC limit ?", tableName, idName, idName)
 	for k := int64(0); k < page*pageSize; k += pageSize {
-		rows, err := d.QueryInterface(query, k, pageSize)
+		var rows []map[string]interface{}
+		err = d.Table(tableName).
+			Select([]string{"id", "name", "value"}).
+			Where(fmt.Sprintf("%s > ?", idName), k).
+			Order(fmt.Sprintf("%s asc", idName)).
+			Limit(int(pageSize)).
+			Scan(&rows).Error
 		if err != nil {
 			t.Error(err)
 		}
