@@ -62,7 +62,6 @@ func buildData() {
 	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
 		return go_simple_db.NewMysql(mysqlDsn)
 	})
-
 	if err != nil {
 		log.Fatal("new driver build data ", err)
 	}
