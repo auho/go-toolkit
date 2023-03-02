@@ -3,8 +3,8 @@ package destination
 import (
 	"errors"
 
-	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
+	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 var _ destinationer[storage.SliceEntry] = (*InsertSliceSlice)(nil)
@@ -13,13 +13,11 @@ type InsertSliceSlice struct {
 	fields []string
 }
 
-func (i *InsertSliceSlice) desFunc(sd simple.Driver, tableName string, items storage.SliceEntries) error {
-	_, err := sd.BulkInsertFromSliceSlice(tableName, i.fields, items)
-
-	return err
+func (i *InsertSliceSlice) exec(d *Destination[storage.SliceEntry], items storage.SliceEntries) error {
+	return d.db.BulkInsertFromSliceSlice(d.table, i.fields, items, int(d.pageSize))
 }
 
-func NewInsertSliceSlice(config Config, fields []string) (*Destination[storage.SliceEntry], error) {
+func NewInsertSliceSlice(config Config, fields []string, b database.BuildDb) (*Destination[storage.SliceEntry], error) {
 	if len(fields) <= 0 {
 		return nil, errors.New("fields is error")
 	}
@@ -27,5 +25,5 @@ func NewInsertSliceSlice(config Config, fields []string) (*Destination[storage.S
 	iss := &InsertSliceSlice{}
 	iss.fields = fields
 
-	return newDestination[storage.SliceEntry](config, iss)
+	return newDestination[storage.SliceEntry](config, iss, b)
 }

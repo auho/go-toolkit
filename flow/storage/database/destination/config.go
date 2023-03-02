@@ -5,6 +5,4 @@ type Config struct {
 	Concurrency int
 	PageSize    int64
 	TableName   string
-	Driver      string
-	Dsn         string
 }

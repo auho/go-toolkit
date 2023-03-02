@@ -1,81 +1,57 @@
 package source
 
 import (
-	"errors"
 	"fmt"
 	"math"
-	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 
-	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
-var _ database.Databaseor = (*Section[storage.MapEntry])(nil)
+var _ database.Driver = (*Section[storage.MapEntry])(nil)
 
-func configFromQuery[E storage.Entry](config FromQueryConfig, sectioner sectioner[E]) (*Section[E], error) {
-	s := &Section[E]{}
-	err := s.config(config.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	s.query = config.Query
-	s.sectioner = sectioner
-
-	return s, nil
-}
-
-func configFromTable[E storage.Entry](config FromTableConfig, sectioner sectioner[E]) (*Section[E], error) {
-	s := &Section[E]{}
-	err := s.config(config.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	s.fields = config.Fields
-
-	fieldsSting := fmt.Sprintf("`%s`", strings.Join(s.fields, "`,`"))
-	s.query = fmt.Sprintf("SELECT %s FROM `%s` WHERE `%s` > ? ORDER BY `%s` ASC limit ?", fieldsSting, s.tableName, s.idName, s.idName)
-	s.sectioner = sectioner
-
-	return s, nil
-}
-
-type sectioner[E storage.Entry] interface {
-	sourceFunc(driver simple.Driver, query string, startId, size int64) ([]E, error)
+type sectionQuery[E storage.Entry] interface {
+	query(se *Section[E], startId, size int64) ([]E, error)
 	duplicate([]E) []E
 }
 
 // Section 分段查询
 type Section[E storage.Entry] struct {
 	storage.Storage
-	driver        simple.Driver
-	scanSw        sync.WaitGroup
-	idRangeSw     sync.WaitGroup
-	concurrency   int
-	pageSize      int64
-	totalPage     int64
-	startId       int64
-	maxId         int64
-	total         int64
-	tableName     string
-	idName        string
-	query         string
-	fields        []string
+	db        *database.DB
+	scanSw    sync.WaitGroup
+	idRangeSw sync.WaitGroup
+	conf      *QueryConfig
+
+	total     int64
+	totalPage int64
+	startId   int64 // 开区间
+	maxId     int64 // 闭区间
+
 	failureLastId []int
 	idRangeChan   chan []int64
 	rowsChan      chan []E
 	state         *storage.PageState
-	sectioner     sectioner[E]
+	sr            sectionQuery[E]
 }
 
-func (s *Section[E]) GetDriver() simple.Driver {
-	return s.driver
+func newSection[E storage.Entry](config *QueryConfig, sr sectionQuery[E], b database.BuildDb) (*Section[E], error) {
+	s := &Section[E]{}
+	err := s.config(config, b)
+	if err != nil {
+		return nil, err
+	}
+
+	s.sr = sr
+
+	return s, nil
+}
+
+func (s *Section[E]) DB() *database.DB {
+	return s.db
 }
 
 func (s *Section[E]) State() []string {
@@ -87,20 +63,20 @@ func (s *Section[E]) Summary() []string {
 		s.Title(),
 		s.total,
 		s.totalPage,
-		s.pageSize,
+		s.conf.PageSize,
 		s.startId,
 		s.maxId)}
 }
 
 func (s *Section[E]) Duplicate(items []E) []E {
-	return s.sectioner.duplicate(items)
+	return s.sr.duplicate(items)
 }
 
 func (s *Section[E]) Scan() error {
 	s.state.StatusScan()
 	s.state.DurationStart()
-	s.idRangeChan = make(chan []int64, s.concurrency)
-	s.rowsChan = make(chan []E, s.concurrency)
+	s.idRangeChan = make(chan []int64, s.conf.Concurrency)
+	s.rowsChan = make(chan []E, s.conf.Concurrency)
 
 	err := s.idRange()
 	if err != nil {
@@ -109,7 +85,7 @@ func (s *Section[E]) Scan() error {
 
 	go s.idSection()
 
-	for i := 0; i < s.concurrency; i++ {
+	for i := 0; i < s.conf.Concurrency; i++ {
 		s.scanSw.Add(1)
 		go func() {
 			s.scanRows()
@@ -139,7 +115,7 @@ func (s *Section[E]) scanRows() {
 		leftId := idRange[0]
 		size := idRange[1]
 
-		rows, err := s.sectioner.sourceFunc(s.driver, s.query, leftId, size)
+		rows, err := s.sr.query(s, leftId, size)
 		if err != nil {
 			s.LogFatalWithTitle("left id:", leftId, err)
 		}
@@ -162,17 +138,17 @@ func (s *Section[E]) idSection() {
 		close(s.idRangeChan)
 	}()
 
-	s.state.PageSize = s.pageSize
+	s.state.PageSize = s.conf.PageSize
 	s.state.TotalPage = s.totalPage
 	s.state.Total = s.total
 }
 
 // queryPages 分段
 func (s *Section[E]) queryPages() {
-	shard := int64(math.Ceil(float64(s.totalPage) / float64(s.concurrency)))
-	shardSize := shard * s.pageSize
+	shard := int64(math.Ceil(float64(s.totalPage) / float64(s.conf.Concurrency)))
+	shardSize := shard * s.conf.PageSize
 
-	for i := 0; i < s.concurrency; i++ {
+	for i := 0; i < s.conf.Concurrency; i++ {
 		i64 := int64(i)
 		startId := s.startId + i64*shardSize
 		endId := startId + shardSize
@@ -198,60 +174,68 @@ func (s *Section[E]) queryPage(startId, endId int64) {
 	var rightId int64 = 0
 	leftId := startId
 
+	var row struct {
+		Id int64
+	}
+
 	for {
-		rightId = leftId + s.pageSize
+		rightId = leftId + s.conf.PageSize
 		if rightId > endId {
 			rightId = endId
 		}
 
-		query := fmt.Sprintf("SELECT MAX(`%s`) AS `id` FROM `%s` WHERE `%s` > ? AND `%s` <= ? ORDER BY `%s` DESC LIMIT 1", s.idName, s.tableName, s.idName, s.idName, s.idName)
-		res, err := s.driver.QueryFieldInterface("id", query, leftId, rightId)
+		err := s.db.Table(s.conf.TableName).
+			Select(fmt.Sprintf("MAX(%s) AS id", s.conf.IdName)).
+			Where(fmt.Sprintf("%s > ? AND %s <= ?", s.conf.IdName, s.conf.IdName), leftId, rightId).
+			Group(fmt.Sprintf("%s desc", s.conf.IdName)).
+			Scan(&row).Error
 		if err != nil {
-			s.LogFatalWithTitle(fmt.Sprintf("source[] last startid %d endId %d id: %d left id: %d right id: %d", startId, endId, leftId, rightId, err))
+			s.LogFatalWithTitle(fmt.Sprintf("query page: start id %d end id %d; left id: %d right id: %d; %v", startId, endId, leftId, rightId, err))
 		}
 
-		if res != nil {
-			s.idRangeChan <- []int64{leftId, rightId - leftId}
-		}
+		s.idRangeChan <- []int64{leftId, rightId - leftId}
 
 		if rightId >= endId {
 			break
 		}
 
-		leftId += s.pageSize
+		leftId += s.conf.PageSize
 	}
 }
 
-func (s *Section[E]) config(config Config) (err error) {
-	s.concurrency = config.Concurrency
+func (s *Section[E]) config(config *QueryConfig, b database.BuildDb) (err error) {
+	s.conf = config
+
 	s.total = config.Maximum
 	s.startId = config.StartId
 	s.maxId = config.EndId
-	s.pageSize = config.PageSize
-	s.tableName = config.TableName
-	s.idName = config.IdName
 
-	s.driver, err = simple.NewDriver(config.Driver, config.Dsn)
+	s.db, err = b()
 	if err != nil {
 		return
 	}
 
-	if s.concurrency <= 0 {
-		err = errors.New(fmt.Sprintf("concurrency[%d] is error", s.concurrency))
+	err = s.db.Ping()
+	if err != nil {
 		return
 	}
 
-	if s.pageSize <= 0 {
-		err = errors.New(fmt.Sprintf("page size[%d] is error", s.pageSize))
+	if s.conf.Concurrency <= 0 {
+		err = fmt.Errorf("concurrency[%d] is error", s.conf.Concurrency)
 		return
 	}
 
-	if s.total > 0 && s.pageSize > s.total {
-		s.pageSize = s.total
+	if s.conf.PageSize <= 0 {
+		err = fmt.Errorf("page size[%d] is error", s.conf.PageSize)
+		return
+	}
+
+	if s.total > 0 && s.conf.PageSize > s.total {
+		s.conf.PageSize = s.total
 	}
 
 	s.state = storage.NewPageState()
-	s.state.Concurrency = s.concurrency
+	s.state.Concurrency = s.conf.Concurrency
 	s.state.Title = s.Title()
 	s.state.StatusConfig()
 
@@ -259,32 +243,27 @@ func (s *Section[E]) config(config Config) (err error) {
 }
 
 func (s *Section[E]) idRange() error {
-	query := fmt.Sprintf("SELECT MAX(`%s`) AS `maxId`, MIN(`%s`) AS `minId` FROM `%s`", s.idName, s.idName, s.tableName)
-	res, err := s.driver.QueryInterfaceRow(query)
+	var row struct {
+		Max int64
+		Min int64
+	}
+
+	query := fmt.Sprintf("MAX(%s) AS max, MIN(%s) AS min", s.conf.IdName, s.conf.IdName)
+	err := s.db.Table(s.conf.TableName).Select(query).Scan(&row).Error
 	if err != nil {
-		return errors.New(fmt.Sprintf("mysql id: %s", err))
+		return fmt.Errorf("id range %w", err)
 	}
 
-	maxId, err := strconv.ParseInt(string(res["maxId"].([]uint8)), 10, 64)
-	if err != nil {
-		return errors.New(fmt.Sprintf("mysql max: %s", err))
+	if row.Min > s.startId {
+		s.startId = row.Min - 1
 	}
 
-	minId, err := strconv.ParseInt(string(res["minId"].([]uint8)), 10, 64)
-	if err != nil {
-		return errors.New(fmt.Sprintf("mysql min: %s", err))
-	}
-
-	if minId > s.startId {
-		s.startId = minId - 1
-	}
-
-	if s.maxId <= 0 || s.maxId > maxId {
-		s.maxId = maxId
+	if s.maxId <= 0 || s.maxId > row.Max {
+		s.maxId = row.Max
 	}
 
 	if s.maxId < s.startId {
-		return errors.New(fmt.Sprintf("mysql max id %d < start id %d", s.maxId, s.startId))
+		return fmt.Errorf("mysql max id %d < start id %d", s.maxId, s.startId)
 	}
 
 	total := s.maxId - s.startId
@@ -298,21 +277,19 @@ func (s *Section[E]) idRange() error {
 		}
 	}
 
-	if s.pageSize > s.total {
-		s.pageSize = s.total
+	if s.conf.PageSize > s.total {
+		s.conf.PageSize = s.total
 	}
 
-	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.pageSize)))
+	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.conf.PageSize)))
 
 	return nil
 }
 
 func (s *Section[E]) Title() string {
-	return fmt.Sprintf("Sourceor driver[%s]", s.driver.DriverName())
+	return fmt.Sprintf("Sourceor db[%s]", s.db.Name())
 }
 
 func (s *Section[E]) Close() error {
-	s.driver.Close()
-
-	return nil
+	return s.db.Close()
 }

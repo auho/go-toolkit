@@ -1,40 +1,40 @@
 package destination
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
-	"github.com/auho/go-simple-db/simple"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/database"
 	"github.com/auho/go-toolkit/time/timing"
 )
 
 var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
-var _ database.Databaseor = (*Destination[storage.MapEntry])(nil)
+var _ database.Driver = (*Destination[storage.MapEntry])(nil)
 
 type destinationer[E storage.Entry] interface {
-	desFunc(driver simple.Driver, tableName string, items []E) error
+	exec(d *Destination[E], items []E) error
 }
 
 type Destination[E storage.Entry] struct {
 	storage.Storage
-	driver        simple.Driver
-	isDone        bool
-	isTruncate    bool
-	concurrency   int
-	pageSize      int64
-	tableName     string
-	itemsChan     chan []E
-	doWg          sync.WaitGroup
+	db     *database.DB
+	isDone bool
+
+	isTruncate  bool
+	concurrency int
+	table       string
+	pageSize    int64
+
 	state         *storage.State
+	doWg          sync.WaitGroup
 	destinationer destinationer[E]
+	itemsChan     chan []E
 }
 
-func newDestination[E storage.Entry](config Config, destinationer destinationer[E]) (*Destination[E], error) {
+func newDestination[E storage.Entry](config Config, destinationer destinationer[E], b database.BuildDb) (*Destination[E], error) {
 	d := &Destination[E]{}
-	err := d.config(config)
+	err := d.config(config, b)
 	if err != nil {
 		return nil, err
 	}
@@ -44,28 +44,33 @@ func newDestination[E storage.Entry](config Config, destinationer destinationer[
 	return d, nil
 }
 
-func (d *Destination[E]) GetDriver() simple.Driver {
-	return d.driver
+func (d *Destination[E]) DB() *database.DB {
+	return d.db
 }
 
-func (d *Destination[E]) config(config Config) (err error) {
+func (d *Destination[E]) config(config Config, b database.BuildDb) (err error) {
 	d.isTruncate = config.IsTruncate
 	d.concurrency = config.Concurrency
 	d.pageSize = config.PageSize
-	d.tableName = config.TableName
+	d.table = config.TableName
 
-	d.driver, err = simple.NewDriver(config.Driver, config.Dsn)
+	d.db, err = b()
 	if err != nil {
-		return err
+		return
+	}
+
+	err = d.db.Ping()
+	if err != nil {
+		return
 	}
 
 	if d.concurrency <= 0 {
-		err = errors.New(fmt.Sprintf("concurrency[%d] is error", d.concurrency))
+		err = fmt.Errorf("concurrency[%d] is error", d.concurrency)
 		return
 	}
 
 	if d.pageSize <= 0 {
-		err = errors.New(fmt.Sprintf("page size[%d] is error", d.pageSize))
+		err = fmt.Errorf("page size[%d] is error", d.pageSize)
 		return
 	}
 
@@ -82,7 +87,7 @@ func (d *Destination[E]) Accept() (err error) {
 	d.state.DurationStart()
 
 	if d.isTruncate {
-		err = d.driver.Truncate(d.tableName)
+		err = d.db.Truncate(d.table)
 		if err != nil {
 			return
 		}
@@ -146,7 +151,7 @@ func (d *Destination[E]) do() {
 				descItems = items[start:end]
 			}
 
-			err := d.destinationer.desFunc(d.driver, d.tableName, descItems)
+			err := d.destinationer.exec(d, descItems)
 			if err != nil {
 				panic(err)
 			}
@@ -161,7 +166,7 @@ func (d *Destination[E]) do() {
 }
 
 func (d *Destination[E]) Title() string {
-	return fmt.Sprintf("Destination driver[%s]", d.driver.DriverName())
+	return fmt.Sprintf("Destination driver[%s]", d.db.Name())
 }
 
 func (d *Destination[E]) Summary() []string {
@@ -173,7 +178,5 @@ func (d *Destination[E]) State() []string {
 }
 
 func (d *Destination[E]) Close() error {
-	d.driver.Close()
-
-	return nil
+	return d.db.Close()
 }
