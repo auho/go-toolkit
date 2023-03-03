@@ -12,19 +12,23 @@ import (
 	"github.com/auho/go-toolkit/time/timing"
 )
 
-func WithSource[E storage.Entry](sf storage.Sourceor[E]) func(i *Flow[E]) {
+type Option[E storage.Entry] func(flow *Flow[E])
+
+type Options[E storage.Entry] []Option[E]
+
+func WithSource[E storage.Entry](sf storage.Sourceor[E]) Option[E] {
 	return func(f *Flow[E]) {
 		f.source = sf
 	}
 }
 
-func WithTasker[E storage.Entry](t task.Tasker[E]) func(*Flow[E]) {
+func WithTasker[E storage.Entry](t task.Tasker[E]) Option[E] {
 	return func(f *Flow[E]) {
 		f.actioners = append(f.actioners, action.NewAction(action.WithTasker(t)))
 	}
 }
 
-func WithStateTickerDuration[E storage.Entry](d time.Duration) func(*Flow[E]) {
+func WithStateTickerDuration[E storage.Entry](d time.Duration) Option[E] {
 	return func(f *Flow[E]) {
 		f.stateTicker = time.NewTicker(d)
 	}
@@ -37,12 +41,12 @@ type Flow[E storage.Entry] struct {
 	actioners     []action.Actioner[E]
 }
 
-func RunFlow[E storage.Entry](options ...func(*Flow[E])) error {
+func RunFlow[E storage.Entry](opts ...Option[E]) error {
 	d := timing.NewDuration()
 	d.Start()
 
 	i := &Flow[E]{}
-	for _, o := range options {
+	for _, o := range opts {
 		o(i)
 	}
 
