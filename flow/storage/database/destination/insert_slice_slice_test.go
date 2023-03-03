@@ -12,7 +12,7 @@ import (
 )
 
 func TestInsertSliceSlice(t *testing.T) {
-	iss, err := NewInsertSliceSlice(Config{
+	iss, err := NewInsertSliceSlice(&Config{
 		IsTruncate:  true,
 		Concurrency: 4,
 		PageSize:    337,

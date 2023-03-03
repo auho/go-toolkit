@@ -17,7 +17,7 @@ var uss *Destination[storage.MapEntry]
 
 func TestUpdateSliceMap(t *testing.T) {
 	var err error
-	uss, err = NewUpdateSliceMap(Config{
+	uss, err = NewUpdateSliceMap(&Config{
 		IsTruncate:  true,
 		Concurrency: 4,
 		PageSize:    7,
