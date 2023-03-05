@@ -187,7 +187,7 @@ func (s *Section[E]) queryPage(startId, endId int64) {
 		err := s.db.Table(s.conf.TableName).
 			Select(fmt.Sprintf("MAX(%s) AS id", s.conf.IdName)).
 			Where(fmt.Sprintf("%s > ? AND %s <= ?", s.conf.IdName, s.conf.IdName), leftId, rightId).
-			Group(fmt.Sprintf("%s desc", s.conf.IdName)).
+			Order(fmt.Sprintf("%s desc", s.conf.IdName)).
 			Scan(&row).Error
 		if err != nil {
 			s.LogFatalWithTitle(fmt.Sprintf("query page: start id %d end id %d; left id: %d right id: %d; %v", startId, endId, leftId, rightId, err))

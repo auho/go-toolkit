@@ -8,7 +8,7 @@ require (
 	github.com/auho/go-toolkit/redis/client v0.0.0-20230302022442-9104ea2ed91c
 	github.com/auho/go-toolkit/time v0.0.0-20230302022442-9104ea2ed91c
 	github.com/go-redis/redis/v8 v8.11.5
-	gorm.io/gorm v1.24.5
+	gorm.io/gorm v1.24.6
 )
 
 require (
