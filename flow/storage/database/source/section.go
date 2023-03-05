@@ -32,7 +32,7 @@ type Section[E storage.Entry] struct {
 	maxId     int64 // 闭区间
 
 	failureLastId []int
-	idRangeChan   chan []int64
+	idRangeChan   chan []int64 // []in64{left id, size} 不包含 left id
 	rowsChan      chan []E
 	state         *storage.PageState
 	sr            sectionQuery[E]
@@ -108,6 +108,7 @@ func (s *Section[E]) ReceiveChan() <-chan []E {
 	return s.rowsChan
 }
 
+// 根据 id section（left id，size） 查询 rows
 func (s *Section[E]) scanRows() {
 	for idRange := range s.idRangeChan {
 		atomic.AddInt64(&s.state.Page, 1)
@@ -130,6 +131,7 @@ func (s *Section[E]) scanRows() {
 	}
 }
 
+// 先根据总数，并发数等对 id 分段（start id、end id），每段在根据 page size 进行 id section（left id，size）并分发 id section
 func (s *Section[E]) idSection() {
 	s.queryPages()
 
@@ -143,7 +145,8 @@ func (s *Section[E]) idSection() {
 	s.state.Total = s.total
 }
 
-// queryPages 分段
+// queryPages
+// 根据总数、页大小、并发数等，进行分段 start Id，end id，并分发分段
 func (s *Section[E]) queryPages() {
 	shard := int64(math.Ceil(float64(s.totalPage) / float64(s.conf.Concurrency)))
 	shardSize := shard * s.conf.PageSize
@@ -169,7 +172,8 @@ func (s *Section[E]) queryPages() {
 	}
 }
 
-// queryPage 查询分段
+// queryPage
+// 根据分段 start id，end id ，page size 计算每页的 id section（left id，size），并分发 id section
 func (s *Section[E]) queryPage(startId, endId int64) {
 	var rightId int64 = 0
 	leftId := startId
@@ -242,6 +246,7 @@ func (s *Section[E]) config(config *QueryConfig, b database.BuildDb) (err error)
 	return
 }
 
+// id range
 func (s *Section[E]) idRange() error {
 	var row struct {
 		Max int64
