@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -45,17 +46,30 @@ func RunFlow[E storage.Entry](opts ...Option[E]) error {
 	d := timing.NewDuration()
 	d.Start()
 
-	i := &Flow[E]{}
+	f := &Flow[E]{}
 	for _, o := range opts {
-		o(i)
+		o(f)
 	}
 
-	err := i.run()
+	err := f.check()
+	if err != nil {
+		return err
+	}
+
+	err = f.run()
 	if err != nil {
 		return err
 	}
 
 	d.StringStartToStop()
+
+	return nil
+}
+
+func (f *Flow[E]) check() error {
+	if len(f.actioners) <= 0 {
+		return errors.New("action not found")
+	}
 
 	return nil
 }
