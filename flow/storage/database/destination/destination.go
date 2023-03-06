@@ -26,20 +26,20 @@ type Destination[E storage.Entry] struct {
 	table       string
 	pageSize    int64
 
-	state         *storage.State
-	doWg          sync.WaitGroup
-	destinationer destinationer[E]
-	itemsChan     chan []E
+	state     *storage.State
+	doWg      sync.WaitGroup
+	dst       destinationer[E]
+	itemsChan chan []E
 }
 
-func newDestination[E storage.Entry](config *Config, destinationer destinationer[E], b database.BuildDb) (*Destination[E], error) {
+func newDestination[E storage.Entry](config *Config, dst destinationer[E], b database.BuildDb) (*Destination[E], error) {
 	d := &Destination[E]{}
 	err := d.config(config, b)
 	if err != nil {
 		return nil, err
 	}
 
-	d.destinationer = destinationer
+	d.dst = dst
 
 	return d, nil
 }
@@ -151,7 +151,7 @@ func (d *Destination[E]) do() {
 				descItems = items[start:end]
 			}
 
-			err := d.destinationer.exec(d, descItems)
+			err := d.dst.exec(d, descItems)
 			if err != nil {
 				panic(err)
 			}

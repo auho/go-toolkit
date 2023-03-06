@@ -25,7 +25,7 @@ func WithSource[E storage.Entry](sf storage.Sourceor[E]) Option[E] {
 
 func WithTasker[E storage.Entry](t task.Tasker[E]) Option[E] {
 	return func(f *Flow[E]) {
-		f.actioners = append(f.actioners, action.NewAction(action.WithTasker(t)))
+		f.actions = append(f.actions, action.NewAction(action.WithTasker(t)))
 	}
 }
 
@@ -39,7 +39,7 @@ type Flow[E storage.Entry] struct {
 	source        storage.Sourceor[E]
 	stateTicker   *time.Ticker
 	refreshOutput *output.Refresh
-	actioners     []action.Actioner[E]
+	actions       []action.Actioner[E]
 }
 
 func RunFlow[E storage.Entry](opts ...Option[E]) error {
@@ -67,7 +67,7 @@ func RunFlow[E storage.Entry](opts ...Option[E]) error {
 }
 
 func (f *Flow[E]) check() error {
-	if len(f.actioners) <= 0 {
+	if len(f.actions) <= 0 {
 		return errors.New("action not found")
 	}
 
@@ -88,8 +88,8 @@ func (f *Flow[E]) run() error {
 		return err
 	}
 
-	f.actionerPerpare()
-	f.actionerDo()
+	f.actionsPrepare()
+	f.actionsDo()
 
 	f.refreshOutput.Start()
 
@@ -107,7 +107,7 @@ func (f *Flow[E]) run() error {
 
 func (f *Flow[E]) transport() {
 	needCopy := false
-	if len(f.actioners) > 1 {
+	if len(f.actions) > 1 {
 		needCopy = true
 	}
 
@@ -118,7 +118,7 @@ func (f *Flow[E]) transport() {
 				break
 			}
 
-			for _, a := range f.actioners {
+			for _, a := range f.actions {
 				if needCopy {
 					newItems := f.source.Duplicate(items)
 					a.Receive(newItems)
@@ -128,43 +128,48 @@ func (f *Flow[E]) transport() {
 			}
 		}
 
-		f.actionerDone()
+		f.actionsDone()
 	}()
 }
 
 func (f *Flow[E]) finish() {
-	f.actionerFinish()
+	f.actionsFinish()
 	f.stateTicker.Stop()
 	f.refreshOutput.Stop()
-	f.actionerOutput()
+	f.actionsOutput()
 }
 
 func (f *Flow[E]) summary() {
 	sss := f.source.Summary()
 	sss = append(sss, "Tasks: ")
-	for _, a := range f.actioners {
-		sss = append(sss, a.Summary()...)
+	for _, a := range f.actions {
+		sss = append(sss, "\t"+a.Summary())
 	}
 
 	for _, s := range sss {
 		fmt.Println(s)
 	}
+
+	fmt.Println("")
 }
 
 func (f *Flow[E]) state() {
 	sss := f.source.State()
 
-	for _, a := range f.actioners {
-		sss = append(sss, a.State()...)
+	for _, a := range f.actions {
+		sss = append(sss, a.Summary())
+		for _, _s := range a.State() {
+			sss = append(sss, "\t"+_s)
+		}
 	}
 
 	f.refreshOutput.CoverAll(sss)
 }
 
-func (f *Flow[E]) actionerOutput() {
+func (f *Flow[E]) actionsOutput() {
 	fmt.Println("\nOutput: ")
 
-	for _, a := range f.actioners {
+	for _, a := range f.actions {
 		for _, s := range a.Output() {
 			fmt.Println(s)
 		}
@@ -173,14 +178,14 @@ func (f *Flow[E]) actionerOutput() {
 	}
 }
 
-func (f *Flow[E]) actionerDo() {
-	for _, a := range f.actioners {
+func (f *Flow[E]) actionsDo() {
+	for _, a := range f.actions {
 		a.Do()
 	}
 }
 
-func (f *Flow[E]) actionerPerpare() {
-	for _, a := range f.actioners {
+func (f *Flow[E]) actionsPrepare() {
+	for _, a := range f.actions {
 		err := a.Prepare()
 		if err != nil {
 			log.Fatalln(err)
@@ -188,14 +193,14 @@ func (f *Flow[E]) actionerPerpare() {
 	}
 }
 
-func (f *Flow[E]) actionerFinish() {
-	for _, a := range f.actioners {
+func (f *Flow[E]) actionsFinish() {
+	for _, a := range f.actions {
 		a.Finish()
 	}
 }
 
-func (f *Flow[E]) actionerDone() {
-	for _, a := range f.actioners {
+func (f *Flow[E]) actionsDone() {
+	for _, a := range f.actions {
 		a.Done()
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	go_simple_db "github.com/auho/go-simple-db/v2"
+	goSimpleDb "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
@@ -32,8 +32,8 @@ func setUp() {
 }
 
 func createTable() {
-	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-		return go_simple_db.NewMysql(mysqlDsn)
+	db, err := database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+		return goSimpleDb.NewMysql(mysqlDsn)
 	})
 	if err != nil {
 		log.Fatal("new db create table ", err)
@@ -58,8 +58,8 @@ func createTable() {
 }
 
 func buildData() {
-	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-		return go_simple_db.NewMysql(mysqlDsn)
+	db, err := database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+		return goSimpleDb.NewMysql(mysqlDsn)
 	})
 	if err != nil {
 		log.Fatal("new db build data ", err)

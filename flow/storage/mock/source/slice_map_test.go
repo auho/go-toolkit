@@ -7,7 +7,7 @@ import (
 )
 
 func TestSliceMap(t *testing.T) {
-	_testMock[storage.MapEntry](t, func(config Config) *mock[storage.MapEntry] {
+	_testMock[storage.MapEntry](t, func(config Config) *Mock[storage.MapEntry] {
 		return NewSliceMap(config)
 	})
 }

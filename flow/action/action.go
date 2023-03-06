@@ -14,7 +14,7 @@ type Actioner[E storage.Entry] interface {
 	Do()            // Process data
 	Done()          // triggered after upstream data processing
 	Finish()        // data processing completed
-	Summary() []string
+	Summary() string
 	State() []string
 	Output() []string
 }
@@ -84,8 +84,8 @@ func (a *Action[E]) Finish() {
 	a.tasker.AfterDo()
 }
 
-func (a *Action[E]) Summary() []string {
-	return []string{a.tasker.Title()}
+func (a *Action[E]) Summary() string {
+	return a.tasker.Title()
 }
 
 func (a *Action[E]) State() []string {
