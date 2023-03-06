@@ -13,7 +13,7 @@ var _ mocker[storage.MapEntry] = (*SliceMap)(nil)
 type SliceMap struct {
 }
 
-func NewSliceMap(config Config) *mock[storage.MapEntry] {
+func NewSliceMap(config Config) *Mock[storage.MapEntry] {
 	return newMock[storage.MapEntry](config, &SliceMap{})
 }
 

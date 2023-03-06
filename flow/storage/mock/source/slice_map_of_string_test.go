@@ -7,7 +7,7 @@ import (
 )
 
 func TestSliceMapString(t *testing.T) {
-	_testMock[storage.MapOfStringsEntry](t, func(config Config) *mock[storage.MapOfStringsEntry] {
+	_testMock[storage.MapOfStringsEntry](t, func(config Config) *Mock[storage.MapOfStringsEntry] {
 		return NewSliceMapOfString(config)
 	})
 }

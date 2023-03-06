@@ -6,12 +6,11 @@ import (
 	"os"
 	"testing"
 
-	go_simple_db "github.com/auho/go-simple-db/v2"
+	goSimpleDb "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
 var _mysqlDsn = "test:Test123$@tcp(127.0.0.1:3306)/"
-var mainMysqlDsn = _mysqlDsn + "mysql"
 var dbName = "_test_flow"
 var mysqlDsn = _mysqlDsn + dbName
 var tableName = "destination"
@@ -32,8 +31,8 @@ func setUp() {
 }
 
 func createTable() {
-	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-		return go_simple_db.NewMysql(mysqlDsn)
+	db, err := database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+		return goSimpleDb.NewMysql(mysqlDsn)
 	})
 
 	if err != nil {
@@ -59,8 +58,8 @@ func createTable() {
 }
 
 func buildData() {
-	db, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-		return go_simple_db.NewMysql(mysqlDsn)
+	db, err := database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+		return goSimpleDb.NewMysql(mysqlDsn)
 	})
 	if err != nil {
 		log.Fatal("new driver build data ", err)

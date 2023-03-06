@@ -14,7 +14,7 @@ var _ mocker[storage.MapOfStringsEntry] = (*SliceMapOfString)(nil)
 type SliceMapOfString struct {
 }
 
-func NewSliceMapOfString(config Config) *mock[storage.MapOfStringsEntry] {
+func NewSliceMapOfString(config Config) *Mock[storage.MapOfStringsEntry] {
 	return newMock[storage.MapOfStringsEntry](config, &SliceMapOfString{})
 }
 

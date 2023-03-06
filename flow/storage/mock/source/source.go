@@ -8,7 +8,7 @@ import (
 	"github.com/auho/go-toolkit/flow/storage"
 )
 
-var _ storage.Sourceor[storage.MapEntry] = (*mock[storage.MapEntry])(nil)
+var _ storage.Sourceor[storage.MapEntry] = (*Mock[storage.MapEntry])(nil)
 
 type mocker[E storage.Entry] interface {
 	// id name, id, page size => stopId, items
@@ -16,7 +16,7 @@ type mocker[E storage.Entry] interface {
 	duplicate([]E) []E
 }
 
-type mock[E storage.Entry] struct {
+type Mock[E storage.Entry] struct {
 	storage.Storage
 	id        int64
 	total     int64 // 最大数量(总数)
@@ -29,8 +29,8 @@ type mock[E storage.Entry] struct {
 	mocker    mocker[E]
 }
 
-func newMock[E storage.Entry](config Config, mocker mocker[E]) *mock[E] {
-	m := &mock[E]{}
+func newMock[E storage.Entry](config Config, mocker mocker[E]) *Mock[E] {
+	m := &Mock[E]{}
 	m.idName = config.IdName
 	m.total = config.Total
 	m.pageSize = config.PageSize
@@ -53,7 +53,7 @@ func newMock[E storage.Entry](config Config, mocker mocker[E]) *mock[E] {
 	return m
 }
 
-func (m *mock[E]) Scan() error {
+func (m *Mock[E]) Scan() error {
 	m.itemChan = make(chan []E)
 
 	go func() {
@@ -76,26 +76,26 @@ func (m *mock[E]) Scan() error {
 	return nil
 }
 
-func (m *mock[E]) ReceiveChan() <-chan []E {
+func (m *Mock[E]) ReceiveChan() <-chan []E {
 	return m.itemChan
 }
 
-func (m *mock[E]) Summary() []string {
+func (m *Mock[E]) Summary() []string {
 	return []string{fmt.Sprintf("%s: total: %d, pageSize: %d", m.Title(), m.total, m.pageSize)}
 }
 
-func (m *mock[E]) State() []string {
+func (m *Mock[E]) State() []string {
 	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", m.amount, m.total, m.page, m.totalPage, m.pageSize)}
 }
 
-func (m *mock[E]) Duplicate(items []E) []E {
+func (m *Mock[E]) Duplicate(items []E) []E {
 	return m.mocker.duplicate(items)
 }
 
-func (m *mock[E]) Title() string {
+func (m *Mock[E]) Title() string {
 	return "Source mock"
 }
 
-func (m *mock[E]) Close() error {
+func (m *Mock[E]) Close() error {
 	return nil
 }
