@@ -16,6 +16,7 @@
 
 # golang
 go.work
+go.work.sum
 *.pprof
 *_linux
 

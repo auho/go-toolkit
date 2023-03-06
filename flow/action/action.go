@@ -9,11 +9,11 @@ import (
 )
 
 type Actioner[E storage.Entry] interface {
-	Prepare() error
-	Receive([]E)
-	Do()
-	Done()
-	Finish()
+	Prepare() error // preparation before processing data
+	Receive([]E)    // receive data asynchronously
+	Do()            // Process data
+	Done()          // triggered after upstream data processing
+	Finish()        // data processing completed
 	Summary() []string
 	State() []string
 	Output() []string

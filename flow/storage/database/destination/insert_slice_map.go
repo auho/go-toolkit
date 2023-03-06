@@ -14,6 +14,6 @@ func (i *InsertSliceMap) exec(d *Destination[storage.MapEntry], items storage.Ma
 	return d.db.BulkInsertFromSliceMap(d.table, items, int(d.pageSize))
 }
 
-func NewInsertSliceMap(config Config, b database.BuildDb) (*Destination[storage.MapEntry], error) {
+func NewInsertSliceMap(config *Config, b database.BuildDb) (*Destination[storage.MapEntry], error) {
 	return newDestination[storage.MapEntry](config, &InsertSliceMap{}, b)
 }

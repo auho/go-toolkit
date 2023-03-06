@@ -12,7 +12,7 @@ import (
 )
 
 func TestInsertSliceMap(t *testing.T) {
-	iss, err := NewInsertSliceMap(Config{
+	iss, err := NewInsertSliceMap(&Config{
 		IsTruncate:  true,
 		Concurrency: 4,
 		PageSize:    337,

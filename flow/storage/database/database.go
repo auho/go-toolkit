@@ -16,7 +16,11 @@ func NewDB(fn func() (*goSimpleDb.SimpleDB, error)) (*DB, error) {
 		return nil, err
 	}
 
-	return &DB{SimpleDB: sd}, nil
+	return NewFromSimpleDb(sd), nil
+}
+
+func NewFromSimpleDb(sd *goSimpleDb.SimpleDB) *DB {
+	return &DB{SimpleDB: sd}
 }
 
 type Driver interface {
