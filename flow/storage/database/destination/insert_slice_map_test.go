@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
@@ -18,8 +17,8 @@ func TestInsertSliceMap(t *testing.T) {
 		PageSize:    337,
 		TableName:   tableName,
 	}, func() (*database.DB, error) {
-		return database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-			return go_simple_db.NewMysql(mysqlDsn)
+		return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+			return goSimpleDb.NewMysql(mysqlDsn)
 		})
 	})
 

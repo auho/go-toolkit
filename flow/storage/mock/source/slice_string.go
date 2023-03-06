@@ -11,7 +11,7 @@ var _ mocker[string] = (*SliceString)(nil)
 type SliceString struct {
 }
 
-func NewSliceString(config Config) *mock[string] {
+func NewSliceString(config Config) *Mock[string] {
 	return newMock[string](config, &SliceString{})
 }
 

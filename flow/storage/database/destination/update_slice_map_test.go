@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
@@ -23,8 +22,8 @@ func TestUpdateSliceMap(t *testing.T) {
 		PageSize:    7,
 		TableName:   tableName,
 	}, idName, func() (*database.DB, error) {
-		return database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-			return go_simple_db.NewMysql(mysqlDsn)
+		return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+			return goSimpleDb.NewMysql(mysqlDsn)
 		})
 	})
 
@@ -70,8 +69,8 @@ func TestUpdateSliceMap(t *testing.T) {
 }
 
 func _buildDataForUpdateSliceMap(t *testing.T, page, pageSize int64) {
-	d, err := database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-		return go_simple_db.NewMysql(mysqlDsn)
+	d, err := database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+		return goSimpleDb.NewMysql(mysqlDsn)
 	})
 	if err != nil {
 		t.Error(err)

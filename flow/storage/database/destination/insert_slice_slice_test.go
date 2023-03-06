@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
@@ -19,8 +18,8 @@ func TestInsertSliceSlice(t *testing.T) {
 		TableName:   tableName,
 	}, []string{nameName, valueName},
 		func() (*database.DB, error) {
-			return database.NewDB(func() (*go_simple_db.SimpleDB, error) {
-				return go_simple_db.NewMysql(mysqlDsn)
+			return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
+				return goSimpleDb.NewMysql(mysqlDsn)
 			})
 		})
 
