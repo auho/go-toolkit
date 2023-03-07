@@ -5,18 +5,38 @@ import (
 	"time"
 )
 
-type Refresh struct {
-	MultilineText
-	currentLine      int
-	lastRefreshTime  time.Time
-	ticker           *time.Ticker
-	isInterval       bool
-	intervalDuration time.Duration
+func WithContentGetter(f func() []string) func(*Refresh) {
+	return func(r *Refresh) {
+		r.contentGetter = f
+	}
 }
 
-func NewRefresh() *Refresh {
+func WithInterval(d time.Duration) func(*Refresh) {
+	return func(r *Refresh) {
+		r.intervalDuration = d
+	}
+}
+
+type Refresh struct {
+	MultilineText
+	isInterval       bool
+	currentLine      int
+	intervalDuration time.Duration
+	ticker           *time.Ticker
+	contentGetter    func() []string
+	lastRefreshTime  time.Time
+}
+
+func NewRefresh(opts ...func(*Refresh)) *Refresh {
 	r := &Refresh{}
-	r.intervalDuration = time.Millisecond * 200
+
+	for _, o := range opts {
+		o(r)
+	}
+
+	if r.intervalDuration <= 0 {
+		r.intervalDuration = time.Millisecond * 200
+	}
 
 	r.content = make([]string, 0)
 	r.ticker = time.NewTicker(r.intervalDuration)
@@ -46,9 +66,16 @@ func (r *Refresh) CleanAndStart() {
 }
 
 func (r *Refresh) refresh() {
-	contentLen := len(r.content)
-	content := make([]string, contentLen, contentLen)
-	copy(content, r.content)
+	var content []string
+	var contentLen int
+	if r.contentGetter == nil {
+		contentLen = len(r.content)
+		content = make([]string, contentLen, contentLen)
+		copy(content, r.content)
+	} else {
+		content = r.contentGetter()
+		contentLen = len(content)
+	}
 
 	if r.currentLine == 0 {
 		for i := 0; i < contentLen; i++ {

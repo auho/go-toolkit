@@ -3,7 +3,6 @@ package task
 import (
 	"fmt"
 	"runtime"
-	"sync/atomic"
 
 	"github.com/auho/go-toolkit/console/output"
 	"github.com/auho/go-toolkit/flow/storage"
@@ -18,10 +17,10 @@ type Tasker[E storage.Entry] interface {
 	Prepare() error
 
 	// Do need to be implemented
-	Do([]E)
+	Do(E) ([]E, bool)
 
-	// AfterDo need to be implemented
-	AfterDo()
+	// PostDo need to be implemented
+	PostDo()
 
 	HasBeenInit() bool
 	Concurrency() int
@@ -31,21 +30,20 @@ type Tasker[E storage.Entry] interface {
 
 type WithTaskOption func(*Task)
 
-func WithConcurrency(c int) func(i *Task) {
-	return func(i *Task) {
-		i.concurrency = c
+func WithConcurrency(c int) func(*Task) {
+	return func(t *Task) {
+		t.concurrency = c
 	}
 }
 
 type Task struct {
-	concurrency   int
-	amount        int64
-	failureAmount int64
-	duration      *timing.Duration
-	state         *output.MultilineText
-	output        *output.MultilineText
-	log           *output.MultilineText
-	hasBeenInit   bool
+	hasBeenInit bool
+	concurrency int
+
+	duration *timing.Duration
+	state    *output.MultilineText
+	output   *output.MultilineText
+	log      *output.MultilineText
 }
 
 func (t *Task) Init(options ...WithTaskOption) {
@@ -80,12 +78,7 @@ func (t *Task) SetState(line int, s string) {
 }
 
 func (t *Task) State() []string {
-	sss := t.state.Content()
-	if len(sss) <= 0 {
-		sss = append(sss, fmt.Sprintf("Amount: %d", t.amount))
-	}
-
-	return sss
+	return t.state.Content()
 }
 
 func (t *Task) Output() []string {
@@ -110,20 +103,4 @@ func (t *Task) Logf(format string, a ...interface{}) {
 
 func (t *Task) Logln(a ...interface{}) {
 	t.log.PrintNext(fmt.Sprint(a...))
-}
-
-func (t *Task) AddAmount(a int64) {
-	atomic.AddInt64(&t.amount, a)
-}
-
-func (t *Task) AddFailureAmount(a int64) {
-	atomic.AddInt64(&t.failureAmount, a)
-}
-
-func (t *Task) Amount() int64 {
-	return t.amount
-}
-
-func (t *Task) FailureAmount() int64 {
-	return t.failureAmount
 }
