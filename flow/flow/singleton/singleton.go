@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/auho/go-toolkit/console/output"
+	"github.com/auho/go-toolkit/flow/action"
 	"github.com/auho/go-toolkit/flow/action/singleton"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/task"
@@ -23,7 +24,7 @@ func WithSource[E storage.Entry](se storage.Sourceor[E]) Option[E] {
 
 func WithTasker[E storage.Entry](t task.Singleton[E]) Option[E] {
 	return func(s *Flow[E]) {
-		s.actions = append(s.actions, singleton.NewAction(singleton.WithTasker(t)))
+		s.actions = append(s.actions, singleton.NewAction(singleton.WithSingleton(t)))
 	}
 }
 
@@ -36,7 +37,7 @@ func WithStateInterval[E storage.Entry](d time.Duration) Option[E] {
 type Flow[E storage.Entry] struct {
 	source        storage.Sourceor[E]
 	refreshOutput *output.Refresh
-	actions       []singleton.Actor[E]
+	actions       []action.Actor[E]
 	stateInterval time.Duration
 }
 

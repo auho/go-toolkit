@@ -16,9 +16,6 @@ type Tasker[E storage.Entry] interface {
 	// Prepare need to be implemented
 	Prepare() error
 
-	// Do need to be implemented
-	Do(E) ([]E, bool)
-
 	// PostDo need to be implemented
 	PostDo()
 

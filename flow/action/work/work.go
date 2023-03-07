@@ -1,4 +1,4 @@
-package singleton
+package work
 
 import (
 	"github.com/auho/go-toolkit/flow/action"
@@ -10,14 +10,14 @@ var _ action.Moder[string] = (*Action[string])(nil)
 
 type Option[E storage.Entry] func(singleton *Action[E])
 
-func WithSingleton[E storage.Entry](s task.Singleton[E]) Option[E] {
+func WithWork[E storage.Entry](w task.Work[E]) Option[E] {
 	return func(a *Action[E]) {
-		a.singleton = s
+		a.work = w
 	}
 }
 
 type Action[E storage.Entry] struct {
-	singleton task.Singleton[E]
+	work task.Work[E]
 }
 
 func NewAction[E storage.Entry](opts ...Option[E]) *action.Action[E] {
@@ -31,22 +31,15 @@ func NewAction[E storage.Entry](opts ...Option[E]) *action.Action[E] {
 }
 
 func (a *Action[E]) Concurrency() int {
-	return a.singleton.Concurrency()
+	return a.work.Concurrency()
 }
 
 func (a *Action[E]) Tasker() task.Tasker[E] {
-	return a.singleton
+	return a.work
 }
 
 func (a *Action[E]) Run(items []E) int {
-	newItems := make([]E, 0, len(items))
-	for k := range items {
-		if v, ok := a.singleton.Do(items[k]); ok {
-			newItems = append(newItems, v...)
-		}
-	}
+	a.work.Do(items)
 
-	a.singleton.PostBatchDo(newItems)
-
-	return len(newItems)
+	return len(items)
 }
