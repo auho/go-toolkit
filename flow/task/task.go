@@ -28,9 +28,9 @@ type Tasker[E storage.Entry] interface {
 	Output() []string
 }
 
-type WithTaskOption func(*Task)
+type Option func(*Task)
 
-func WithConcurrency(c int) func(*Task) {
+func WithConcurrency(c int) Option {
 	return func(t *Task) {
 		t.concurrency = c
 	}
@@ -46,8 +46,8 @@ type Task struct {
 	log      *output.MultilineText
 }
 
-func (t *Task) Init(options ...WithTaskOption) {
-	for _, o := range options {
+func (t *Task) Init(opts ...Option) {
+	for _, o := range opts {
 		o(t)
 	}
 
