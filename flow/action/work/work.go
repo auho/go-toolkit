@@ -8,7 +8,7 @@ import (
 
 var _ action.Moder[string] = (*Action[string])(nil)
 
-type Option[E storage.Entry] func(singleton *Action[E])
+type Option[E storage.Entry] func(*Action[E])
 
 func WithWork[E storage.Entry](w task.Work[E]) Option[E] {
 	return func(a *Action[E]) {
@@ -18,6 +18,10 @@ func WithWork[E storage.Entry](w task.Work[E]) Option[E] {
 
 type Action[E storage.Entry] struct {
 	work task.Work[E]
+}
+
+func NewActor[E storage.Entry](w task.Work[E]) *action.Action[E] {
+	return NewAction(WithWork(w))
 }
 
 func NewAction[E storage.Entry](opts ...Option[E]) *action.Action[E] {
