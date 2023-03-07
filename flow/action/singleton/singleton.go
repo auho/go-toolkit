@@ -20,6 +20,10 @@ type Action[E storage.Entry] struct {
 	singleton task.Singleton[E]
 }
 
+func NewActor[E storage.Entry](w task.Singleton[E]) *action.Action[E] {
+	return NewAction(WithSingleton(w))
+}
+
 func NewAction[E storage.Entry](opts ...Option[E]) *action.Action[E] {
 	a := &Action[E]{}
 
