@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/auho/go-toolkit/flow/storage/database"
+	"github.com/auho/go-toolkit/flow/tests/mysql"
 )
 
 func TestInsertSliceMap(t *testing.T) {
@@ -17,9 +18,7 @@ func TestInsertSliceMap(t *testing.T) {
 		PageSize:    337,
 		TableName:   tableName,
 	}, func() (*database.DB, error) {
-		return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
-			return goSimpleDb.NewMysql(mysqlDsn)
-		})
+		return mysql.DB, nil
 	})
 
 	if err != nil {
@@ -37,9 +36,9 @@ func TestInsertSliceMap(t *testing.T) {
 
 	go func() {
 		for i := int64(0); i < page; i++ {
-			data := make([]map[string]interface{}, pageSize, pageSize)
+			data := make([]map[string]any, pageSize, pageSize)
 			for j := int64(0); j < pageSize; j++ {
-				data[j] = map[string]interface{}{
+				data[j] = map[string]any{
 					nameName:  fmt.Sprintf("name-%d-%d", i, j),
 					valueName: i * j,
 				}

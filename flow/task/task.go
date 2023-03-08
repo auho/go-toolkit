@@ -3,7 +3,6 @@ package task
 import (
 	"fmt"
 	"runtime"
-	"sync/atomic"
 
 	"github.com/auho/go-toolkit/console/output"
 	"github.com/auho/go-toolkit/flow/storage"
@@ -17,39 +16,36 @@ type Tasker[E storage.Entry] interface {
 	// Prepare need to be implemented
 	Prepare() error
 
-	// Do need to be implemented
-	Do([]E)
+	// PostDo need to be implemented
+	PostDo()
 
-	// AfterDo need to be implemented
-	AfterDo()
-
+	Init(...Option)
 	HasBeenInit() bool
 	Concurrency() int
 	State() []string
 	Output() []string
 }
 
-type WithTaskOption func(*Task)
+type Option func(*Task)
 
-func WithConcurrency(c int) func(i *Task) {
-	return func(i *Task) {
-		i.concurrency = c
+func WithConcurrency(c int) Option {
+	return func(t *Task) {
+		t.concurrency = c
 	}
 }
 
 type Task struct {
-	concurrency   int
-	amount        int64
-	failureAmount int64
-	duration      *timing.Duration
-	state         *output.MultilineText
-	output        *output.MultilineText
-	log           *output.MultilineText
-	hasBeenInit   bool
+	hasBeenInit bool
+	concurrency int
+
+	duration *timing.Duration
+	state    *output.MultilineText
+	output   *output.MultilineText
+	log      *output.MultilineText
 }
 
-func (t *Task) Init(options ...WithTaskOption) {
-	for _, o := range options {
+func (t *Task) Init(opts ...Option) {
+	for _, o := range opts {
 		o(t)
 	}
 
@@ -80,12 +76,7 @@ func (t *Task) SetState(line int, s string) {
 }
 
 func (t *Task) State() []string {
-	sss := t.state.Content()
-	if len(sss) <= 0 {
-		sss = append(sss, fmt.Sprintf("Amount: %d", t.amount))
-	}
-
-	return sss
+	return t.state.Content()
 }
 
 func (t *Task) Output() []string {
@@ -96,34 +87,18 @@ func (t *Task) Log() []string {
 	return t.log.Content()
 }
 
-func (t *Task) Printf(format string, a ...interface{}) {
+func (t *Task) Printf(format string, a ...any) {
 	t.output.PrintNext(fmt.Sprintf(format, a...))
 }
 
-func (t *Task) Println(a ...interface{}) {
+func (t *Task) Println(a ...any) {
 	t.output.PrintNext(fmt.Sprint(a...))
 }
 
-func (t *Task) Logf(format string, a ...interface{}) {
+func (t *Task) Logf(format string, a ...any) {
 	t.log.PrintNext(fmt.Sprintf(format, a...))
 }
 
-func (t *Task) Logln(a ...interface{}) {
+func (t *Task) Logln(a ...any) {
 	t.log.PrintNext(fmt.Sprint(a...))
-}
-
-func (t *Task) AddAmount(a int64) {
-	atomic.AddInt64(&t.amount, a)
-}
-
-func (t *Task) AddFailureAmount(a int64) {
-	atomic.AddInt64(&t.failureAmount, a)
-}
-
-func (t *Task) Amount() int64 {
-	return t.amount
-}
-
-func (t *Task) FailureAmount() int64 {
-	return t.failureAmount
 }

@@ -25,9 +25,9 @@ func TestInsertSliceSlice(t *testing.T) {
 
 	go func() {
 		for i := 0; i < page; i++ {
-			var sliceSlice [][]interface{}
+			var sliceSlice [][]any
 			for j := 0; j < pageSize; j++ {
-				m := make([]interface{}, 0)
+				m := make([]any, 0)
 				m = append(m, i*page+j)
 				sliceSlice = append(sliceSlice, m)
 			}

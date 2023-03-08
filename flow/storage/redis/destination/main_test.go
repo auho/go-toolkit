@@ -10,14 +10,10 @@ import (
 	"time"
 
 	"github.com/auho/go-toolkit/flow/storage"
-	"github.com/go-redis/redis/v8"
+	redis2 "github.com/auho/go-toolkit/flow/tests/redis"
 )
 
-var _redisOptions = redis.Options{
-	Network:  "tcp",
-	Addr:     "127.0.0.1:6379",
-	Password: "123456",
-}
+var _redisOptions = redis2.Options
 
 func TestMain(m *testing.M) {
 	setUp()

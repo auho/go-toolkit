@@ -23,7 +23,7 @@ func _buildHashesData(k *key[storage.MapEntry]) int64 {
 		items := make(storage.MapEntries, 0, tSize)
 		for j := 0; j < tSize; j++ {
 			a := i + j
-			items = append(items, map[string]interface{}{strconv.Itoa(a): a})
+			items = append(items, map[string]any{strconv.Itoa(a): a})
 		}
 
 		k.Receive(items)
