@@ -2,6 +2,7 @@ package destination
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/auho/go-toolkit/flow/storage"
@@ -65,8 +66,7 @@ func (d *Destination[E]) config(config *Config, b database.BuildDb) (err error) 
 	}
 
 	if d.concurrency <= 0 {
-		err = fmt.Errorf("concurrency[%d] is error", d.concurrency)
-		return
+		d.concurrency = runtime.NumCPU()
 	}
 
 	if d.pageSize <= 0 {

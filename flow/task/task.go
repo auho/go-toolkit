@@ -19,6 +19,7 @@ type Tasker[E storage.Entry] interface {
 	// PostDo need to be implemented
 	PostDo()
 
+	Init(...Option)
 	HasBeenInit() bool
 	Concurrency() int
 	State() []string

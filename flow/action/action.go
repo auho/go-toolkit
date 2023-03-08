@@ -1,7 +1,6 @@
 package action
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -49,7 +48,7 @@ func NewAction[E storage.Entry](mode Moder[E]) *Action[E] {
 
 func (a *Action[E]) Prepare() error {
 	if !a.task.HasBeenInit() {
-		return errors.New("task of action has not been init")
+		a.task.Init()
 	}
 
 	err := a.task.Prepare()

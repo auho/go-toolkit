@@ -3,6 +3,7 @@ package source
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"sync"
 	"sync/atomic"
 
@@ -225,8 +226,7 @@ func (s *Section[E]) config(config *QueryConfig, b database.BuildDb) (err error)
 	}
 
 	if s.conf.Concurrency <= 0 {
-		err = fmt.Errorf("concurrency[%d] is error", s.conf.Concurrency)
-		return
+		s.conf.Concurrency = runtime.NumCPU()
 	}
 
 	if s.conf.PageSize <= 0 {

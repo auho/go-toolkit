@@ -134,7 +134,7 @@ func (f *Flow[E]) summary() {
 	sss := f.source.Summary()
 	sss = append(sss, "Tasks: ")
 	for _, a := range f.actions {
-		sss = append(sss, "\t"+a.Summary())
+		sss = append(sss, "  "+a.Summary())
 	}
 
 	for _, s := range sss {
@@ -150,7 +150,7 @@ func (f *Flow[E]) state() []string {
 	for _, a := range f.actions {
 		sss = append(sss, a.Summary())
 		for _, _s := range a.State() {
-			sss = append(sss, "\t"+_s)
+			sss = append(sss, "  "+_s)
 		}
 	}
 

@@ -20,7 +20,7 @@ func TestSectionSliceMapFromTable(t *testing.T) {
 				TableName:   tableName,
 				IdName:      idName,
 			},
-			Fields: []string{"name", "value"},
+			Fields: []string{nameName, valueName},
 		}, func() (*database.DB, error) {
 			return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
 				return goSimpleDb.NewMysql(mysqlDsn)
