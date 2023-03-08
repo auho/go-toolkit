@@ -24,7 +24,7 @@ func (ssm *sectionSliceMap) query(se *Section[storage.MapEntry], startId, size i
 }
 
 func (ssm *sectionSliceMap) duplicate(items storage.MapEntries) storage.MapEntries {
-	return tool.DuplicateSliceMap[tool.InterfaceEntry](items)
+	return tool.DuplicateSliceMap[tool.AnyEntry](items)
 }
 
 func NewSectionSliceMap(config *QueryConfig, newDb database.BuildDb) (*Section[storage.MapEntry], error) {

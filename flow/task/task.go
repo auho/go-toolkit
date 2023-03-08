@@ -87,18 +87,18 @@ func (t *Task) Log() []string {
 	return t.log.Content()
 }
 
-func (t *Task) Printf(format string, a ...interface{}) {
+func (t *Task) Printf(format string, a ...any) {
 	t.output.PrintNext(fmt.Sprintf(format, a...))
 }
 
-func (t *Task) Println(a ...interface{}) {
+func (t *Task) Println(a ...any) {
 	t.output.PrintNext(fmt.Sprint(a...))
 }
 
-func (t *Task) Logf(format string, a ...interface{}) {
+func (t *Task) Logf(format string, a ...any) {
 	t.log.PrintNext(fmt.Sprintf(format, a...))
 }
 
-func (t *Task) Logln(a ...interface{}) {
+func (t *Task) Logln(a ...any) {
 	t.log.PrintNext(fmt.Sprint(a...))
 }

@@ -38,9 +38,9 @@ func TestInsertSliceMap(t *testing.T) {
 
 	go func() {
 		for i := int64(0); i < page; i++ {
-			data := make([]map[string]interface{}, pageSize, pageSize)
+			data := make([]map[string]any, pageSize, pageSize)
 			for j := int64(0); j < pageSize; j++ {
-				data[j] = map[string]interface{}{
+				data[j] = map[string]any{
 					nameName:  fmt.Sprintf("name-%d-%d", i, j),
 					valueName: i * j,
 				}

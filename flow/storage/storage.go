@@ -2,12 +2,12 @@ package storage
 
 import "log"
 
-type SliceEntry = []interface{}
+type SliceEntry = []any
 type SliceOfStringsEntry = []string
 
-type MapEntry = map[string]interface{}
+type MapEntry = map[string]any
 type MapOfStringsEntry = map[string]string
-type ScoreMap = map[interface{}]float64
+type ScoreMap = map[any]float64
 
 type SliceEntries = []SliceEntry
 type SliceOfStringsEntries = []SliceOfStringsEntry
@@ -26,7 +26,7 @@ func (s *Storage) Title() string {
 }
 
 func (s *Storage) LogFatalWithTitle(v ...any) {
-	log.Fatal(append([]interface{}{s.Title()}, v...)...)
+	log.Fatal(append([]any{s.Title()}, v...)...)
 }
 
 func (s *Storage) LogFatal(v ...any) {

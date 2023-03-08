@@ -25,9 +25,9 @@ func TestInsertSliceMap(t *testing.T) {
 
 	go func() {
 		for i := 0; i < page; i++ {
-			var sliceMap []map[string]interface{}
+			var sliceMap []map[string]any
 			for j := 0; j < pageSize; j++ {
-				m := make(map[string]interface{})
+				m := make(map[string]any)
 				m[idName] = i*page + j
 				sliceMap = append(sliceMap, m)
 			}

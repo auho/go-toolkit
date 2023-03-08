@@ -78,9 +78,9 @@ func _buildDataForUpdateSliceMap(t *testing.T, page, pageSize int64) {
 	}
 
 	for i := int64(0); i < page; i++ {
-		rows := make([][]interface{}, pageSize, pageSize)
+		rows := make([][]any, pageSize, pageSize)
 		for j := int64(0); j < pageSize; j++ {
-			rows[j] = []interface{}{
+			rows[j] = []any{
 				fmt.Sprintf("name-%d-%d", i, j),
 				1,
 			}
@@ -93,7 +93,7 @@ func _buildDataForUpdateSliceMap(t *testing.T, page, pageSize int64) {
 	}
 
 	for k := int64(0); k < page*pageSize; k += pageSize {
-		var rows []map[string]interface{}
+		var rows []map[string]any
 		err = d.Table(tableName).
 			Select([]string{"id", "name", "value"}).
 			Where(fmt.Sprintf("%s > ?", idName), k).

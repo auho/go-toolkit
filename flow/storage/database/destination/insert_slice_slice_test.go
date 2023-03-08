@@ -39,9 +39,9 @@ func TestInsertSliceSlice(t *testing.T) {
 
 	go func() {
 		for i := int64(0); i < page; i++ {
-			data := make([][]interface{}, pageSize, pageSize)
+			data := make([][]any, pageSize, pageSize)
 			for j := int64(0); j < pageSize; j++ {
-				data[j] = []interface{}{
+				data[j] = []any{
 					fmt.Sprintf("name-%d-%d", i, j),
 					i * j,
 				}
