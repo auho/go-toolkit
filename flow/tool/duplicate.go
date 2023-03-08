@@ -1,10 +1,10 @@
 package tool
 
 type StringEntry = string
-type InterfaceEntry = interface{}
+type AnyEntry = any
 
 type Entry interface {
-	StringEntry | InterfaceEntry
+	StringEntry | AnyEntry
 }
 
 func DuplicateSliceMap[E Entry](items []map[string]E) []map[string]E {

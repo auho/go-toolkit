@@ -9,37 +9,34 @@ import (
 	"github.com/auho/go-toolkit/console/output"
 	"github.com/auho/go-toolkit/flow/action"
 	"github.com/auho/go-toolkit/flow/storage"
-	"github.com/auho/go-toolkit/flow/task"
 	"github.com/auho/go-toolkit/time/timing"
 )
 
-type Option[E storage.Entry] func(flow *Flow[E])
+type Option[E storage.Entry] func(*Flow[E])
 
-type Options[E storage.Entry] []Option[E]
-
-func WithSource[E storage.Entry](sf storage.Sourceor[E]) Option[E] {
-	return func(f *Flow[E]) {
-		f.source = sf
+func WithSource[E storage.Entry](se storage.Sourceor[E]) Option[E] {
+	return func(s *Flow[E]) {
+		s.source = se
 	}
 }
 
-func WithTasker[E storage.Entry](t task.Tasker[E]) Option[E] {
-	return func(f *Flow[E]) {
-		f.actions = append(f.actions, action.NewAction(action.WithTasker(t)))
+func WithActor[E storage.Entry](actor action.Actor[E]) Option[E] {
+	return func(s *Flow[E]) {
+		s.actions = append(s.actions, actor)
 	}
 }
 
-func WithStateTickerDuration[E storage.Entry](d time.Duration) Option[E] {
+func WithStateInterval[E storage.Entry](d time.Duration) Option[E] {
 	return func(f *Flow[E]) {
-		f.stateTicker = time.NewTicker(d)
+		f.stateInterval = d
 	}
 }
 
 type Flow[E storage.Entry] struct {
 	source        storage.Sourceor[E]
-	stateTicker   *time.Ticker
 	refreshOutput *output.Refresh
-	actions       []action.Actioner[E]
+	actions       []action.Actor[E]
+	stateInterval time.Duration
 }
 
 func RunFlow[E storage.Entry](opts ...Option[E]) error {
@@ -75,11 +72,12 @@ func (f *Flow[E]) check() error {
 }
 
 func (f *Flow[E]) run() error {
-	if f.stateTicker == nil {
-		f.stateTicker = time.NewTicker(time.Millisecond * 200)
-	}
-
-	f.refreshOutput = output.NewRefresh()
+	f.refreshOutput = output.NewRefresh(
+		output.WithInterval(f.stateInterval),
+		output.WithContentGetter(func() []string {
+			return f.state()
+		}),
+	)
 
 	f.summary()
 
@@ -89,15 +87,9 @@ func (f *Flow[E]) run() error {
 	}
 
 	f.actionsPrepare()
-	f.actionsDo()
+	f.actionsRun()
 
 	f.refreshOutput.Start()
-
-	go func() {
-		for range f.stateTicker.C {
-			f.state()
-		}
-	}()
 
 	f.transport()
 	f.finish()
@@ -134,7 +126,6 @@ func (f *Flow[E]) transport() {
 
 func (f *Flow[E]) finish() {
 	f.actionsFinish()
-	f.stateTicker.Stop()
 	f.refreshOutput.Stop()
 	f.actionsOutput()
 }
@@ -143,7 +134,7 @@ func (f *Flow[E]) summary() {
 	sss := f.source.Summary()
 	sss = append(sss, "Tasks: ")
 	for _, a := range f.actions {
-		sss = append(sss, "\t"+a.Summary())
+		sss = append(sss, "  "+a.Summary())
 	}
 
 	for _, s := range sss {
@@ -153,17 +144,17 @@ func (f *Flow[E]) summary() {
 	fmt.Println("")
 }
 
-func (f *Flow[E]) state() {
+func (f *Flow[E]) state() []string {
 	sss := f.source.State()
 
 	for _, a := range f.actions {
 		sss = append(sss, a.Summary())
 		for _, _s := range a.State() {
-			sss = append(sss, "\t"+_s)
+			sss = append(sss, "  "+_s)
 		}
 	}
 
-	f.refreshOutput.CoverAll(sss)
+	return sss
 }
 
 func (f *Flow[E]) actionsOutput() {
@@ -178,9 +169,9 @@ func (f *Flow[E]) actionsOutput() {
 	}
 }
 
-func (f *Flow[E]) actionsDo() {
+func (f *Flow[E]) actionsRun() {
 	for _, a := range f.actions {
-		a.Do()
+		a.Run()
 	}
 }
 

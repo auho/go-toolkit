@@ -28,9 +28,11 @@ func (m *MultilineText) Print(line int, s string) {
 		for i := 0; i < line-contentLen; i++ {
 			m.content = append(m.content, "")
 		}
+	} else if line == 0 {
+		m.content = append(m.content, s)
+	} else {
+		m.content[line-1] = s
 	}
-
-	m.content[line-1] = s
 }
 
 func (m *MultilineText) PrintNext(s string) {

@@ -35,12 +35,12 @@ func (h *sets) accept(itemsChan <-chan []string, c *client.Redis, key string, pa
 
 			entries := items[i:end]
 
-			entriesInterface := make([]interface{}, 0, end-i)
+			entriesAny := make([]any, 0, end-i)
 			for _, entry := range entries {
-				entriesInterface = append(entriesInterface, entry)
+				entriesAny = append(entriesAny, entry)
 			}
 
-			_, err := c.SAdd(ctx, key, entriesInterface...).Result()
+			_, err := c.SAdd(ctx, key, entriesAny...).Result()
 			if err != nil {
 				panic(err)
 			}
