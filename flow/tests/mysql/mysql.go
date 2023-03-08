@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 
 	goSimpleDb "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage/database"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var _dsn = "test:Test123$@tcp(127.0.0.1:3306)/"
@@ -23,8 +26,20 @@ var DB *database.DB
 
 func init() {
 	var err error
+
+	dbc := &gorm.Config{
+		Logger: logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer（日志输出的目标，前缀和日志包含的内容——译者注）
+			logger.Config{
+				SlowThreshold:             time.Second,  // 慢 SQL 阈值
+				LogLevel:                  logger.Error, // 日志级别
+				IgnoreRecordNotFoundError: true,         // 忽略ErrRecordNotFound（记录未找到）错误
+			},
+		),
+	}
+
 	DB, err = database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
-		return goSimpleDb.NewMysql(Dsn)
+		return goSimpleDb.NewMysql(Dsn, dbc)
 	})
 	if err != nil {
 		log.Fatal("new DB create table ", err)

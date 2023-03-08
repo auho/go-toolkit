@@ -3,9 +3,9 @@ package source
 import (
 	"testing"
 
-	goSimpleDb "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/database"
+	"github.com/auho/go-toolkit/flow/tests/mysql"
 )
 
 func TestSectionSliceMapFromTable(t *testing.T) {
@@ -22,9 +22,7 @@ func TestSectionSliceMapFromTable(t *testing.T) {
 			},
 			Fields: []string{nameName, valueName},
 		}, func() (*database.DB, error) {
-			return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
-				return goSimpleDb.NewMysql(mysqlDsn)
-			})
+			return mysql.DB, nil
 		})
 
 	if err != nil {

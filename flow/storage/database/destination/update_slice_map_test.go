@@ -10,6 +10,7 @@ import (
 	goSimpleDb "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/storage/database"
+	"github.com/auho/go-toolkit/flow/tests/mysql"
 )
 
 var ussItemsChan = make(chan storage.MapEntries)
@@ -23,9 +24,7 @@ func TestUpdateSliceMap(t *testing.T) {
 		PageSize:    7,
 		TableName:   tableName,
 	}, idName, func() (*database.DB, error) {
-		return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
-			return goSimpleDb.NewMysql(mysqlDsn)
-		})
+		return mysql.DB, nil
 	})
 
 	if err != nil {

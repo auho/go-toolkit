@@ -61,5 +61,6 @@ func _testSection[E storage.Entry](
 }
 
 func tearDown() {
+	mysql.CleanData(tableName)
 	log.Println("tear down")
 }

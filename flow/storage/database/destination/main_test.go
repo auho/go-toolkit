@@ -27,5 +27,6 @@ func setUp() {
 }
 
 func tearDown() {
+	mysql.CleanData(tableName)
 	log.Println("tear down")
 }

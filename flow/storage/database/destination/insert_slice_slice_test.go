@@ -7,22 +7,23 @@ import (
 	"testing"
 	"time"
 
-	goSimpleDb "github.com/auho/go-simple-db/v2"
 	"github.com/auho/go-toolkit/flow/storage/database"
+	"github.com/auho/go-toolkit/flow/tests/mysql"
 )
 
 func TestInsertSliceSlice(t *testing.T) {
-	iss, err := NewInsertSliceSlice(&Config{
-		IsTruncate:  true,
-		Concurrency: 4,
-		PageSize:    337,
-		TableName:   tableName,
-	}, []string{nameName, valueName},
+	iss, err := NewInsertSliceSlice(
+		&Config{
+			IsTruncate:  true,
+			Concurrency: 4,
+			PageSize:    337,
+			TableName:   tableName,
+		},
+		[]string{nameName, valueName},
 		func() (*database.DB, error) {
-			return database.NewDB(func() (*goSimpleDb.SimpleDB, error) {
-				return goSimpleDb.NewMysql(mysqlDsn)
-			})
-		})
+			return mysql.DB, nil
+		},
+	)
 
 	if err != nil {
 		log.Fatal(err)
