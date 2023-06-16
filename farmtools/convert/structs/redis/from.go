@@ -81,7 +81,7 @@ func _convertInt(fieldRef reflect.Value, v interface{}) {
 	case string:
 		tempInt, _ = strconv.ParseInt(tmpVal, 10, 64)
 	default:
-		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
+		panic(fmt.Sprintf("convert int type error[%T %v]", v, v))
 	}
 
 	fieldRef.SetInt(tempInt)
@@ -102,7 +102,7 @@ func _convertFloat(fieldRef reflect.Value, v interface{}) {
 	case string:
 		tempFloat, _ = strconv.ParseFloat(tmpVal, 64)
 	default:
-		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
+		panic(fmt.Sprintf("convert float type error[%T %v]", v, v))
 	}
 
 	fieldRef.SetFloat(tempFloat)
