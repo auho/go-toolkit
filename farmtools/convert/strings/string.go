@@ -14,7 +14,7 @@ func AnyTo(v any) string {
 	case int:
 		newV = strconv.Itoa(_v)
 	case float64:
-		newV = strconv.FormatFloat(_v, 'E', -1, 64)
+		newV = strconv.FormatFloat(_v, 'f', -1, 64)
 	default:
 		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
 	}

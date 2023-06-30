@@ -28,9 +28,9 @@ func Format(value reflect.Value) string {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		s = strconv.FormatUint(value.Uint(), 10)
 	case reflect.Float32:
-		s = strconv.FormatFloat(value.Float(), 'E', -1, 32)
+		s = strconv.FormatFloat(value.Float(), 'f', -1, 32)
 	case reflect.Float64:
-		s = strconv.FormatFloat(value.Float(), 'E', -1, 64)
+		s = strconv.FormatFloat(value.Float(), 'f', -1, 64)
 	case reflect.Complex64, reflect.Complex128:
 		s = fmt.Sprintf("%v", value)
 	case reflect.String:

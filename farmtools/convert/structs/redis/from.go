@@ -115,7 +115,7 @@ func _convertString(fieldRef reflect.Value, v interface{}) {
 	case string:
 		tempString = tmpVal
 	case float64:
-		tempString = strconv.FormatFloat(tmpVal, 'E', -1, 64)
+		tempString = strconv.FormatFloat(tmpVal, 'f', -1, 64)
 	default:
 		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
 	}
