@@ -26,8 +26,14 @@ func FromAny(v any) (int, error) {
 	case float64:
 		newV = int(_v)
 	case string:
+		if _v == "" {
+			_v = "0"
+		}
+
 		newV, err = strconv.Atoi(_v)
-		err = fmt.Errorf("convert string to int error %w", err)
+		if err != nil {
+			err = fmt.Errorf("convert string to int error %w", err)
+		}
 	default:
 		err = errors.New(fmt.Sprintf("convert int type error[%T %v]", v, v))
 	}
