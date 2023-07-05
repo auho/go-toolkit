@@ -82,9 +82,9 @@ func (b *Beautify) format(value reflect.Value) string {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		s = b.decoder.UintValue(strconv.FormatUint(value.Uint(), 10))
 	case reflect.Float32:
-		s = b.decoder.Float32Value(strconv.FormatFloat(value.Float(), 'E', -1, 32))
+		s = b.decoder.Float32Value(strconv.FormatFloat(value.Float(), 'f', -1, 32))
 	case reflect.Float64:
-		s = b.decoder.Float32Value(strconv.FormatFloat(value.Float(), 'E', -1, 64))
+		s = b.decoder.Float32Value(strconv.FormatFloat(value.Float(), 'f', -1, 64))
 	case reflect.Complex64, reflect.Complex128:
 		s = b.decoder.ComplexValue(fmt.Sprintf("%v", value))
 	case reflect.String:

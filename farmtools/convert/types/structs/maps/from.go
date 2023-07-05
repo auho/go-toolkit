@@ -1,4 +1,4 @@
-package redis
+package maps
 
 import (
 	"errors"
@@ -6,7 +6,8 @@ import (
 	"reflect"
 )
 
-func ConvertToHash(s interface{}) (m map[string]interface{}, err error) {
+// MapStringAnyFromStruct convert struct to string any map
+func MapStringAnyFromStruct(s interface{}) (m map[string]any, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = errors.New(fmt.Sprintf("%s", r))
