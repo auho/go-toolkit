@@ -1,11 +1,13 @@
 package ints
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
 
-func AnyTo(v any) int {
+func FromAny(v any) (int, error) {
+	var err error
 	newV := 0
 
 	switch _v := v.(type) {
@@ -24,10 +26,11 @@ func AnyTo(v any) int {
 	case float64:
 		newV = int(_v)
 	case string:
-		newV, _ = strconv.Atoi(_v)
+		newV, err = strconv.Atoi(_v)
+		err = fmt.Errorf("convert string to int error %w", err)
 	default:
-		panic(fmt.Sprintf("convert int type error[%T %v]", v, v))
+		err = errors.New(fmt.Sprintf("convert int type error[%T %v]", v, v))
 	}
 
-	return newV
+	return newV, err
 }

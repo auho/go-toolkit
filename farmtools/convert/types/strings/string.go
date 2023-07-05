@@ -1,11 +1,13 @@
 package strings
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
 
-func AnyTo(v any) string {
+func FromAny(v any) (string, error) {
+	var err error
 	newV := ""
 
 	switch _v := v.(type) {
@@ -16,8 +18,8 @@ func AnyTo(v any) string {
 	case float64:
 		newV = strconv.FormatFloat(_v, 'f', -1, 64)
 	default:
-		panic(fmt.Sprintf("convert string type error[%T %v]", v, v))
+		err = errors.New(fmt.Sprintf("convert string type error[%T %v]", v, v))
 	}
 
-	return newV
+	return newV, err
 }

@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func AnyTo(v any) float64 {
+func FromAny(v any) float64 {
 	newV := float64(0)
 
 	switch _v := v.(type) {

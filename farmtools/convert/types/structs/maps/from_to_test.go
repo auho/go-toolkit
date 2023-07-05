@@ -1,4 +1,4 @@
-package redis
+package maps
 
 import (
 	"testing"
@@ -24,19 +24,19 @@ var rm = redisMap{
 
 func Test_from(t *testing.T) {
 	// not pointer
-	s, err = ConvertToHash(rm)
+	s, err = MapStringAnyFromStruct(rm)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// pointer
-	s, err = ConvertToHash(&rm)
+	s, err = MapStringAnyFromStruct(&rm)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	var rm1 redisMap
-	err = ConvertFromHash(&rm1, s)
+	err = MapStringAnyToStruct(&rm1, s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,23 +49,23 @@ func Test_from(t *testing.T) {
 // error type
 func Test_error(t *testing.T) {
 	_i := 2
-	s, err = ConvertToHash(_i)
+	s, err = MapStringAnyFromStruct(_i)
 	if err == nil {
 		t.Fatal("error type _i")
 	}
 
-	s, err = ConvertToHash(&_i)
+	s, err = MapStringAnyFromStruct(&_i)
 	if err == nil {
 		t.Fatal("error type &_i")
 	}
 
 	var _i1 interface{} = 2
-	s, err = ConvertToHash(_i1)
+	s, err = MapStringAnyFromStruct(_i1)
 	if err == nil {
 		t.Fatal("error type _i1")
 	}
 
-	s, err = ConvertToHash(&_i1)
+	s, err = MapStringAnyFromStruct(&_i1)
 	if err == nil {
 		t.Fatal("error type &_i1")
 	}
