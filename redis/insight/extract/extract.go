@@ -9,7 +9,7 @@ type KeyPattern string
 
 type extract struct {
 	regexps     map[KeyPattern]*regexp.Regexp
-	keyPatterns map[KeyPattern]string
+	keyPatterns map[KeyPattern]string // map[key pattern]key pattern regex
 }
 
 func (e *extract) init() {
