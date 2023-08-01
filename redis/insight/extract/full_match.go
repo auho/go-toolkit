@@ -12,12 +12,5 @@ func NewFullMatch() *FullMatch {
 }
 
 func (fm *FullMatch) Match(s string) (string, bool) {
-	for kp, kpReg := range fm.keyPatterns {
-		ok := fm.matchString(kp, kpReg, s)
-		if ok {
-			return string(kp), true
-		}
-	}
-
-	return s, false
+	return fm.match(s)
 }

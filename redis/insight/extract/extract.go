@@ -8,8 +8,8 @@ import (
 type KeyPattern string
 
 type extract struct {
-	regexps     map[KeyPattern]*regexp.Regexp
-	keyPatterns map[KeyPattern]string // map[key pattern]key pattern regex
+	regexps     map[KeyPattern]*regexp.Regexp // map[key pattern]key pattern representation of a compiled regular expression
+	keyPatterns map[KeyPattern]string         // map[key pattern]key pattern regular expression
 }
 
 func (e *extract) init() {
@@ -31,11 +31,12 @@ func (e *extract) RegisterKeyPatterns(m map[string]string) {
 
 func (e *extract) RegisterKeyPattern(kp, regex string) {
 	e.keyPatterns[KeyPattern(kp)] = regex
+	e.regexps[KeyPattern(kp)] = regexp.MustCompile(regex)
 }
 
-func (e *extract) matchKeyPatterns(s string) (string, bool) {
-	for k, v := range e.keyPatterns {
-		kp, ok := e.matchKeyPattern(k, v, s)
+func (e *extract) match(s string) (string, bool) {
+	for k := range e.keyPatterns {
+		kp, ok := e.matchKeyPattern(k, s)
 		if ok {
 			return kp, true
 		}
@@ -44,28 +45,13 @@ func (e *extract) matchKeyPatterns(s string) (string, bool) {
 	return s, false
 }
 
-func (e *extract) matchKeyPattern(kp KeyPattern, regex string, s string) (string, bool) {
-	ok := e.matchString(kp, regex, s)
+func (e *extract) matchKeyPattern(kp KeyPattern, s string) (string, bool) {
+	re := e.regexps[kp]
+	ok := re.MatchString(s)
 	if ok {
 		return e.formatKeyPattern(kp), true
 	} else {
 		return s, false
-	}
-}
-
-func (e *extract) matchString(kp KeyPattern, regex string, s string) bool {
-	re := e.generateKeyPatternRe(kp, regex)
-	return re.MatchString(s)
-}
-
-func (e *extract) generateKeyPatternRe(kp KeyPattern, regex string) *regexp.Regexp {
-	if re, ok := e.regexps[kp]; ok {
-		return re
-	} else {
-		re = regexp.MustCompile(regex)
-		e.regexps[kp] = re
-
-		return re
 	}
 }
 

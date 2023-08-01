@@ -12,5 +12,5 @@ func NewString() *String {
 }
 
 func (s *String) Match(t string) (string, bool) {
-	return s.matchKeyPatterns(t)
+	return s.match(t)
 }
