@@ -13,8 +13,8 @@ import (
 var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
 var _ database.Driver = (*Destination[storage.MapEntry])(nil)
 
-type destinationer[E storage.Entry] interface {
-	exec(d *Destination[E], items []E) error
+type Destinationer[E storage.Entry] interface {
+	Exec(d *Destination[E], items []E) error
 }
 
 type Destination[E storage.Entry] struct {
@@ -29,11 +29,11 @@ type Destination[E storage.Entry] struct {
 
 	state     *storage.State
 	doWg      sync.WaitGroup
-	dst       destinationer[E]
+	dst       Destinationer[E]
 	itemsChan chan []E
 }
 
-func newDestination[E storage.Entry](config *Config, dst destinationer[E], b database.BuildDb) (*Destination[E], error) {
+func newDestination[E storage.Entry](config *Config, dst Destinationer[E], b database.BuildDb) (*Destination[E], error) {
 	d := &Destination[E]{}
 	err := d.config(config, b)
 	if err != nil {
@@ -151,7 +151,7 @@ func (d *Destination[E]) do() {
 				descItems = items[start:end]
 			}
 
-			err := d.dst.exec(d, descItems)
+			err := d.dst.Exec(d, descItems)
 			if err != nil {
 				panic(err)
 			}

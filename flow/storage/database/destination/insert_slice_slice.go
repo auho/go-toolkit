@@ -7,13 +7,13 @@ import (
 	"github.com/auho/go-toolkit/flow/storage/database"
 )
 
-var _ destinationer[storage.SliceEntry] = (*InsertSliceSlice)(nil)
+var _ Destinationer[storage.SliceEntry] = (*InsertSliceSlice)(nil)
 
 type InsertSliceSlice struct {
 	fields []string
 }
 
-func (i *InsertSliceSlice) exec(d *Destination[storage.SliceEntry], items storage.SliceEntries) error {
+func (i *InsertSliceSlice) Exec(d *Destination[storage.SliceEntry], items storage.SliceEntries) error {
 	return d.db.BulkInsertFromSliceSlice(d.table, i.fields, items, int(d.pageSize))
 }
 
