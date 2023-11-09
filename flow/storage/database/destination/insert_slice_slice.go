@@ -25,5 +25,5 @@ func NewInsertSliceSlice(config *Config, fields []string, b database.BuildDb) (*
 	iss := &InsertSliceSlice{}
 	iss.fields = fields
 
-	return newDestination[storage.SliceEntry](config, iss, b)
+	return NewDestination[storage.SliceEntry](config, iss, b)
 }

@@ -33,7 +33,7 @@ type Destination[E storage.Entry] struct {
 	itemsChan chan []E
 }
 
-func newDestination[E storage.Entry](config *Config, dst Destinationer[E], b database.BuildDb) (*Destination[E], error) {
+func NewDestination[E storage.Entry](config *Config, dst Destinationer[E], b database.BuildDb) (*Destination[E], error) {
 	d := &Destination[E]{}
 	err := d.config(config, b)
 	if err != nil {
@@ -47,6 +47,14 @@ func newDestination[E storage.Entry](config *Config, dst Destinationer[E], b dat
 
 func (d *Destination[E]) DB() *database.DB {
 	return d.db
+}
+
+func (d *Destination[E]) TableName() string {
+	return d.table
+}
+
+func (d *Destination[E]) PageSize() int64 {
+	return d.pageSize
 }
 
 func (d *Destination[E]) config(config *Config, b database.BuildDb) (err error) {

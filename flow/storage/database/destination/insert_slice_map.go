@@ -15,5 +15,5 @@ func (i *InsertSliceMap) Exec(d *Destination[storage.MapEntry], items storage.Ma
 }
 
 func NewInsertSliceMap(config *Config, b database.BuildDb) (*Destination[storage.MapEntry], error) {
-	return newDestination[storage.MapEntry](config, &InsertSliceMap{}, b)
+	return NewDestination[storage.MapEntry](config, &InsertSliceMap{}, b)
 }

@@ -19,5 +19,5 @@ func NewUpdateSliceMap(config *Config, idName string, b database.BuildDb) (*Dest
 	usm := &UpdateSliceMap{}
 	usm.idName = idName
 
-	return newDestination[storage.MapEntry](config, usm, b)
+	return NewDestination[storage.MapEntry](config, usm, b)
 }
