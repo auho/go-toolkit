@@ -3,7 +3,6 @@ package flow
 import (
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/auho/go-toolkit/console/output"
@@ -86,15 +85,21 @@ func (f *Flow[E]) run() error {
 		return err
 	}
 
-	f.actionsPrepare()
-	f.actionsRun()
+	err = f.actionsPrepare()
+	if err != nil {
+		return fmt.Errorf("actioins prepare error;%w", err)
+	}
+
+	err = f.actionsRun()
+	if err != nil {
+		return fmt.Errorf("actioins run error;%w", err)
+	}
 
 	f.refreshOutput.Start()
 
 	f.transport()
-	f.finish()
 
-	return nil
+	return f.finish()
 }
 
 func (f *Flow[E]) transport() {
@@ -124,10 +129,16 @@ func (f *Flow[E]) transport() {
 	}()
 }
 
-func (f *Flow[E]) finish() {
-	f.actionsFinish()
+func (f *Flow[E]) finish() error {
+	err := f.actionsFinish()
 	f.refreshOutput.Stop()
 	f.actionsOutput()
+
+	if err != nil {
+		return fmt.Errorf("actions finish error; %w", err)
+	} else {
+		return nil
+	}
 }
 
 func (f *Flow[E]) summary() {
@@ -169,25 +180,52 @@ func (f *Flow[E]) actionsOutput() {
 	}
 }
 
-func (f *Flow[E]) actionsRun() {
+func (f *Flow[E]) actionsRun() error {
+	var err error
 	for _, a := range f.actions {
-		a.Run()
-	}
-}
-
-func (f *Flow[E]) actionsPrepare() {
-	for _, a := range f.actions {
-		err := a.Prepare()
-		if err != nil {
-			log.Fatalln(err)
+		aErr := a.Run()
+		if aErr != nil {
+			if err != nil {
+				err = fmt.Errorf("%w, %w", err, aErr)
+			} else {
+				err = fmt.Errorf("run error; %w", aErr)
+			}
 		}
 	}
+
+	return err
 }
 
-func (f *Flow[E]) actionsFinish() {
+func (f *Flow[E]) actionsPrepare() error {
+	var err error
 	for _, a := range f.actions {
-		a.Finish()
+		aErr := a.Prepare()
+		if aErr != nil {
+			if err != nil {
+				err = fmt.Errorf("%w, %w", err, aErr)
+			} else {
+				err = fmt.Errorf("prepare error; %w", aErr)
+			}
+		}
 	}
+
+	return err
+}
+
+func (f *Flow[E]) actionsFinish() error {
+	var err error
+	for _, a := range f.actions {
+		aErr := a.Finish()
+		if aErr != nil {
+			if err != nil {
+				err = fmt.Errorf("%w, %w", err, aErr)
+			} else {
+				err = fmt.Errorf("finish error; %w", aErr)
+			}
+		}
+	}
+
+	return err
 }
 
 func (f *Flow[E]) actionsDone() {

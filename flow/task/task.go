@@ -16,8 +16,11 @@ type Tasker[E storage.Entry] interface {
 	// Prepare need to be implemented
 	Prepare() error
 
+	// PreDo need to be implemented
+	PreDo() error
+
 	// PostDo need to be implemented
-	PostDo()
+	PostDo() error
 
 	Init(...Option)
 	HasBeenInit() bool

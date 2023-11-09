@@ -25,7 +25,16 @@ func (w *work) Do(items []map[string]any) {
 	}
 }
 
-func (w *work) PostDo() {
+func (w *work) PreDo() error {
+	w.SetState(0, "pre do")
+	w.Println("pre do")
+
+	return nil
+}
+
+func (w *work) PostDo() error {
 	w.SetState(0, "post do")
 	w.Println("post do")
+
+	return nil
 }
