@@ -117,7 +117,7 @@ func (f *Flow[E]) transport() {
 
 			for _, a := range f.actions {
 				if needCopy {
-					newItems := f.source.Duplicate(items)
+					newItems := f.source.Copy(items)
 					a.Receive(newItems)
 				} else {
 					a.Receive(items)

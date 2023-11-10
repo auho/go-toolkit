@@ -98,6 +98,11 @@ func (a *Action[E]) Finish() error {
 		return fmt.Errorf("PostDo error; %w", err)
 	}
 
+	err = a.task.Close()
+	if err != nil {
+		return fmt.Errorf("close error; %w", err)
+	}
+
 	return nil
 }
 

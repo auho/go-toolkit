@@ -15,38 +15,37 @@ var _ storage.Sourceor[storage.MapEntry] = (*Section[storage.MapEntry])(nil)
 var _ database.Driver = (*Section[storage.MapEntry])(nil)
 
 type sectionQuery[E storage.Entry] interface {
-	query(se *Section[E], startId, size int64) ([]E, error)
-	duplicate([]E) []E
+	Query(se *Section[E], startId, endId int64) ([]E, error)
+	Copy([]E) []E
 }
 
 // Section 分段查询
 type Section[E storage.Entry] struct {
 	storage.Storage
-	db        *database.DB
-	scanSw    sync.WaitGroup
-	idRangeSw sync.WaitGroup
-	conf      *QueryConfig
+	db     *database.DB
+	scanSw sync.WaitGroup
+	conf   *QueryConfig
 
 	total     int64
 	totalPage int64
-	startId   int64 // 开区间
-	maxId     int64 // 闭区间
+	startId   int64 // 闭区间
+	endId     int64 // 闭区间
 
 	failureLastId []int
-	idRangeChan   chan []int64 // []in64{left id, size} 不包含 left id
+	idRangeChan   chan []int64 // []in64{left id, right id} 包含两端
 	rowsChan      chan []E
 	state         *storage.PageState
-	sr            sectionQuery[E]
+	sq            sectionQuery[E]
 }
 
-func newSection[E storage.Entry](config *QueryConfig, sr sectionQuery[E], b database.BuildDb) (*Section[E], error) {
+func newSection[E storage.Entry](config *QueryConfig, sq sectionQuery[E], b database.BuildDb) (*Section[E], error) {
 	s := &Section[E]{}
 	err := s.config(config, b)
 	if err != nil {
 		return nil, err
 	}
 
-	s.sr = sr
+	s.sq = sq
 
 	return s, nil
 }
@@ -66,11 +65,11 @@ func (s *Section[E]) Summary() []string {
 		s.totalPage,
 		s.conf.PageSize,
 		s.startId,
-		s.maxId)}
+		s.endId)}
 }
 
-func (s *Section[E]) Duplicate(items []E) []E {
-	return s.sr.duplicate(items)
+func (s *Section[E]) Copy(items []E) []E {
+	return s.sq.Copy(items)
 }
 
 func (s *Section[E]) Scan() error {
@@ -85,14 +84,7 @@ func (s *Section[E]) Scan() error {
 	}
 
 	go s.idSection()
-
-	for i := 0; i < s.conf.Concurrency; i++ {
-		s.scanSw.Add(1)
-		go func() {
-			s.scanRows()
-			s.scanSw.Done()
-		}()
-	}
+	s.scanRows()
 
 	go func() {
 		s.scanSw.Wait()
@@ -109,102 +101,57 @@ func (s *Section[E]) ReceiveChan() <-chan []E {
 	return s.rowsChan
 }
 
-// 根据 id section（left id，size） 查询 rows
-func (s *Section[E]) scanRows() {
-	for idRange := range s.idRangeChan {
-		atomic.AddInt64(&s.state.Page, 1)
-
-		leftId := idRange[0]
-		size := idRange[1]
-
-		rows, err := s.sr.query(s, leftId, size)
-		if err != nil {
-			s.LogFatalWithTitle("left id:", leftId, err)
-		}
-
-		if len(rows) == 0 {
-			continue
-		}
-
-		s.state.AddAmount(int64(len(rows)))
-
-		s.rowsChan <- rows
-	}
-}
-
-// 先根据总数，并发数等对 id 分段（start id、end id），每段在根据 page size 进行 id section（left id，size）并分发 id section
+// 根据 start id， end id，分段（left id， right id）并分发 id section
 func (s *Section[E]) idSection() {
-	s.queryPages()
-
-	go func() {
-		s.idRangeSw.Wait()
-		close(s.idRangeChan)
-	}()
-
-	s.state.PageSize = s.conf.PageSize
-	s.state.TotalPage = s.totalPage
-	s.state.Total = s.total
-}
-
-// queryPages
-// 根据总数、页大小、并发数等，进行分段 start Id，end id，并分发分段
-func (s *Section[E]) queryPages() {
-	shard := int64(math.Ceil(float64(s.totalPage) / float64(s.conf.Concurrency)))
-	shardSize := shard * s.conf.PageSize
-
-	for i := 0; i < s.conf.Concurrency; i++ {
-		i64 := int64(i)
-		startId := s.startId + i64*shardSize
-		endId := startId + shardSize
-
-		if endId > s.maxId {
-			endId = s.maxId
-		}
-
-		s.idRangeSw.Add(1)
-		go func() {
-			s.queryPage(startId, endId)
-			s.idRangeSw.Done()
-		}()
-
-		if endId >= s.maxId {
-			break
-		}
-	}
-}
-
-// queryPage
-// 根据分段 start id，end id ，page size 计算每页的 id section（left id，size），并分发 id section
-func (s *Section[E]) queryPage(startId, endId int64) {
-	var rightId int64 = 0
-	leftId := startId
-
-	var row struct {
-		Id int64
-	}
-
+	_break := false
+	_startId := s.startId
+	_rightId := int64(0)
 	for {
-		rightId = leftId + s.conf.PageSize
-		if rightId > endId {
-			rightId = endId
+		_rightId = _startId + s.conf.PageSize - 1
+		if _rightId >= s.endId {
+			_rightId = s.endId
+			_break = true
 		}
 
-		err := s.db.Table(s.conf.TableName).
-			Select(fmt.Sprintf("MAX(%s) AS id", s.conf.IdName)).
-			Where(fmt.Sprintf("%s > ? AND %s <= ?", s.conf.IdName, s.conf.IdName), leftId, rightId).
-			Order(fmt.Sprintf("%s desc", s.conf.IdName)).
-			Scan(&row).Error
-		if err != nil {
-			s.LogFatalWithTitle(fmt.Sprintf("query page: start id %d end id %d; left id: %d right id: %d; %v", startId, endId, leftId, rightId, err))
-		}
+		s.idRangeChan <- []int64{_startId, _rightId}
 
-		s.idRangeChan <- []int64{leftId, rightId - leftId}
-
-		if rightId >= endId {
+		if _break {
 			break
 		}
 
-		leftId += s.conf.PageSize
+		_startId += s.conf.PageSize
+	}
+
+	close(s.idRangeChan)
+}
+
+// 根据 id section（left id，right id） 查询 rows
+func (s *Section[E]) scanRows() {
+	for i := 0; i < s.conf.Concurrency; i++ {
+		s.scanSw.Add(1)
+		go func() {
+			for idRange := range s.idRangeChan {
+				atomic.AddInt64(&s.state.Page, 1)
+
+				leftId := idRange[0]
+				rightId := idRange[1]
+
+				rows, err := s.sq.Query(s, leftId, rightId)
+				if err != nil {
+					s.LogFatalWithTitle(fmt.Sprintf("left id[%d] - right id[%d]", leftId, rightId), err)
+				}
+
+				if len(rows) == 0 {
+					continue
+				}
+
+				s.state.AddAmount(int64(len(rows)))
+
+				s.rowsChan <- rows
+			}
+
+			s.scanSw.Done()
+		}()
 	}
 }
 
@@ -213,7 +160,7 @@ func (s *Section[E]) config(config *QueryConfig, b database.BuildDb) (err error)
 
 	s.total = config.Maximum
 	s.startId = config.StartId
-	s.maxId = config.EndId
+	s.endId = config.EndId
 
 	s.db, err = b()
 	if err != nil {
@@ -260,23 +207,23 @@ func (s *Section[E]) idRange() error {
 	}
 
 	if row.Min > s.startId {
-		s.startId = row.Min - 1
+		s.startId = row.Min
 	}
 
-	if s.maxId <= 0 || s.maxId > row.Max {
-		s.maxId = row.Max
+	if s.endId <= 0 || s.endId > row.Max {
+		s.endId = row.Max
 	}
 
-	if s.maxId < s.startId {
-		return fmt.Errorf("mysql max id %d < start id %d", s.maxId, s.startId)
+	if s.endId < s.startId {
+		return fmt.Errorf("mysql max id %d < start id %d", s.endId, s.startId)
 	}
 
-	total := s.maxId - s.startId
+	total := s.endId - s.startId + 1
 	if s.total == 0 {
 		s.total = total
 	} else {
 		if s.total < total {
-			s.maxId = s.startId + s.total
+			s.endId = s.startId + s.total - 1
 		} else if s.total > total {
 			s.total = total
 		}
@@ -287,6 +234,10 @@ func (s *Section[E]) idRange() error {
 	}
 
 	s.totalPage = int64(math.Ceil(float64(s.total) / float64(s.conf.PageSize)))
+
+	s.state.PageSize = s.conf.PageSize
+	s.state.TotalPage = s.totalPage
+	s.state.Total = s.total
 
 	return nil
 }

@@ -38,3 +38,5 @@ func (w *work) PostDo() error {
 
 	return nil
 }
+
+func (w *work) Close() error { return nil }

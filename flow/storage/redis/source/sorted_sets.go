@@ -58,7 +58,7 @@ func (s *sortedSetsKey) scan(entriesChan chan<- storage.MapOfStringsEntries, c *
 }
 
 func (s *sortedSetsKey) duplicate(items storage.MapOfStringsEntries) storage.MapOfStringsEntries {
-	return tool.DuplicateSliceMap[tool.StringEntry](items)
+	return tool.CopySliceMap[tool.StringEntry](items)
 }
 
 func (s *sortedSetsKey) stateAmount() int64 {

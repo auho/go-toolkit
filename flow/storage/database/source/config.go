@@ -1,6 +1,9 @@
 package source
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/auho/go-toolkit/flow/storage/database"
 	"gorm.io/gorm"
 )
@@ -25,7 +28,12 @@ type QueryConfig struct {
 func (q *QueryConfig) querior(db *database.DB) *gorm.DB {
 	tx := db.Table(q.TableName)
 	if len(q.Fields) > 0 {
-		tx = tx.Select(q.Fields)
+		var _s1 []string
+		for _, _f := range q.Fields {
+			_s1 = append(_s1, fmt.Sprintf("`%s`", _f))
+		}
+
+		tx = tx.Select(strings.Join(_s1, ","))
 	}
 
 	if q.Where != "" {

@@ -34,5 +34,5 @@ func (sms SliceMapOfString) scan(idName string, id *int64, amount int64) (*int64
 }
 
 func (sms SliceMapOfString) duplicate(items []storage.MapOfStringsEntry) []storage.MapOfStringsEntry {
-	return tool.DuplicateSliceMap(items)
+	return tool.CopySliceMap(items)
 }

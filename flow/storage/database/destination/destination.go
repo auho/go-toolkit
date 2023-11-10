@@ -3,6 +3,7 @@ package destination
 import (
 	"fmt"
 	"runtime"
+	"slices"
 	"sync"
 
 	"github.com/auho/go-toolkit/flow/storage"
@@ -143,33 +144,48 @@ func (d *Destination[E]) do() {
 	duration.Start()
 	var descItems []E
 
+	duration.Begin()
 	for items := range d.itemsChan {
-		duration.Begin()
-
-		itemsLen := int64(len(items))
-		if itemsLen <= 0 {
+		if len(items) <= 0 {
 			continue
 		}
 
-		for start := int64(0); start < itemsLen; start += d.pageSize {
-			end := start + d.pageSize
-			if end >= itemsLen {
-				descItems = items[start:]
-			} else {
-				descItems = items[start:end]
-			}
+		descItems = append(descItems, items...)
 
-			err := d.dst.Exec(d, descItems)
-			if err != nil {
-				panic(err)
+		_len := len(descItems)
+		_start := 0
+		_end := 0
+		_size := int(d.pageSize)
+		for {
+			_end = _start + _size
+			if _end <= _len {
+				err := d.dst.Exec(d, descItems[_start:_end])
+				if err != nil {
+					panic(err)
+				}
+
+				d.state.AddAmount(int64(_size))
+
+				_start += _size
+			} else {
+				descItems = slices.Clone(descItems[_start:])
+				descItems = slices.Clip(descItems)
+
+				break
 			}
 		}
-
-		d.state.AddAmount(itemsLen)
-
-		duration.End()
 	}
 
+	if len(descItems) > 0 {
+		err := d.dst.Exec(d, descItems)
+		if err != nil {
+			panic(err)
+		}
+
+		d.state.AddAmount(int64(len(descItems)))
+	}
+
+	duration.End()
 	duration.Stop()
 }
 

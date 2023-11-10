@@ -12,5 +12,5 @@ type Sourceor[E Entry] interface {
 	Close() error
 	Summary() []string
 	State() []string
-	Duplicate([]E) []E
+	Copy([]E) []E
 }

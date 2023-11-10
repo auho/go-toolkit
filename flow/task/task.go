@@ -22,6 +22,9 @@ type Tasker[E storage.Entry] interface {
 	// PostDo need to be implemented
 	PostDo() error
 
+	// Close need to be implemented
+	Close() error
+
 	Init(...Option)
 	HasBeenInit() bool
 	Concurrency() int
@@ -72,6 +75,12 @@ func (t *Task) HasBeenInit() bool {
 
 func (t *Task) Concurrency() int {
 	return t.concurrency
+}
+
+// AddState
+// int 当前行行数 从 1 开始
+func (t *Task) AddState(s string) int {
+	return t.state.PrintNext(s)
 }
 
 func (t *Task) SetState(line int, s string) {

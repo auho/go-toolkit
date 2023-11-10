@@ -40,3 +40,5 @@ func (s *singleton) PostDo() error {
 
 	return nil
 }
+
+func (s *singleton) Close() error { return nil }
