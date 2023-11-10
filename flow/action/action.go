@@ -111,6 +111,7 @@ func (a *Action[E]) Summary() string {
 }
 
 func (a *Action[E]) State() []string {
+	a.task.Blink()
 	return append([]string{fmt.Sprintf("Total: %d, Amount %d", a.total, a.amount)}, a.task.State()...)
 }
 

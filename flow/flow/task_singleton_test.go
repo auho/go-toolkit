@@ -8,6 +8,8 @@ type singleton struct {
 	task.Task
 }
 
+func (s *singleton) Blink() {}
+
 func (s *singleton) Title() string {
 	return "test singleton"
 }

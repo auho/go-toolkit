@@ -25,6 +25,9 @@ type Tasker[E storage.Entry] interface {
 	// Close need to be implemented
 	Close() error
 
+	// Blink need to be implemented
+	Blink()
+
 	Init(...Option)
 	HasBeenInit() bool
 	Concurrency() int

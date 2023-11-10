@@ -10,6 +10,8 @@ type work struct {
 	task.Task
 }
 
+func (w *work) Blink() {}
+
 func (w *work) Title() string {
 	return "test work"
 }
