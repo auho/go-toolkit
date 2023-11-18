@@ -12,20 +12,18 @@ func NewNumber() *Number {
 	n := &Number{}
 	n.init()
 
+	n.RegisterKeyPattern(string(KeyPatternNumber), keyPatternRegexNumber)
+
 	return n
 }
 
-func (n *Number) matchNumber(s string) (string, bool) {
-	return n.matchKeyPattern(KeyPatternNumber, keyPatternRegexNumber, s)
-}
-
 func (n *Number) Match(s string) (string, bool) {
-	ss, ok := n.matchNumber(s)
+	ss, ok := n.matchKeyPattern(KeyPatternNumber, s)
 	if !ok {
 		return ss, false
 	}
 
-	sss, ok := n.matchKeyPatterns(s)
+	sss, ok := n.match(s)
 	if ok {
 		return sss, true
 	} else {
