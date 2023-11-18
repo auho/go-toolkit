@@ -129,7 +129,7 @@ func (k *key[E]) State() []string {
 	return []string{k.state.Overview()}
 }
 
-func (k *key[E]) Duplicate(items []E) []E {
+func (k *key[E]) Copy(items []E) []E {
 	return k.keyer.duplicate(items)
 }
 

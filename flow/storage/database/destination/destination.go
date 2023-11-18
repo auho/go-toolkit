@@ -3,6 +3,7 @@ package destination
 import (
 	"fmt"
 	"runtime"
+	"slices"
 	"sync"
 
 	"github.com/auho/go-toolkit/flow/storage"
@@ -13,8 +14,8 @@ import (
 var _ storage.Destinationer[storage.MapEntry] = (*Destination[storage.MapEntry])(nil)
 var _ database.Driver = (*Destination[storage.MapEntry])(nil)
 
-type destinationer[E storage.Entry] interface {
-	exec(d *Destination[E], items []E) error
+type Destinationer[E storage.Entry] interface {
+	Exec(d *Destination[E], items []E) error
 }
 
 type Destination[E storage.Entry] struct {
@@ -29,11 +30,11 @@ type Destination[E storage.Entry] struct {
 
 	state     *storage.State
 	doWg      sync.WaitGroup
-	dst       destinationer[E]
+	dst       Destinationer[E]
 	itemsChan chan []E
 }
 
-func newDestination[E storage.Entry](config *Config, dst destinationer[E], b database.BuildDb) (*Destination[E], error) {
+func NewDestination[E storage.Entry](config *Config, dst Destinationer[E], b database.BuildDb) (*Destination[E], error) {
 	d := &Destination[E]{}
 	err := d.config(config, b)
 	if err != nil {
@@ -47,6 +48,14 @@ func newDestination[E storage.Entry](config *Config, dst destinationer[E], b dat
 
 func (d *Destination[E]) DB() *database.DB {
 	return d.db
+}
+
+func (d *Destination[E]) TableName() string {
+	return d.table
+}
+
+func (d *Destination[E]) PageSize() int64 {
+	return d.pageSize
 }
 
 func (d *Destination[E]) config(config *Config, b database.BuildDb) (err error) {
@@ -135,33 +144,48 @@ func (d *Destination[E]) do() {
 	duration.Start()
 	var descItems []E
 
+	duration.Begin()
 	for items := range d.itemsChan {
-		duration.Begin()
-
-		itemsLen := int64(len(items))
-		if itemsLen <= 0 {
+		if len(items) <= 0 {
 			continue
 		}
 
-		for start := int64(0); start < itemsLen; start += d.pageSize {
-			end := start + d.pageSize
-			if end >= itemsLen {
-				descItems = items[start:]
-			} else {
-				descItems = items[start:end]
-			}
+		descItems = append(descItems, items...)
 
-			err := d.dst.exec(d, descItems)
-			if err != nil {
-				panic(err)
+		_len := len(descItems)
+		_start := 0
+		_end := 0
+		_size := int(d.pageSize)
+		for {
+			_end = _start + _size
+			if _end <= _len {
+				err := d.dst.Exec(d, descItems[_start:_end])
+				if err != nil {
+					panic(err)
+				}
+
+				d.state.AddAmount(int64(_size))
+
+				_start += _size
+			} else {
+				descItems = slices.Clone(descItems[_start:])
+				descItems = slices.Clip(descItems)
+
+				break
 			}
 		}
-
-		d.state.AddAmount(itemsLen)
-
-		duration.End()
 	}
 
+	if len(descItems) > 0 {
+		err := d.dst.Exec(d, descItems)
+		if err != nil {
+			panic(err)
+		}
+
+		d.state.AddAmount(int64(len(descItems)))
+	}
+
+	duration.End()
 	duration.Stop()
 }
 

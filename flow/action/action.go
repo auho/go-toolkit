@@ -20,9 +20,9 @@ type Moder[E storage.Entry] interface {
 type Actor[E storage.Entry] interface {
 	Prepare() error // preparation before processing data
 	Receive([]E)    // receive data asynchronously
-	Run()           // Process data
+	Run() error     // Process data
 	Done()          // triggered after upstream data processing
-	Finish()        // data processing completed
+	Finish() error  // data processing completed
 	Summary() string
 	State() []string
 	Output() []string
@@ -63,7 +63,12 @@ func (a *Action[E]) Receive(items []E) {
 	a.itemsChan <- items
 }
 
-func (a *Action[E]) Run() {
+func (a *Action[E]) Run() error {
+	err := a.task.PreDo()
+	if err != nil {
+		return fmt.Errorf("PreDo error; %w", err)
+	}
+
 	for i := 0; i < a.task.Concurrency(); i++ {
 		a.taskWg.Add(1)
 
@@ -77,16 +82,28 @@ func (a *Action[E]) Run() {
 			a.taskWg.Done()
 		}()
 	}
+
+	return nil
 }
 
 func (a *Action[E]) Done() {
 	close(a.itemsChan)
 }
 
-func (a *Action[E]) Finish() {
+func (a *Action[E]) Finish() error {
 	a.taskWg.Wait()
 
-	a.task.PostDo()
+	err := a.task.PostDo()
+	if err != nil {
+		return fmt.Errorf("PostDo error; %w", err)
+	}
+
+	err = a.task.Close()
+	if err != nil {
+		return fmt.Errorf("close error; %w", err)
+	}
+
+	return nil
 }
 
 func (a *Action[E]) Summary() string {
@@ -94,6 +111,7 @@ func (a *Action[E]) Summary() string {
 }
 
 func (a *Action[E]) State() []string {
+	a.task.Blink()
 	return append([]string{fmt.Sprintf("Total: %d, Amount %d", a.total, a.amount)}, a.task.State()...)
 }
 

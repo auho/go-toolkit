@@ -125,7 +125,7 @@ func (s *scanKey) State() []string {
 	return []string{s.state.Overview()}
 }
 
-func (s *scanKey) Duplicate(items []string) []string {
+func (s *scanKey) Copy(items []string) []string {
 	newItems := make([]string, len(items), len(items))
 	_ = copy(newItems, items)
 

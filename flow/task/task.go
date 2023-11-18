@@ -16,8 +16,17 @@ type Tasker[E storage.Entry] interface {
 	// Prepare need to be implemented
 	Prepare() error
 
+	// PreDo need to be implemented
+	PreDo() error
+
 	// PostDo need to be implemented
-	PostDo()
+	PostDo() error
+
+	// Close need to be implemented
+	Close() error
+
+	// Blink need to be implemented
+	Blink()
 
 	Init(...Option)
 	HasBeenInit() bool
@@ -69,6 +78,12 @@ func (t *Task) HasBeenInit() bool {
 
 func (t *Task) Concurrency() int {
 	return t.concurrency
+}
+
+// AddState
+// int 当前行行数 从 1 开始
+func (t *Task) AddState(s string) int {
+	return t.state.PrintNext(s)
 }
 
 func (t *Task) SetState(line int, s string) {

@@ -12,19 +12,18 @@ var _ sectionQuery[storage.MapEntry] = (*sectionSliceMap)(nil)
 
 type sectionSliceMap struct{}
 
-func (ssm *sectionSliceMap) query(se *Section[storage.MapEntry], startId, size int64) ([]storage.MapEntry, error) {
+func (ssm *sectionSliceMap) Query(se *Section[storage.MapEntry], startId, endId int64) ([]storage.MapEntry, error) {
 	var rows storage.MapEntries
 
 	tx := se.conf.querior(se.db)
-	err := tx.Where(fmt.Sprintf("%s > ?", se.conf.IdName), startId).
-		Limit(int(size)).
+	err := tx.Where(fmt.Sprintf("%s >= ? and %s <= ?", se.conf.IdName, se.conf.IdName), startId, endId).
 		Scan(&rows).Error
 
 	return rows, err
 }
 
-func (ssm *sectionSliceMap) duplicate(items storage.MapEntries) storage.MapEntries {
-	return tool.DuplicateSliceMap[tool.AnyEntry](items)
+func (ssm *sectionSliceMap) Copy(items storage.MapEntries) storage.MapEntries {
+	return tool.CopySliceMap[tool.AnyEntry](items)
 }
 
 func NewSectionSliceMap(config *QueryConfig, newDb database.BuildDb) (*Section[storage.MapEntry], error) {

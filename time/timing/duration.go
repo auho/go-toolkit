@@ -68,6 +68,10 @@ func (t *Duration) StringBeginToEnd() string {
 }
 
 func (t *Duration) stringPretty(d time.Duration) string {
+	return PrettyDuration(d)
+}
+
+func PrettyDuration(d time.Duration) string {
 	seconds := d.Seconds()
 	if seconds < 60 {
 		return fmt.Sprintf("%f 秒", seconds)
@@ -83,10 +87,10 @@ func (t *Duration) stringPretty(d time.Duration) string {
 
 		return fmt.Sprintf("%d 小时 %d 分 %d 秒", h, m, s)
 	} else {
-		d := int64(seconds / 86400)
+		_d := int64(seconds / 86400)
 		h := (int64(seconds) % 86400) / 3600
 		m := (int64(seconds) % 3600) / 60
 
-		return fmt.Sprintf("%d 天 %d 小时 %d 分 ", d, h, m)
+		return fmt.Sprintf("%d 天 %d 小时 %d 分 ", _d, h, m)
 	}
 }

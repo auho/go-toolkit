@@ -104,7 +104,7 @@ func (l *Line) State() []string {
 	return []string{l.state.Overview()}
 }
 
-func (l *Line) Duplicate(items []string) []string {
+func (l *Line) Copy(items []string) []string {
 	ns := make([]string, 0, len(items))
 	copy(ns, items)
 	return ns

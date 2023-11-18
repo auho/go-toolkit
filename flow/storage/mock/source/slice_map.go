@@ -33,5 +33,5 @@ func (sm SliceMap) scan(idName string, id *int64, amount int64) (*int64, storage
 }
 
 func (sm SliceMap) duplicate(items []storage.MapEntry) []storage.MapEntry {
-	return tool.DuplicateSliceMap(items)
+	return tool.CopySliceMap(items)
 }

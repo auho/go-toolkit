@@ -88,7 +88,7 @@ func (m *Mock[E]) State() []string {
 	return []string{fmt.Sprintf("amount: %d/%d, page: %d/%d(%d)", m.amount, m.total, m.page, m.totalPage, m.pageSize)}
 }
 
-func (m *Mock[E]) Duplicate(items []E) []E {
+func (m *Mock[E]) Copy(items []E) []E {
 	return m.mocker.duplicate(items)
 }
 

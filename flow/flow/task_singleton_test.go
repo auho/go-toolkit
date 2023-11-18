@@ -8,6 +8,8 @@ type singleton struct {
 	task.Task
 }
 
+func (s *singleton) Blink() {}
+
 func (s *singleton) Title() string {
 	return "test singleton"
 }
@@ -27,7 +29,18 @@ func (s *singleton) PostBatchDo(items []map[string]any) {
 	}
 }
 
-func (s *singleton) PostDo() {
+func (s *singleton) PreDo() error {
+	s.SetState(0, "pre do")
+	s.Println("pre do")
+
+	return nil
+}
+
+func (s *singleton) PostDo() error {
 	s.SetState(0, "post do")
 	s.Println("post do")
+
+	return nil
 }
+
+func (s *singleton) Close() error { return nil }

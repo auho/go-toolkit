@@ -59,7 +59,7 @@ func (h *hashesKey) scan(entriesChan chan<- storage.MapOfStringsEntries, c *clie
 }
 
 func (h *hashesKey) duplicate(items storage.MapOfStringsEntries) storage.MapOfStringsEntries {
-	return tool.DuplicateSliceMap[tool.StringEntry](items)
+	return tool.CopySliceMap[tool.StringEntry](items)
 }
 
 func (h *hashesKey) stateAmount() int64 {
