@@ -42,15 +42,17 @@ func (a *Action[E]) Tasker() task.Tasker[E] {
 	return a.singleton
 }
 
-func (a *Action[E]) Run(items []E) int {
+func (a *Action[E]) Run(items []E) (int, int) {
+	amount := 0
 	newItems := make([]E, 0, len(items))
 	for k := range items {
 		if v, ok := a.singleton.Do(items[k]); ok {
 			newItems = append(newItems, v...)
+			amount += 1
 		}
 	}
 
 	a.singleton.PostBatchDo(newItems)
 
-	return len(newItems)
+	return amount, len(newItems)
 }

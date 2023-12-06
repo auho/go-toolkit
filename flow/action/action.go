@@ -14,7 +14,11 @@ var _ Actor[string] = (*Action[string])(nil)
 type Moder[E storage.Entry] interface {
 	Concurrency() int
 	Tasker() task.Tasker[E]
-	Run([]E) int // Process data
+
+	// Run
+	// amount: input amount
+	// effected: output effected amount
+	Run([]E) (int, int) // Process data
 }
 
 type Actor[E storage.Entry] interface {
@@ -31,6 +35,7 @@ type Actor[E storage.Entry] interface {
 type Action[E storage.Entry] struct {
 	total     int64
 	amount    int64
+	effected  int64
 	itemsChan chan []E
 	mode      Moder[E]
 	task      task.Tasker[E]
@@ -75,8 +80,9 @@ func (a *Action[E]) Run() error {
 		go func() {
 			for items := range a.itemsChan {
 				atomic.AddInt64(&a.total, int64(len(items)))
-				amount := a.mode.Run(items)
+				amount, effected := a.mode.Run(items)
 				atomic.AddInt64(&a.amount, int64(amount))
+				atomic.AddInt64(&a.effected, int64(effected))
 			}
 
 			a.taskWg.Done()
@@ -112,7 +118,7 @@ func (a *Action[E]) Summary() string {
 
 func (a *Action[E]) State() []string {
 	a.task.Blink()
-	return append([]string{fmt.Sprintf("Total: %d, Amount %d", a.total, a.amount)}, a.task.State()...)
+	return append([]string{fmt.Sprintf("Total: %d, Amount %d, effected %d", a.total, a.amount, a.effected)}, a.task.State()...)
 }
 
 func (a *Action[E]) Output() []string {
