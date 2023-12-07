@@ -3,6 +3,7 @@ package insight
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	simpleDb "github.com/auho/go-simple-db/v2"
@@ -36,9 +37,8 @@ func (i *Insight) analyse(db *simpleDb.SimpleDB, table string) (*analysis.Analys
 	if err != nil {
 		return nil, err
 	}
-	a := &analysis.Analysis{
-		Table: tableAly,
-	}
+	a := analysis.NewAnalysis()
+	a.Table = tableAly
 
 	var fields []string
 	for _, _ca := range columnsAly {
@@ -75,18 +75,20 @@ func (i *Insight) analyseColumns(db *simpleDb.SimpleDB, tableAly *analysis.Table
 		switch column.DataType {
 		case schema.DataTypeInt, schema.DataTypeFloat:
 			fields = append(fields,
-				fmt.Sprintf("SUM(IF(`%s` = 0, 0, 1)) AS `%s_empty`", column.Name, column.Name),
+				fmt.Sprintf("SUM(IF(`%s` = 0, 1, 0)) AS `%s_empty`", column.Name, column.Name),
+				fmt.Sprintf("SUM(IF(`%s` IS NULL, 1, 0)) AS `%s_null`", column.Name, column.Name),
 			)
 		case schema.DataTypeString:
 			fields = append(fields,
-				fmt.Sprintf("SUM(IF(`%s` = '', 0, 1)) AS `%s_empty`", column.Name, column.Name),
+				fmt.Sprintf("SUM(IF(`%s` = '', 1, 0)) AS `%s_empty`", column.Name, column.Name),
+				fmt.Sprintf("SUM(IF(`%s` IS NULL, 1, 0)) AS `%s_null`", column.Name, column.Name),
 			)
 		default:
 
 		}
 	}
 
-	var retRows []map[string]int
+	var retRows []map[string]any
 	sql := fmt.Sprintf("SELECT %s FROM `%s`", strings.Join(fields, ","), tableAly.Table.Name)
 	err := db.Raw(sql).Scan(&retRows).Error
 	if err != nil {
@@ -103,7 +105,19 @@ func (i *Insight) analyseColumns(db *simpleDb.SimpleDB, tableAly *analysis.Table
 		}
 
 		if v, ok := ret[column.Name+"_empty"]; ok {
-			_ca.Empty = v
+			_v, err1 := strconv.Atoi(v.(string))
+			if err1 != nil {
+				return nil, err1
+			}
+			_ca.Empty = _v
+		}
+
+		if v, ok := ret[column.Name+"_null"]; ok {
+			_v, err1 := strconv.Atoi(v.(string))
+			if err1 != nil {
+				return nil, err1
+			}
+			_ca.Null = _v
 		}
 
 		columnsAly = append(columnsAly, _ca)
