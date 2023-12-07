@@ -6,5 +6,6 @@ type Work[E storage.Entry] interface {
 	Tasker[E]
 
 	// Do need to be implemented
-	Do([]E)
+	// effected
+	Do([]E) int
 }

@@ -78,8 +78,6 @@ func (f *Flow[E]) run() error {
 		}),
 	)
 
-	f.summary()
-
 	err := f.source.Scan()
 	if err != nil {
 		return err
@@ -89,6 +87,8 @@ func (f *Flow[E]) run() error {
 	if err != nil {
 		return fmt.Errorf("actioins prepare error;%w", err)
 	}
+
+	f.summary()
 
 	err = f.actionsRun()
 	if err != nil {

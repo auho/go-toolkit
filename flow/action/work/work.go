@@ -42,8 +42,9 @@ func (a *Action[E]) Tasker() task.Tasker[E] {
 	return a.work
 }
 
-func (a *Action[E]) Run(items []E) int {
-	a.work.Do(items)
+func (a *Action[E]) Run(items []E) (int, int) {
+	effected := 0
+	effected += a.work.Do(items)
 
-	return len(items)
+	return len(items), effected
 }
