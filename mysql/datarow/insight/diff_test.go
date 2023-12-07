@@ -11,7 +11,11 @@ import (
 
 var _db *simpleDb.SimpleDB
 
-func TestDiff(t *testing.T) {
+func TestInsight(t *testing.T) {
+
+	fmt.Println(fmt.Sprintf("%-20s|", "d1 [varchar]:"))
+	fmt.Println(fmt.Sprintf("%-16s|", "中文字段1 [varchar]:"))
+
 	var err error
 	_db, err = simpleDb.NewMysql("test:Test123$@tcp(127.0.0.1:3306)/test")
 	if err != nil {
@@ -21,6 +25,15 @@ func TestDiff(t *testing.T) {
 	err = _build()
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	_as, err := Explore(_db, "diff")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, _s := range _as.ToStrings() {
+		fmt.Println(_s)
 	}
 
 	d, err := Diff(diff.Source{
@@ -55,6 +68,7 @@ func _build() error {
 		"`s` varchar(20) NOT NULL DEFAULT ''," +
 		"`s_null` varchar(20) DEFAULT NULL," +
 		"`d1` varchar(20) DEFAULT NULL," +
+		"`中文字段1` varchar(20) DEFAULT NULL," +
 		"PRIMARY KEY (`id`)" +
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;"
 
@@ -69,6 +83,7 @@ func _build() error {
 		"`s` varchar(20) NOT NULL DEFAULT ''," +
 		"`s_null` varchar(20) DEFAULT NULL," +
 		"`d2` varchar(20) DEFAULT NULL," +
+		"`中文字段1` varchar(20) DEFAULT NULL," +
 		"PRIMARY KEY (`id`)" +
 		") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;"
 

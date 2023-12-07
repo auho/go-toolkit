@@ -2,7 +2,6 @@ package insight
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -40,17 +39,13 @@ func (i *Insight) analyse(db *simpleDb.SimpleDB, table string) (*analysis.Analys
 	a := analysis.NewAnalysis()
 	a.Table = tableAly
 
-	var fields []string
 	for _, _ca := range columnsAly {
 		a.Columns[_ca.Column.Name] = _ca
-		fields = append(fields, _ca.Column.Name)
 	}
 
-	sort.Slice(fields, func(i, j int) bool {
-		return fields[i] < fields[j]
-	})
-
-	a.FieldsName = fields
+	for _, _c := range _cs {
+		a.FieldsName = append(a.FieldsName, _c.Name)
+	}
 
 	return a, nil
 }
