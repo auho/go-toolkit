@@ -33,19 +33,19 @@ func (a *Analysis) ToStrings() []string {
 	columnsShow, maxColumnShow := a.GetColumnsShow()
 	_maxFieldLen := maxColumnShow.NameShowWidth + 1
 
-	_format := fmt.Sprintf("%%-%ds %%-9s %%-9s %%-9s %%7s", _maxFieldLen)
-	ss = append(ss, fmt.Sprintf(_format, "COLUMN", "TYPE", "IS-EMPTY", "IS-NULL", "FLAG"))
+	_format := fmt.Sprintf("%%-%ds %%-9s %%5s  %%-9s %%-9s", _maxFieldLen)
+	ss = append(ss, fmt.Sprintf(_format, "COLUMN", "TYPE", "FLAG", "IS-EMPTY", "IS-NULL"))
 
 	for _k, fieldName := range a.FieldsName {
 		column := a.Columns[fieldName]
 
 		warning := ""
 		if column.Empty+column.Null >= column.Amount {
-			warning = fmt.Sprintf(" ⚠️ ")
+			warning = fmt.Sprintf("❗️")
 		}
 
-		_format = fmt.Sprintf("%%-%ds %%-9s %%-9d %%-9d  %%7s", _maxFieldLen-columnsShow[_k].NameZhLen)
-		ss = append(ss, fmt.Sprintf(_format, column.Column.Name, column.Column.FieldType, column.Empty, column.Null, warning))
+		_format = fmt.Sprintf("%%-%ds %%-9s %%5s  %%-9d %%-9d ", _maxFieldLen-columnsShow[_k].NameZhLen)
+		ss = append(ss, fmt.Sprintf(_format, column.Column.Name, column.Column.FieldType, warning, column.Empty, column.Null))
 	}
 
 	ss = append(ss, "")
