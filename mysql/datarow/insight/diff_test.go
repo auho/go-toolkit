@@ -34,7 +34,7 @@ func TestDiff(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Println(strings.Join(d.DifferenceToString(), "\n"))
+	fmt.Println(strings.Join(d.DifferenceToStrings(), "\n"))
 }
 
 func _build() error {

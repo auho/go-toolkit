@@ -17,7 +17,7 @@ type Differ struct {
 	ss []string
 }
 
-func (d *Differ) DifferenceToString() []string {
+func (d *Differ) DifferenceToStrings() []string {
 	return d.ss
 }
 
@@ -35,7 +35,7 @@ func (d *Differ) diff(as ...*analysis.Analysis) {
 	}
 
 	for _, _lc := range _las.Columns {
-		_title = fmt.Sprintf("  column[%s]", _lc.Column.Name)
+		_title = fmt.Sprintf("  %s", _lc.Column.Name)
 
 		if _rc, ok := _ras.Columns[_lc.Column.Name]; ok {
 			if _lc.Amount == _rc.Amount {
@@ -58,7 +58,7 @@ func (d *Differ) diff(as ...*analysis.Analysis) {
 	}
 
 	for _, _rc := range _ras.Columns {
-		_title = fmt.Sprintf("  column[%s]", _rc.Column.Name)
+		_title = fmt.Sprintf("  %s", _rc.Column.Name)
 
 		if _, ok := _las.Columns[_rc.Column.Name]; !ok {
 			ss = append(ss, d.failureAndWarning(fmt.Sprintf("%s[0 != %d]", _title, _rc.Amount)))
