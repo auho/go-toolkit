@@ -15,6 +15,11 @@ func Diff(as ...*analysis.Analysis) *Differ {
 
 type Differ struct {
 	ss []string
+	ok bool
+}
+
+func (d *Differ) IsOk() bool {
+	return d.ok
 }
 
 func (d *Differ) DifferenceToStrings() []string {
@@ -22,6 +27,8 @@ func (d *Differ) DifferenceToStrings() []string {
 }
 
 func (d *Differ) diff(as ...*analysis.Analysis) {
+	d.ok = true
+
 	var ss []string
 
 	_las := as[0]
@@ -83,17 +90,25 @@ func (d *Differ) success(s string) string {
 }
 
 func (d *Differ) warning(s string) string {
+	d.ok = false
+
 	return "❎  " + s
 }
 
 func (d *Differ) failure(s string) string {
+	d.ok = false
+
 	return "❌  " + s
 }
 
 func (d *Differ) warningAndFailure(s string) string {
+	d.ok = false
+
 	return "❎❌" + s
 }
 
 func (d *Differ) failureAndWarning(s string) string {
+	d.ok = false
+
 	return "❌❎" + s
 }

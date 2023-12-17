@@ -100,6 +100,10 @@ func (i *Insight) analyseColumns(db *simpleDb.SimpleDB, tableAly *analysis.Table
 		}
 
 		if v, ok := ret[column.Name+"_empty"]; ok {
+			if v == nil {
+				v = "0"
+			}
+
 			_v, err1 := strconv.Atoi(v.(string))
 			if err1 != nil {
 				return nil, err1
@@ -108,6 +112,10 @@ func (i *Insight) analyseColumns(db *simpleDb.SimpleDB, tableAly *analysis.Table
 		}
 
 		if v, ok := ret[column.Name+"_null"]; ok {
+			if v == nil {
+				v = "0"
+			}
+
 			_v, err1 := strconv.Atoi(v.(string))
 			if err1 != nil {
 				return nil, err1
