@@ -5,8 +5,9 @@ import (
 )
 
 type Column struct {
-	Column schema.Column
-	Amount int
-	Empty  int
-	Null   int
+	Column   schema.Column
+	Amount   int
+	Distinct int
+	Empty    int
+	Null     int
 }

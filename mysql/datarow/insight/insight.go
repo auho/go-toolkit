@@ -81,6 +81,10 @@ func (i *Insight) analyseColumns(db *simpleDb.SimpleDB, tableAly *analysis.Table
 		default:
 
 		}
+
+		fields = append(fields,
+			fmt.Sprintf("COUNT(DISTINCT `%s`) as `%s_distinct`", column.Name, column.Name),
+		)
 	}
 
 	var retRows []map[string]any
@@ -98,33 +102,49 @@ func (i *Insight) analyseColumns(db *simpleDb.SimpleDB, tableAly *analysis.Table
 			Column: column,
 			Amount: tableAly.Amount,
 		}
-
-		if v, ok := ret[column.Name+"_empty"]; ok {
-			if v == nil {
-				v = "0"
-			}
-
-			_v, err1 := strconv.Atoi(v.(string))
-			if err1 != nil {
-				return nil, err1
-			}
-			_ca.Empty = _v
+		err = i.toNum(ret, column.Name, "distinct", &_ca.Distinct)
+		if err != nil {
+			return nil, err
 		}
 
-		if v, ok := ret[column.Name+"_null"]; ok {
-			if v == nil {
-				v = "0"
-			}
+		err = i.toNum(ret, column.Name, "empty", &_ca.Empty)
+		if err != nil {
+			return nil, err
+		}
 
-			_v, err1 := strconv.Atoi(v.(string))
-			if err1 != nil {
-				return nil, err1
-			}
-			_ca.Null = _v
+		err = i.toNum(ret, column.Name, "null", &_ca.Null)
+		if err != nil {
+			return nil, err
 		}
 
 		columnsAly = append(columnsAly, _ca)
 	}
 
 	return columnsAly, nil
+}
+
+func (i *Insight) toNum(ret map[string]any, name, suffix string, value *int) error {
+	if v, ok := ret[name+"_"+suffix]; ok {
+		var err error
+		var _v int
+		if v == nil {
+			v = "0"
+		}
+
+		switch v.(type) {
+		case string:
+			_v, err = strconv.Atoi(v.(string))
+			if err != nil {
+				return err
+			}
+		case int64:
+			_v = int(v.(int64))
+		default:
+			panic("unknown type")
+		}
+
+		*value = _v
+	}
+
+	return nil
 }
