@@ -5,6 +5,6 @@ import (
 )
 
 type Source struct {
-	Name string
+	Name string // table name
 	DB   *simpleDb.SimpleDB
 }
