@@ -1,4 +1,4 @@
-module domain
+module github.com/auho/go-toolkit/farmtools/domain
 
 go 1.21.5
 
