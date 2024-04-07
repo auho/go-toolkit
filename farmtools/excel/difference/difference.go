@@ -5,6 +5,10 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+// DataDiffToSheet
+// excelFile: result excel file
+// sheetName: result sheet name
+// baseData, diffData: Path to the excel file being compared
 func DataDiffToSheet(excelFile *excelize.File, sheetName string, baseData, diffData [][]string) error {
 	data := &Data{
 		baseData: baseData,
