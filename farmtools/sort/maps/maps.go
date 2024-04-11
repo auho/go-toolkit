@@ -1,78 +1,52 @@
 package maps
 
 import (
-	"sort"
-
-	sort2 "github.com/auho/go-toolkit/farmtools/sort"
+	"github.com/auho/go-toolkit/farmtools/sort"
+	sort2 "sort"
 )
 
-const sortedByKey = "key"
-const sortedByValue = "value"
+func newSortByKey[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT, sortedOrder string) []KT {
+	var _ks []KT
 
-type Item[keyE sort2.KeyEntity, valE sort2.ValEntity] struct {
-	Key keyE
-	Val valE
-}
-
-type Items[keyE sort2.KeyEntity, valE sort2.ValEntity] []Item[keyE, valE]
-
-func (is Items[keyE, valE]) Keys() []keyE {
-	keys := make([]keyE, 0, len(is))
-
-	for _, item := range is {
-		keys = append(keys, item.Key)
+	for _k := range x {
+		_ks = append(_ks, _k)
 	}
 
-	return keys
-}
-
-func (is Items[keyE, valE]) Values() []valE {
-	values := make([]valE, 0, len(is))
-
-	for _, item := range is {
-		values = append(values, item.Val)
-	}
-
-	return values
-}
-
-type sorter[keyE sort2.KeyEntity, valE sort2.ValEntity] struct {
-	items       Items[keyE, valE]
-	sortedBy    string
-	sortedOrder string
-}
-
-func (s *sorter[keyE, valE]) sort() Items[keyE, valE] {
-	sort.Sort(s)
-	return s.items
-}
-
-func (s *sorter[keyE, valE]) Len() int {
-	return len(s.items)
-}
-
-func (s *sorter[keyE, valE]) Less(i, j int) bool {
-	if s.sortedBy == sortedByKey {
-		ik := s.items[i].Key
-		jk := s.items[j].Key
-
-		if s.sortedOrder == sort2.SortedOrderAsc {
-			return ik < jk
+	sort2.SliceStable(_ks, func(i, j int) bool {
+		if sortedOrder == sort.SortedOrderAsc {
+			return _ks[i] < _ks[j]
 		} else {
-			return ik > jk
+			return _ks[i] > _ks[j]
 		}
-	} else {
-		iv := s.items[i].Val
-		jv := s.items[j].Val
+	})
 
-		if s.sortedOrder == sort2.SortedOrderAsc {
-			return iv < jv
-		} else {
-			return iv > jv
-		}
-	}
+	return _ks
 }
 
-func (s *sorter[keyE, valE]) Swap(i, j int) {
-	s.items[i], s.items[j] = s.items[j], s.items[i]
+func newSortByValue[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT, val func(key KT) VT, sortedOrder string) ([]KT, []VT) {
+	var _ks []KT
+	_vs := make(map[KT]VT)
+
+	for _k := range x {
+		_ks = append(_ks, _k)
+		_vs[_k] = val(_k)
+	}
+
+	sort2.SliceStable(_ks, func(i, j int) bool {
+		_ki := _ks[i]
+		_kj := _ks[j]
+
+		if sortedOrder == sort.SortedOrderAsc {
+			return _vs[_ki] < _vs[_kj]
+		} else {
+			return _vs[_ki] > _vs[_kj]
+		}
+	})
+
+	var _nvs []VT
+	for _, _k := range _ks {
+		_nvs = append(_nvs, _vs[_k])
+	}
+
+	return _ks, _nvs
 }

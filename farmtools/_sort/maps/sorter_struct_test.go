@@ -6,7 +6,7 @@ import (
 	"github.com/auho/go-toolkit/farmtools/sort"
 )
 
-var _ sort.ValueSorter[int] = (*sorterStruct)(nil)
+var _ _sort.ValueSorter[int] = (*sorterStruct)(nil)
 
 type sorterStruct struct {
 	b int
