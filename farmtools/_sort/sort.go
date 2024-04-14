@@ -1,4 +1,4 @@
-package sort
+package _sort
 
 const SortedOrderAsc = "asc"
 const SortedOrderDesc = "desc"
@@ -21,4 +21,8 @@ type KeyEntity interface {
 
 type ValEntity interface {
 	KeyEntity
+}
+
+type ValueSorter[valE ValEntity] interface {
+	SortedVal() valE
 }

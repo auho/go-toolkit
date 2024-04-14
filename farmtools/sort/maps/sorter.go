@@ -1,34 +1,25 @@
 package maps
 
 import (
-	sort2 "github.com/auho/go-toolkit/farmtools/sort"
+	"github.com/auho/go-toolkit/farmtools/sort"
 )
 
-func SorterByKeyAsc[keyE sort2.KeyEntity, valE sort2.ValEntity](m map[keyE]valE) Items[keyE, valE] {
-	return newSorter[keyE, valE](m, sortedByKey, sort2.SortedOrderAsc)
+func SortKeyAsc[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT) []KT {
+	return newSortByKey(x, sort.SortedOrderAsc)
 }
 
-func SorterByKeyDesc[keyE sort2.KeyEntity, valE sort2.ValEntity](m map[keyE]valE) Items[keyE, valE] {
-	return newSorter[keyE, valE](m, sortedByKey, sort2.SortedOrderDesc)
+func SortKeyDesc[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT) []KT {
+	return newSortByKey(x, sort.SortedOrderDesc)
 }
 
-func SorterByValueAsc[keyE sort2.KeyEntity, valE sort2.ValEntity](m map[keyE]valE) Items[keyE, valE] {
-	return newSorter[keyE, valE](m, sortedByValue, sort2.SortedOrderAsc)
+func SortValueAsc[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT) ([]KT, []VT) {
+	return newSortByValue(x, func(key KT) VT {
+		return x[key]
+	}, sort.SortedOrderAsc)
 }
 
-func SorterByValueDesc[keyE sort2.KeyEntity, valE sort2.ValEntity](m map[keyE]valE) Items[keyE, valE] {
-	return newSorter[keyE, valE](m, sortedByValue, sort2.SortedOrderDesc)
-}
-
-func newSorter[keyE sort2.KeyEntity, valE sort2.ValEntity](m map[keyE]valE, sortedBy string, sortedOrder string) Items[keyE, valE] {
-	ms := &sorter[keyE, valE]{}
-	ms.sortedBy = sortedBy
-	ms.sortedOrder = sortedOrder
-
-	ms.items = make([]Item[keyE, valE], 0, len(m))
-	for k, v := range m {
-		ms.items = append(ms.items, Item[keyE, valE]{Key: k, Val: v})
-	}
-
-	return ms.sort()
+func SortValueDesc[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT) ([]KT, []VT) {
+	return newSortByValue(x, func(key KT) VT {
+		return x[key]
+	}, sort.SortedOrderDesc)
 }
