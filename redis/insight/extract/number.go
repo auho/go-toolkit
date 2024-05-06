@@ -1,7 +1,6 @@
 package extract
 
-const KeyPatternNumber KeyPattern = "number"
-
+const keyPatternNumber = "number"
 const keyPatternRegexNumber = `^\d+$`
 
 type Number struct {
@@ -12,13 +11,13 @@ func NewNumber() *Number {
 	n := &Number{}
 	n.init()
 
-	n.RegisterKeyPattern(string(KeyPatternNumber), keyPatternRegexNumber)
+	n.RegisterKeyPattern(string(keyPatternNumber), keyPatternRegexNumber)
 
 	return n
 }
 
 func (n *Number) Match(s string) (string, bool) {
-	ss, ok := n.matchKeyPattern(KeyPatternNumber, s)
+	ss, ok := n.matchKeyPattern(keyPatternNumber, s)
 	if !ok {
 		return ss, false
 	}
