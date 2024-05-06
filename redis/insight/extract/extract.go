@@ -5,16 +5,14 @@ import (
 	"regexp"
 )
 
-type KeyPattern string
-
 type extract struct {
-	regexps     map[KeyPattern]*regexp.Regexp // map[key pattern]key pattern representation of a compiled regular expression
-	keyPatterns map[KeyPattern]string         // map[key pattern]key pattern regular expression
+	regexps     map[string]*regexp.Regexp // map[key pattern]key pattern representation of a compiled regular expression
+	keyPatterns map[string]string         // map[key pattern]key pattern regular expression
 }
 
 func (e *extract) init() {
-	e.regexps = make(map[KeyPattern]*regexp.Regexp)
-	e.keyPatterns = make(map[KeyPattern]string)
+	e.regexps = make(map[string]*regexp.Regexp)
+	e.keyPatterns = make(map[string]string)
 }
 
 func (e *extract) ShowKeyPattern() {
@@ -30,8 +28,8 @@ func (e *extract) RegisterKeyPatterns(m map[string]string) {
 }
 
 func (e *extract) RegisterKeyPattern(kp, regex string) {
-	e.keyPatterns[KeyPattern(kp)] = regex
-	e.regexps[KeyPattern(kp)] = regexp.MustCompile(regex)
+	e.keyPatterns[kp] = regex
+	e.regexps[kp] = regexp.MustCompile(regex)
 }
 
 func (e *extract) match(s string) (string, bool) {
@@ -45,7 +43,7 @@ func (e *extract) match(s string) (string, bool) {
 	return s, false
 }
 
-func (e *extract) matchKeyPattern(kp KeyPattern, s string) (string, bool) {
+func (e *extract) matchKeyPattern(kp string, s string) (string, bool) {
 	re := e.regexps[kp]
 	ok := re.MatchString(s)
 	if ok {
@@ -55,6 +53,6 @@ func (e *extract) matchKeyPattern(kp KeyPattern, s string) (string, bool) {
 	}
 }
 
-func (e *extract) formatKeyPattern(kp KeyPattern) string {
+func (e *extract) formatKeyPattern(kp string) string {
 	return "<" + string(kp) + ">"
 }
