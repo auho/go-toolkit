@@ -1,6 +1,6 @@
 module github.com/auho/go-toolkit/elasticsearch
 
-go 1.21.5
+go 1.21
 
 require (
 	github.com/elastic/go-elasticsearch/v7 v7.17.10

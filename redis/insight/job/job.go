@@ -23,6 +23,9 @@ type jobConfig struct {
 	pageSize    int64
 	poolSize    int
 	concurrency int
+
+	outputExcel bool
+	outputFile  bool
 }
 
 type Job struct {
@@ -107,6 +110,9 @@ func (j *Job) build(workers []Worker[string]) *cobra.Command {
 	cmd.Flags().Int64Var(&jc.pageSize, "page", 100, "page size of redis scan")
 	cmd.Flags().IntVar(&jc.poolSize, "pool", 10, "pool size of redis client")
 	cmd.Flags().IntVar(&jc.concurrency, "concurrency", 4, "concurrency of job")
+
+	cmd.Flags().BoolVar(&jc.outputExcel, "excel", false, "output to excel")
+	cmd.Flags().BoolVar(&jc.outputFile, "file", true, "output to file")
 
 	return cmd
 }

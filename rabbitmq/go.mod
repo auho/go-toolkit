@@ -1,4 +1,4 @@
-module github.com/auho/go-toolkit/rabbitmq/client
+module github.com/auho/go-toolkit/rabbitmq
 
 go 1.18
 
