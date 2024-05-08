@@ -41,6 +41,9 @@ func MapStringAnyFromStruct(s interface{}) (m map[string]any, err error) {
 	for i := 0; i < fieldNum; i++ {
 		fieldRef := sRefElem.Field(i)
 		fieldName := sRefElemType.Field(i).Tag.Get("json")
+		if fieldName == "" {
+			fieldName = sRefElemType.Field(i).Name
+		}
 
 		m[fieldName] = fieldRef.Interface()
 	}
