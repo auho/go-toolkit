@@ -45,6 +45,14 @@ func NewRefresh(opts ...func(*Refresh)) *Refresh {
 	return r
 }
 
+func NewRefreshWithCancel(opts ...func(refresh *Refresh)) (*Refresh, func()) {
+	r := NewRefresh(opts...)
+
+	return r, func() {
+		r.Stop()
+	}
+}
+
 // Start 开始刷新输出，定时刷新内容到输出
 func (r *Refresh) Start() {
 	r.interval()
@@ -75,7 +83,7 @@ func (r *Refresh) refresh() error {
 	var contentLen int
 	if r.contentGetter == nil {
 		contentLen = len(r.content)
-		content = make([]string, contentLen, contentLen)
+		content = make([]string, contentLen)
 		copy(content, r.content)
 	} else {
 		content, err = r.contentGetter()
@@ -121,9 +129,14 @@ func (r *Refresh) interval() {
 	r.isInterval = true
 
 	go func() {
+		err := r.refresh()
+		if err != nil {
+			fmt.Printf("[Error] %s\n", err)
+		}
+
 		for {
 			if _, ok := <-r.ticker.C; ok {
-				err := r.refresh()
+				err = r.refresh()
 				if err != nil {
 					fmt.Printf("[Error] %s\n", err)
 				}
