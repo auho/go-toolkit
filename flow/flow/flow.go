@@ -73,8 +73,8 @@ func (f *Flow[E]) check() error {
 func (f *Flow[E]) run() error {
 	f.refreshOutput = output.NewRefresh(
 		output.WithInterval(f.stateInterval),
-		output.WithContentGetter(func() []string {
-			return f.state()
+		output.WithContent(func() ([]string, error) {
+			return f.state(), nil
 		}),
 	)
 
