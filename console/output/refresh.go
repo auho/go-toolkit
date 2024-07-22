@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func WithContentGetter(f func() []string) func(*Refresh) {
+func WithContent(f func() ([]string, error)) func(*Refresh) {
 	return func(r *Refresh) {
 		r.contentGetter = f
 	}
@@ -23,7 +23,7 @@ type Refresh struct {
 	currentLine      int
 	intervalDuration time.Duration
 	ticker           *time.Ticker
-	contentGetter    func() []string
+	contentGetter    func() ([]string, error)
 	lastRefreshTime  time.Time
 }
 
@@ -55,7 +55,11 @@ func (r *Refresh) Start() {
 // 清空内容
 // 停止定时输出
 func (r *Refresh) Stop() {
-	r.refresh()
+	err := r.refresh()
+	if err != nil {
+		fmt.Printf("[Error] %s\n", err)
+	}
+
 	r.flushContent()
 	r.ticker.Stop()
 }
@@ -65,7 +69,8 @@ func (r *Refresh) CleanAndStart() {
 	r.ticker.Reset(r.intervalDuration)
 }
 
-func (r *Refresh) refresh() {
+func (r *Refresh) refresh() error {
+	var err error
 	var content []string
 	var contentLen int
 	if r.contentGetter == nil {
@@ -73,7 +78,11 @@ func (r *Refresh) refresh() {
 		content = make([]string, contentLen, contentLen)
 		copy(content, r.content)
 	} else {
-		content = r.contentGetter()
+		content, err = r.contentGetter()
+		if err != nil {
+			return err
+		}
+
 		contentLen = len(content)
 	}
 
@@ -100,6 +109,8 @@ func (r *Refresh) refresh() {
 	fmt.Printf("%c[1B\r", 0x1B)
 
 	r.lastRefreshTime = time.Now()
+
+	return nil
 }
 
 func (r *Refresh) interval() {
@@ -112,7 +123,10 @@ func (r *Refresh) interval() {
 	go func() {
 		for {
 			if _, ok := <-r.ticker.C; ok {
-				r.refresh()
+				err := r.refresh()
+				if err != nil {
+					fmt.Printf("[Error] %s\n", err)
+				}
 			} else {
 				break
 			}
