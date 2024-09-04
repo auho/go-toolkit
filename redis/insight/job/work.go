@@ -14,16 +14,17 @@ import (
 
 type Worker[E storage.Entry] interface {
 	task.Work[E]
-	WithRedisSource(redis2 *client.Redis)
-	WithTimeMark(s string)
+	WithRedisSource(*client.Redis)
+	WithTimeMark(string)
 }
 
 type Work struct {
 	task.Task
 
-	Client *client.Redis
-
+	Client   *client.Redis
 	TimeMark string
+
+	patternCounters *PatternCounters
 }
 
 func (w *Work) WithRedisSource(c *client.Redis) {
@@ -34,20 +35,25 @@ func (w *Work) WithTimeMark(s string) {
 	w.TimeMark = s
 }
 
-func (w *Work) PatternCounter(m map[string]int, k string) {
-	if _, ok := m[k]; ok {
-		m[k] += 1
-	} else {
-		m[k] = 1
+func (w *Work) RegisterPatternCounter(names ...string) {
+	w.patternCounters = NewPatternCounters(names...)
+}
+
+func (w *Work) DonePatternCounter() {
+	w.patternCounters.Done()
+}
+
+func (w *Work) PrintlnPatternCounter(lessNum int) {
+	rets := w.patternCounters.Result()
+	for _, ret := range rets {
+		w.Println(ret.Name + ": ")
+		w.PrintlnCounter(ret.Data, lessNum)
+		w.Println("")
 	}
 }
 
-func (w *Work) PatternChanCounter(c chan map[string]int, m map[string]int) {
-	for item := range c {
-		for k, v := range item {
-			m[k] += v
-		}
-	}
+func (w *Work) IncrementPrintlnCounter(name, key string, lessNum int) {
+	w.patternCounters.Increment(name, key, lessNum)
 }
 
 // PrintlnCounter 打印计数
