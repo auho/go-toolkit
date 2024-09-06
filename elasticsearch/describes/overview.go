@@ -1,11 +1,12 @@
 package describes
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/auho/go-toolkit/elasticsearch/restapi"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
-	"sort"
-	"strings"
 )
 
 type Index struct {
@@ -98,7 +99,7 @@ func (o *overview) CatShards() ([]Shard, error) {
 	var err error
 	var shards []Shard
 
-	shards, err = restapi.Do(
+	shards, err = restapi.DoResponse(
 		func() (*esapi.Response, error) {
 			return o.client.Cat.Shards(o.client.Cat.Shards.WithFormat("json"))
 		},
@@ -115,7 +116,7 @@ func (o *overview) CatIndices() ([]Index, error) {
 	var err error
 	var indices []Index
 
-	indices, err = restapi.Do(
+	indices, err = restapi.DoResponse(
 		func() (*esapi.Response, error) {
 			return o.client.Cat.Indices(o.client.Cat.Indices.WithFormat("json"))
 		},

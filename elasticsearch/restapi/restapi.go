@@ -3,21 +3,40 @@ package restapi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"io"
+
+	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/elastic/go-elasticsearch/v7/esapi"
 )
 
-func Do[T any](fn func() (*esapi.Response, error), a T) (T, error) {
-	resp, err := fn()
+func NewClient(config elasticsearch.Config) (*elasticsearch.Client, error) {
+	return elasticsearch.NewClient(config)
+}
+
+func GetResponseBody(resp *esapi.Response, err error) (string, error) {
+	_b, err := getResponseBytes(resp, err)
 	if err != nil {
-		return a, err
+		return "", err
+	}
+
+	return string(_b), nil
+}
+
+func getResponseBytes(resp *esapi.Response, err error) ([]byte, error) {
+	if err != nil {
+		return nil, err
 	}
 
 	defer func() {
 		_ = resp.Body.Close()
 	}()
 
-	body, err := io.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
+}
+
+func DoResponse[T any](fn func() (*esapi.Response, error), a T) (T, error) {
+	resp, err := fn()
+	body, err := getResponseBytes(resp, err)
 	if err != nil {
 		return a, err
 	}
