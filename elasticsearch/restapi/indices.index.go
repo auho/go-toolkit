@@ -1,7 +1,10 @@
 package restapi
 
 func (i *Indices) Settings(index string) (string, error) {
-	resp, err := i.client.Indices.GetSettings(i.client.Indices.GetSettings.WithIndex(index))
+	resp, err := i.client.Indices.GetSettings(
+		i.client.Indices.GetSettings.WithIndex(index),
+		i.client.Indices.GetSettings.WithIncludeDefaults(true),
+	)
 	if err != nil {
 		return "", err
 	}
