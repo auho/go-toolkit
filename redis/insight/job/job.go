@@ -19,10 +19,14 @@ import (
 type jobConfig struct {
 	addr        string
 	auth        string
+	db          int
 	amount      int64
 	pageSize    int64
 	poolSize    int
 	concurrency int
+
+	outputExcel bool
+	outputFile  bool
 }
 
 type Job struct {
@@ -65,6 +69,7 @@ func (j *Job) run(jc *jobConfig, workers []Worker[string]) error {
 		Options: &redis.Options{
 			Network:  "tcp",
 			Addr:     jc.addr,
+			DB:       jc.db,
 			Password: jc.auth,
 			PoolSize: jc.poolSize,
 		},
@@ -94,7 +99,8 @@ func (j *Job) run(jc *jobConfig, workers []Worker[string]) error {
 }
 
 func (j *Job) build(workers []Worker[string]) *cobra.Command {
-	var jc *jobConfig
+	jc := &jobConfig{}
+
 	var cmd = &cobra.Command{
 		Use: "redis-job",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -102,11 +108,15 @@ func (j *Job) build(workers []Worker[string]) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&jc.addr, "addr", "", "addr of redis")
+	cmd.Flags().StringVar(&jc.addr, "addr", "127.0.0.1:6379", "addr of redis 127.0.0.1:6379")
+	cmd.Flags().IntVar(&jc.db, "db", 0, "db of redis")
 	cmd.Flags().Int64Var(&jc.amount, "amount", 0, "amount of job")
 	cmd.Flags().Int64Var(&jc.pageSize, "page", 100, "page size of redis scan")
 	cmd.Flags().IntVar(&jc.poolSize, "pool", 10, "pool size of redis client")
 	cmd.Flags().IntVar(&jc.concurrency, "concurrency", 4, "concurrency of job")
+
+	cmd.Flags().BoolVar(&jc.outputExcel, "excel", false, "output to excel")
+	cmd.Flags().BoolVar(&jc.outputFile, "file", true, "output to file")
 
 	return cmd
 }

@@ -1,6 +1,6 @@
 module github.com/auho/go-toolkit/mysql
 
-go 1.21.3
+go 1.21
 
 require (
 	github.com/ClickHouse/ch-go v0.48.0 // indirect

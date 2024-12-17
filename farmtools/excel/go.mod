@@ -1,6 +1,6 @@
 module github.com/auho/go-toolkit/farmtools/excel
 
-go 1.21.5
+go 1.21
 
 require github.com/xuri/excelize/v2 v2.8.1
 

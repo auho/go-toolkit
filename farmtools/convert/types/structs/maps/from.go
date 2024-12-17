@@ -14,6 +14,10 @@ func MapStringAnyFromStruct(s interface{}) (m map[string]any, err error) {
 		}
 	}()
 
+	if s == nil {
+		return nil, nil
+	}
+
 	var sRef, sRefElem reflect.Value
 	var sRefElemType reflect.Type
 	var fieldNum int

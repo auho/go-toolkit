@@ -1,8 +1,6 @@
-module github.com/auho/go-toolkit
+module github.com/auho/go-toolkit/redis
 
 go 1.21
-
-toolchain go1.21.3
 
 require (
 	github.com/auho/go-toolkit/farmtools/sort v0.0.0-20240420150334-bf0d46ed2616
@@ -10,7 +8,7 @@ require (
 	github.com/auho/go-toolkit/redis/client v0.0.0-20240420150334-bf0d46ed2616
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/spf13/cobra v1.8.0
-	golang.org/x/term v0.19.0
+	golang.org/x/term v0.20.0
 )
 
 require (
@@ -21,5 +19,5 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 )

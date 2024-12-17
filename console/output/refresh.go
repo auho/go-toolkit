@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func WithContentGetter(f func() []string) func(*Refresh) {
+func WithContent(f func() ([]string, error)) func(*Refresh) {
 	return func(r *Refresh) {
 		r.contentGetter = f
 	}
@@ -23,7 +23,7 @@ type Refresh struct {
 	currentLine      int
 	intervalDuration time.Duration
 	ticker           *time.Ticker
-	contentGetter    func() []string
+	contentGetter    func() ([]string, error)
 	lastRefreshTime  time.Time
 }
 
@@ -45,6 +45,14 @@ func NewRefresh(opts ...func(*Refresh)) *Refresh {
 	return r
 }
 
+func NewRefreshWithCancel(opts ...func(refresh *Refresh)) (*Refresh, func()) {
+	r := NewRefresh(opts...)
+
+	return r, func() {
+		r.Stop()
+	}
+}
+
 // Start 开始刷新输出，定时刷新内容到输出
 func (r *Refresh) Start() {
 	r.interval()
@@ -55,7 +63,11 @@ func (r *Refresh) Start() {
 // 清空内容
 // 停止定时输出
 func (r *Refresh) Stop() {
-	r.refresh()
+	err := r.refresh()
+	if err != nil {
+		fmt.Printf("[Error] %s\n", err)
+	}
+
 	r.flushContent()
 	r.ticker.Stop()
 }
@@ -65,15 +77,20 @@ func (r *Refresh) CleanAndStart() {
 	r.ticker.Reset(r.intervalDuration)
 }
 
-func (r *Refresh) refresh() {
+func (r *Refresh) refresh() error {
+	var err error
 	var content []string
 	var contentLen int
 	if r.contentGetter == nil {
 		contentLen = len(r.content)
-		content = make([]string, contentLen, contentLen)
+		content = make([]string, contentLen)
 		copy(content, r.content)
 	} else {
-		content = r.contentGetter()
+		content, err = r.contentGetter()
+		if err != nil {
+			return err
+		}
+
 		contentLen = len(content)
 	}
 
@@ -100,6 +117,8 @@ func (r *Refresh) refresh() {
 	fmt.Printf("%c[1B\r", 0x1B)
 
 	r.lastRefreshTime = time.Now()
+
+	return nil
 }
 
 func (r *Refresh) interval() {
@@ -110,9 +129,17 @@ func (r *Refresh) interval() {
 	r.isInterval = true
 
 	go func() {
+		err := r.refresh()
+		if err != nil {
+			fmt.Printf("[Error] %s\n", err)
+		}
+
 		for {
 			if _, ok := <-r.ticker.C; ok {
-				r.refresh()
+				err = r.refresh()
+				if err != nil {
+					fmt.Printf("[Error] %s\n", err)
+				}
 			} else {
 				break
 			}
