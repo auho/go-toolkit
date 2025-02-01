@@ -5,7 +5,7 @@ import (
 )
 
 func TestZone(t *testing.T) {
-	z, err := NewZone(Config{
+	z, _, err := NewZone(Config{
 		EnableIpv4: true,
 		EnableIpv6: false,
 	})
@@ -31,7 +31,7 @@ func TestZone(t *testing.T) {
 	// Bind this service into the list of registered services for dns-sd.
 	newRecord(t, rs, "_services._dns-sd._udp.local. 60 IN PTR _ssh._tcp.local.")
 
-	err = z.BroadcastEntries(rs)
+	err = z.BroadcastRecords(rs)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -14,26 +14,29 @@ type Zone struct {
 	ipvs    []Ipv
 }
 
-func NewZone(c Config) (*Zone, error) {
+func NewZone(c Config) (*Zone, func(), error) {
+
 	z := &Zone{}
 	err := z.multicastInterfaces()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if c.EnableIpv4 {
 		ipv4, err := NewIpv4(z.ifs)
 		if err != nil {
-			return nil, fmt.Errorf("ipv4: %v", err)
+			return nil, nil, fmt.Errorf("ipv4: %v", err)
 		}
 
 		z.ipvs = append(z.ipvs, ipv4)
 	}
 
-	return z, nil
+	return z, func() {
+		z.close()
+	}, nil
 }
 
-func (z *Zone) BroadcastEntries(rs Records) error {
+func (z *Zone) BroadcastRecords(rs Records) error {
 	if len(rs) <= 0 {
 		return fmt.Errorf("no record found")
 	}
@@ -97,4 +100,8 @@ func (z *Zone) listMulticastInterfaces() []net.Interface {
 	}
 
 	return out
+}
+
+func (z *Zone) close() {
+
 }
