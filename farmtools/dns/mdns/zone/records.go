@@ -4,6 +4,10 @@ import "github.com/miekg/dns"
 
 type Records map[dns.RR]struct{}
 
+func NewRecords() Records {
+	return make(Records, 16)
+}
+
 func (rs Records) New(s string) error {
 	rr, err := dns.NewRR(s)
 	if err != nil {
@@ -13,6 +17,10 @@ func (rs Records) New(s string) error {
 	rs.Add(rr)
 
 	return nil
+}
+
+func (rs Records) Clear() {
+	rs = NewRecords()
 }
 
 func (rs Records) Delete(s string) error {

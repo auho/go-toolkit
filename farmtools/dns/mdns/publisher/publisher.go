@@ -1,7 +1,6 @@
 package publisher
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"sync"
@@ -11,16 +10,21 @@ import (
 )
 
 type Publisher struct {
-	mutex    sync.Mutex
-	records  zone.Records
-	change   chan zone.Records
-	shutdown chan struct{}
+	mutex             sync.Mutex
+	records           zone.Records
+	recordsChan       chan zone.Records
+	recordsUpdateChan chan struct{}
+	shutdown          chan struct{}
 
 	wg sync.WaitGroup
 }
 
 func newPublisher() (*Publisher, error) {
-	return &Publisher{}, nil
+	return &Publisher{
+		recordsChan:       make(chan zone.Records),
+		recordsUpdateChan: make(chan struct{}),
+		shutdown:          make(chan struct{}),
+	}, nil
 }
 
 func runPublisher(c *Config) error {
@@ -35,42 +39,57 @@ func runPublisher(c *Config) error {
 }
 
 func (p *Publisher) start(c *Config) {
-	z, zoneCancel, err := zone.NewZone(zone.Config{
-		EnableIpv4: c.enableIpv4,
-		EnableIpv6: c.enableIpv6,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	p.wg.Add(2)
-	go p.recordsChange(c)
-	go p.multicast(c, z)
+	p.wg.Add(3)
+	go p.loop(c)
+	go p.handleRecordsChange(c)
+	go p.multicast(c)
 
 	p.wg.Wait()
 
 	c.close()
-	zoneCancel()
 }
 
-func (p *Publisher) multicast(c *Config, z *zone.Zone) {
+func (p *Publisher) loop(c *Config) {
 	defer p.wg.Done()
 
 	var jitter = time.Millisecond * 100 * time.Duration(rand.Intn(10))
 	for {
 		select {
 		case <-time.NewTimer(c.broadcastInterval + jitter).C:
+			p.recordsUpdateChan <- struct{}{}
+		case <-p.shutdown:
+			return
+		}
+	}
+}
+
+func (p *Publisher) multicast(c *Config) {
+	defer p.wg.Done()
+
+	for {
+		select {
+		case <-p.recordsUpdateChan:
 			p.mutex.Lock()
-			if len(p.records) <= 0 {
-				continue
-			}
 
-			err := z.BroadcastRecords(p.records)
-			if err != nil {
-				log.Println(err)
-			}
+			if len(p.records) > 0 {
+				z, zoneCancel, err := zone.NewZone(zone.Config{
+					EnableIpv4: c.enableIpv4,
+					EnableIpv6: c.enableIpv6,
+				})
+				if err != nil {
+					log.Fatal(err)
+				}
 
-			fmt.Println(p.records)
+				err = z.BroadcastRecords(p.records)
+				if err != nil {
+					log.Println(err)
+				}
+
+				zoneCancel()
+
+				log.Println(p.records)
+			}
 
 			p.mutex.Unlock()
 
@@ -80,7 +99,7 @@ func (p *Publisher) multicast(c *Config, z *zone.Zone) {
 	}
 }
 
-func (p *Publisher) recordsChange(c *Config) {
+func (p *Publisher) handleRecordsChange(c *Config) {
 	defer p.wg.Done()
 
 	for {
@@ -89,6 +108,9 @@ func (p *Publisher) recordsChange(c *Config) {
 			p.mutex.Lock()
 			p.records = records
 			p.mutex.Unlock()
+
+			p.recordsUpdateChan <- struct{}{}
+
 		case <-p.shutdown:
 			return
 		}

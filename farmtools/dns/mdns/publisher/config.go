@@ -35,8 +35,8 @@ func (c *Config) checkArgs() error {
 		c.enableIpv4 = true
 	}
 
-	if c.broadcastInterval <= time.Second*10 {
-		c.broadcastInterval = time.Second * 10
+	if c.broadcastInterval <= time.Second*30 {
+		c.broadcastInterval = time.Second * 30
 	}
 
 	if c.broadcastInterval > time.Second*900 {
