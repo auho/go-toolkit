@@ -39,15 +39,23 @@ func runPublisher(c *Config) error {
 }
 
 func (p *Publisher) start(c *Config) {
+	z, zoneCancel, err := zone.NewZone(zone.Config{
+		EnableIpv4: c.enableIpv4,
+		EnableIpv6: c.enableIpv6,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	p.wg.Add(3)
 	go p.loop(c)
 	go p.handleRecordsChange(c)
-	go p.multicast(c)
+	go p.multicast(z)
 
 	p.wg.Wait()
 
 	c.close()
+	zoneCancel()
 }
 
 func (p *Publisher) loop(c *Config) {
@@ -64,7 +72,7 @@ func (p *Publisher) loop(c *Config) {
 	}
 }
 
-func (p *Publisher) multicast(c *Config) {
+func (p *Publisher) multicast(z *zone.Zone) {
 	defer p.wg.Done()
 
 	for {
@@ -73,22 +81,10 @@ func (p *Publisher) multicast(c *Config) {
 			p.mutex.Lock()
 
 			if len(p.records) > 0 {
-				z, zoneCancel, err := zone.NewZone(zone.Config{
-					EnableIpv4: c.enableIpv4,
-					EnableIpv6: c.enableIpv6,
-				})
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				err = z.BroadcastRecords(p.records)
+				err := z.BroadcastRecords(p.records)
 				if err != nil {
 					log.Println(err)
 				}
-
-				zoneCancel()
-
-				log.Println(p.records)
 			}
 
 			p.mutex.Unlock()

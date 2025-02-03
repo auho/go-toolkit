@@ -28,8 +28,8 @@ var (
 )
 
 type Ipv4 struct {
-	net4 *ipv4.PacketConn
-	ifs  []net.Interface
+	packetConn *ipv4.PacketConn
+	ifs        []net.Interface
 }
 
 func NewIpv4(ifs []net.Interface) (*Ipv4, error) {
@@ -49,14 +49,14 @@ func (i *Ipv4) multicastResponse(msg *dns.Msg) error {
 		return err
 	}
 
-	if i.net4 != nil {
+	if i.packetConn != nil {
 		var wcm ipv4.ControlMessage
 		var ifs []net.Interface
 
 		for _, _i := range i.ifs {
 			wcm.IfIndex = _i.Index
-			_, err = i.net4.WriteTo(buf, &wcm, ipv4Addr)
-			if err != nil {
+			_, err = i.packetConn.WriteTo(buf, &wcm, ipv4Addr)
+			if err == nil {
 				ifs = append(ifs, _i)
 			}
 		}
@@ -73,7 +73,7 @@ func (i *Ipv4) multicastResponse(msg *dns.Msg) error {
 
 func (i *Ipv4) joinMulticast(ifs []net.Interface) error {
 	var err error
-	i.net4, err = i.joinUDPMulticast(ifs)
+	i.packetConn, err = i.joinUDPMulticast(ifs)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (i *Ipv4) joinUDPMulticast(ifs []net.Interface) (*ipv4.PacketConn, error) {
 
 	var failedJoins int
 	for _, _i := range ifs {
-		if err := pkConn.JoinGroup(&_i, &net.UDPAddr{IP: mdnsGroupIPv4}); err == nil {
+		if err = pkConn.JoinGroup(&_i, &net.UDPAddr{IP: mdnsGroupIPv4}); err == nil {
 			i.ifs = append(i.ifs, _i)
 		} else {
 			// log.Println("Udp4 JoinGroup failed for interface ", _i)
