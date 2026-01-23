@@ -1,68 +1,58 @@
 package difference
 
 type ByRows struct {
+	by
+
 	baseData    [][]string
 	compareData [][]string
 }
 
-func (d *ByRows) diff() (SheetResult, error) {
-	addedRows := make(map[int][]string)
-	deletedRows := make(map[int][]string)
-	var modifiedCells []CellResult
+func (r *ByRows) compare() (ByRowResult, error) {
+	var byRowsRet ByRowResult
 
-	baseTotalRows := len(d.baseData)
-	compareTotalRows := len(d.compareData)
+	baseTotalRows := len(r.baseData)
+	compareTotalRows := len(r.compareData)
 
 	smallerTotalRows := min(baseTotalRows, compareTotalRows)
 
+	var rowIndex int
+
 	// common rows
 	for i := 0; i < smallerTotalRows; i++ {
+		cellsRet, ok := r.compareRow(i)
+		if !ok {
+			continue
+		}
 
-		rowRet := d.row(i)
+		byRowsRet.addModifiedRows(r.indexToNo(rowIndex), cellsRet)
+		rowIndex++
 	}
 
 	// base rows > compare rows
 	if baseTotalRows > compareTotalRows {
 		for i := smallerTotalRows; i < baseTotalRows; i++ {
-			rowRet := d.rowWithAction(i, d.baseData[i], actionDelete)
+			byRowsRet.addDeletedRow(r.indexToNo(rowIndex), r.baseData[i])
+			rowIndex++
 		}
 
 	} else if baseTotalRows < compareTotalRows {
 		// base rows < compare rows
 		for i := smallerTotalRows; i < compareTotalRows; i++ {
-			rowRet := d.rowWithAction(i, d.compareData[i], actionAdd)
+			byRowsRet.addAddedRow(r.indexToNo(rowIndex), r.compareData[i])
+			rowIndex++
 		}
+
 	}
 
-	// base rows < compare rows
-
-	if baseTotalRows < compareTotalRows { // length of rows of base less than diff. new cells (row)
-		for i := baseTotalRows + 1; i < compareTotalRows; i++ {
-			addedRows[i] = d.compareData[i]
-		}
-	} else { // length of rows of base greater than diff. new cells (row)
-		for baseRowNo, baseRowValues := range d.baseData { // iteration row
-			// rows
-			if baseRowNo > compareTotalRows { // delete cells (row)
-				deletedRows[baseRowNo] = baseRowValues
-			} else { // change cells (row)
-
-			}
-		}
-	}
-
-	return SheetResult{
-		addedRows:     addedRows,
-		deletedRows:   deletedRows,
-		modifiedCells: modifiedCells,
-	}, nil
+	return byRowsRet, nil
 }
 
-func (d *ByRows) row(rowIndex int) []CellResult {
-	var cellsRet []CellResult
+func (r *ByRows) compareRow(rowIndex int) ([]RowCellResult, bool) {
+	var cellsRet []RowCellResult
+	var hasChange bool
 
-	baseRow := d.baseData[rowIndex]
-	compareRow := d.compareData[rowIndex]
+	baseRow := r.baseData[rowIndex]
+	compareRow := r.compareData[rowIndex]
 
 	baseLen := len(baseRow)
 	compareLen := len(compareRow)
@@ -71,51 +61,46 @@ func (d *ByRows) row(rowIndex int) []CellResult {
 
 	// common
 	for i := 0; i < smallerLen; i++ {
-		if baseRow[i] != compareRow[i] {
-			cellsRet = append(cellsRet, CellResult{
-				row:    rowIndex,
-				col:    i,
-				action: actionModify,
-				value:  compareRow[i],
-			})
+		cellRet := RowCellResult{
+			col: r.indexToNo(i),
 		}
+
+		if baseRow[i] == compareRow[i] {
+			cellRet.action = actionNull
+			cellRet.value = baseRow[i]
+		} else {
+			cellRet.action = actionModify
+			cellRet.value = compareRow[i]
+
+			hasChange = true
+		}
+
+		cellsRet = append(cellsRet, cellRet)
 	}
 
 	// base len > compare len
 	if baseLen > compareLen {
 		for i := smallerLen; i < baseLen; i++ {
-			cellsRet = append(cellsRet, CellResult{
-				row:    rowIndex,
-				col:    i,
+			cellsRet = append(cellsRet, RowCellResult{
+				col:    r.indexToNo(i),
 				action: actionDelete,
 				value:  baseRow[i],
 			})
 		}
+
+		hasChange = true
 	} else if baseLen < compareLen {
 		// base len < compare len
 		for i := smallerLen; i < compareLen; i++ {
-			cellsRet = append(cellsRet, CellResult{
-				row:    rowIndex,
-				col:    i,
+			cellsRet = append(cellsRet, RowCellResult{
+				col:    r.indexToNo(i),
 				action: actionAdd,
 				value:  compareRow[i],
 			})
 		}
+
+		hasChange = true
 	}
 
-	return cellsRet
-}
-
-func (d *ByRows) rowWithAction(rowIndex int, row []string, action int) []CellResult {
-	var cellsRet []CellResult
-	for i, v := range row {
-		cellsRet = append(cellsRet, CellResult{
-			row:    rowIndex,
-			col:    i,
-			action: action,
-			value:  v,
-		})
-	}
-
-	return cellsRet
+	return cellsRet, hasChange
 }
