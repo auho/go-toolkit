@@ -5,15 +5,15 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-type SheetDiff struct {
-	data          Data
+type SheetResult struct {
+	data          ByRows
 	addedRows     map[int][]string
 	deletedRows   map[int][]string
-	modifiedCells []CellDiff
+	modifiedCells []CellResult
 	cellStyles    map[int]int
 }
 
-func (s *SheetDiff) ToSheet(f *excelize.File, sheetName string) error {
+func (s *SheetResult) ToSheet(f *excelize.File, sheetName string) error {
 	err := s.toSheet(f, sheetName)
 	if err != nil {
 		return fmt.Errorf("%s to sheet %w", sheetName, err)
@@ -22,7 +22,7 @@ func (s *SheetDiff) ToSheet(f *excelize.File, sheetName string) error {
 	return nil
 }
 
-func (s *SheetDiff) buildStyles(f *excelize.File) error {
+func (s *SheetResult) buildStyles(f *excelize.File) error {
 	var err error
 
 	s.cellStyles = make(map[int]int)
@@ -45,7 +45,7 @@ func (s *SheetDiff) buildStyles(f *excelize.File) error {
 	return nil
 }
 
-func (s *SheetDiff) toSheet(f *excelize.File, sheetName string) error {
+func (s *SheetResult) toSheet(f *excelize.File, sheetName string) error {
 	err := s.buildStyles(f)
 	if err != nil {
 		return fmt.Errorf("build style %w", err)
@@ -59,7 +59,7 @@ func (s *SheetDiff) toSheet(f *excelize.File, sheetName string) error {
 	return nil
 }
 
-func (s *SheetDiff) buildSheet(f *excelize.File, sheetName string) error {
+func (s *SheetResult) buildSheet(f *excelize.File, sheetName string) error {
 	_, err := f.NewSheet(sheetName)
 	if err != nil {
 		return fmt.Errorf("new sheet %s %w", sheetName, err)
@@ -86,7 +86,7 @@ func (s *SheetDiff) buildSheet(f *excelize.File, sheetName string) error {
 	return nil
 }
 
-func (s *SheetDiff) setCell(f *excelize.File, sheetName string, slice []CellDiff) error {
+func (s *SheetResult) setCell(f *excelize.File, sheetName string, slice []CellResult) error {
 	var err error
 	var cell string
 	for _, cellDiff := range slice {
@@ -109,7 +109,7 @@ func (s *SheetDiff) setCell(f *excelize.File, sheetName string, slice []CellDiff
 	return nil
 }
 
-func (s *SheetDiff) setRows(f *excelize.File, sheetName string, m map[int][]string, action int) error {
+func (s *SheetResult) setRows(f *excelize.File, sheetName string, m map[int][]string, action int) error {
 	var cell string
 	for rowNo, rowValues := range m {
 		rowStartCell, err := excelize.CoordinatesToCellName(rowNo, 1)
@@ -139,7 +139,7 @@ func (s *SheetDiff) setRows(f *excelize.File, sheetName string, m map[int][]stri
 	return nil
 }
 
-func (s *SheetDiff) buildStyle(f *excelize.File, color string) (int, error) {
+func (s *SheetResult) buildStyle(f *excelize.File, color string) (int, error) {
 	return f.NewStyle(&excelize.Style{
 		Fill: excelize.Fill{
 			Type:    "gradient",

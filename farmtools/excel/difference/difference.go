@@ -8,11 +8,11 @@ import (
 // DataDiffToSheet
 // excelFile: result excel file
 // sheetName: result sheet name
-// baseData, diffData: Path to the excel file being compared
+// baseData, compareData: Path to the excel file being compared
 func DataDiffToSheet(excelFile *excelize.File, sheetName string, baseData, diffData [][]string) error {
-	data := &Data{
-		baseData: baseData,
-		diffData: diffData,
+	data := &ByRows{
+		baseData:    baseData,
+		compareData: diffData,
 	}
 
 	sheet, err := data.diff()

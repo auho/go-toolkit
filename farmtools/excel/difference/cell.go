@@ -1,12 +1,12 @@
 package difference
 
 const (
-	actionAdd int = iota
-	actionModify
-	actionDelete
+	actionAdd    = 1
+	actionModify = 2
+	actionDelete = 3
 )
 
-type CellDiff struct {
+type CellResult struct {
 	row    int
 	col    int
 	action int
