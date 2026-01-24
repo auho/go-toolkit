@@ -1,58 +1,59 @@
-package difference
+package contrast
 
-type ByRows struct {
+type ByRowsRows struct {
 	by
-
-	baseData    [][]string
-	compareData [][]string
 }
 
-func (r *ByRows) compare() (ByRowResult, error) {
-	var byRowsRet ByRowResult
+// bool: rows has changed
+func (r *ByRowsRows) compare(baseData, compareData [][]string) (ByRowsRowsResult, bool) {
+	var ret ByRowsRowsResult
+	var hasChanged bool
 
-	baseTotalRows := len(r.baseData)
-	compareTotalRows := len(r.compareData)
+	baseTotalRows := len(baseData)
+	compareTotalRows := len(compareData)
 
 	smallerTotalRows := min(baseTotalRows, compareTotalRows)
 
 	var rowIndex int
 
-	// common rows
+	// both have rows
 	for i := 0; i < smallerTotalRows; i++ {
-		cellsRet, ok := r.compareRow(i)
+		cellsRet, ok := r.compareRow(baseData[i], compareData[i])
 		if !ok {
 			continue
 		}
 
-		byRowsRet.addModifiedRows(r.indexToNo(rowIndex), cellsRet)
+		ret.addModifiedRows(r.indexToNo(rowIndex), cellsRet)
+		hasChanged = true
 		rowIndex++
+
 	}
 
 	// base rows > compare rows
 	if baseTotalRows > compareTotalRows {
 		for i := smallerTotalRows; i < baseTotalRows; i++ {
-			byRowsRet.addDeletedRow(r.indexToNo(rowIndex), r.baseData[i])
+			ret.addDeletedRow(r.indexToNo(rowIndex), baseData[i])
+			hasChanged = true
 			rowIndex++
 		}
 
 	} else if baseTotalRows < compareTotalRows {
 		// base rows < compare rows
 		for i := smallerTotalRows; i < compareTotalRows; i++ {
-			byRowsRet.addAddedRow(r.indexToNo(rowIndex), r.compareData[i])
+			ret.addAddedRow(r.indexToNo(rowIndex), compareData[i])
+			hasChanged = true
 			rowIndex++
 		}
 
 	}
 
-	return byRowsRet, nil
+	return ret, hasChanged
 }
 
-func (r *ByRows) compareRow(rowIndex int) ([]RowCellResult, bool) {
+// bool: has changed
+func (r *ByRowsRows) compareRow(baseRow, compareRow []string) ([]RowCellResult, bool) {
 	var cellsRet []RowCellResult
-	var hasChange bool
-
-	baseRow := r.baseData[rowIndex]
-	compareRow := r.compareData[rowIndex]
+	var hasChanged bool
 
 	baseLen := len(baseRow)
 	compareLen := len(compareRow)
@@ -66,13 +67,13 @@ func (r *ByRows) compareRow(rowIndex int) ([]RowCellResult, bool) {
 		}
 
 		if baseRow[i] == compareRow[i] {
-			cellRet.action = actionNull
+			cellRet.action = actionUnchanged
 			cellRet.value = baseRow[i]
 		} else {
 			cellRet.action = actionModify
 			cellRet.value = compareRow[i]
 
-			hasChange = true
+			hasChanged = true
 		}
 
 		cellsRet = append(cellsRet, cellRet)
@@ -88,7 +89,7 @@ func (r *ByRows) compareRow(rowIndex int) ([]RowCellResult, bool) {
 			})
 		}
 
-		hasChange = true
+		hasChanged = true
 	} else if baseLen < compareLen {
 		// base len < compare len
 		for i := smallerLen; i < compareLen; i++ {
@@ -99,8 +100,8 @@ func (r *ByRows) compareRow(rowIndex int) ([]RowCellResult, bool) {
 			})
 		}
 
-		hasChange = true
+		hasChanged = true
 	}
 
-	return cellsRet, hasChange
+	return cellsRet, hasChanged
 }

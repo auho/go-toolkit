@@ -1,4 +1,4 @@
-package difference
+package contrast
 
 type by struct{}
 
