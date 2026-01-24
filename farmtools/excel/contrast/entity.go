@@ -11,37 +11,99 @@ import (
 //
 
 type InputFilePath struct {
-	base    string
-	compare string
+	Base    string
+	Compare string
+	Sheets  []string
 }
 
 type Input struct {
-	base    *excelize.File
-	compare *excelize.File
+	Base    *excelize.File
+	Compare *excelize.File
+	Sheets  []string
+
+	isAll     bool
+	sheetsMap map[string]struct{}
+}
+
+func (i *Input) getSheetList(f *excelize.File) []string {
+	var sheets []string
+
+	for _, sheet := range f.GetSheetList() {
+		if !i.hasSheet(sheet) {
+			continue
+		}
+
+		sheets = append(sheets, sheet)
+	}
+
+	return sheets
+}
+
+func (i *Input) initSheets() {
+	i.sheetsMap = make(map[string]struct{})
+
+	i.isAll = true
+	if len(i.Sheets) > 0 {
+		for _, sheet := range i.Sheets {
+			i.sheetsMap[sheet] = struct{}{}
+		}
+
+		i.isAll = false
+	}
+}
+
+func (i *Input) hasSheet(sheet string) bool {
+	if i.isAll {
+		return true
+	}
+
+	_, ok := i.sheetsMap[sheet]
+
+	return ok
 }
 
 func (i *Input) close() error {
-	_ = i.base.Close()
-	_ = i.compare.Close()
+	_ = i.Base.Close()
+	_ = i.Compare.Close()
 
 	return nil
 }
 
-func (i *Input) sheetData(sheet string) (SheetData, error) {
+func (i *Input) sheetRowsData(sheet string) (SheetData, error) {
 	var err error
 
 	sd := SheetData{
 		sheetName: sheet,
 	}
 
-	sd.base, err = i.base.GetRows(sheet)
+	sd.base, err = i.Base.GetRows(sheet)
 	if err != nil {
 		return sd, fmt.Errorf("base GetRows: %w", err)
 	}
 
-	sd.compare, err = i.compare.GetRows(sheet)
+	sd.compare, err = i.Compare.GetRows(sheet)
 	if err != nil {
 		return sd, fmt.Errorf("compare GetRows: %w", err)
+	}
+
+	return sd, nil
+}
+
+func (i *Input) sheetColsData(sheet string) (SheetData, error) {
+	var err error
+
+	sd := SheetData{
+		sheetName: sheet,
+	}
+
+	sd.base, err = i.Base.GetCols(sheet)
+	if err != nil {
+		return sd, fmt.Errorf("base GetCols: %w", err)
+	}
+
+	sd.compare, err = i.Compare.GetCols(sheet)
+	if err != nil {
+		return sd, fmt.Errorf("compare GetCols: %w", err)
 	}
 
 	return sd, nil

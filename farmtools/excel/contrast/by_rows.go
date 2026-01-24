@@ -60,9 +60,9 @@ func (r *ByRows) compareSheet(input Input, sheet string) (ByRowsSheetResult, err
 	var sheetRet ByRowsSheetResult
 	sheetRet.sheetName = sheet
 
-	sheetData, err := input.sheetData(sheet)
+	sheetData, err := input.sheetRowsData(sheet)
 	if err != nil {
-		return sheetRet, fmt.Errorf("sheetData: %w", err)
+		return sheetRet, fmt.Errorf("sheetRowsData: %w", err)
 	}
 
 	rowsRet, hasChanged := r.rows.compare(sheetData.base, sheetData.compare)

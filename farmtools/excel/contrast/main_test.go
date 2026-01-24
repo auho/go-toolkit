@@ -18,12 +18,12 @@ func genInput(t *testing.T) Input {
 	var input Input
 	var err error
 
-	input.base, err = excelize.OpenReader(bytes.NewReader(baseFile))
+	input.Base, err = excelize.OpenReader(bytes.NewReader(baseFile))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	input.compare, err = excelize.OpenReader(bytes.NewReader(compareFile))
+	input.Compare, err = excelize.OpenReader(bytes.NewReader(compareFile))
 	if err != nil {
 		t.Fatal(err)
 	}

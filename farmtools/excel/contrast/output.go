@@ -129,18 +129,57 @@ func (o *output) setRow(f *excelize.File, sheetName string, action, rowNo int, d
 		return fmt.Errorf("%d set row %#v: %w", rowNo, data, err)
 	}
 
-	// set style
-	var cell string
+	// set style for entire row at once
 	_len := len(data)
-	for i := 1; i <= _len; i++ {
-		cell, err = excelize.CoordinatesToCellName(i, rowNo)
+	if _len > 0 {
+		endCell, err := excelize.CoordinatesToCellName(_len, rowNo)
 		if err != nil {
-			return fmt.Errorf("%d:%d to cell name %w", rowNo, i, err)
+			return fmt.Errorf("%d:%d to cell name %w", rowNo, _len, err)
 		}
 
-		err = f.SetCellStyle(sheetName, cell, cell, o.cellStyles[action])
+		err = f.SetCellStyle(sheetName, startCell, endCell, o.cellStyles[action])
 		if err != nil {
-			return fmt.Errorf("%d:%d set style %w", rowNo, i, err)
+			return fmt.Errorf("set row style %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (o *output) setColumnsData(f *excelize.File, sheetName string, action int, cols []ColData) error {
+	for _, col := range cols {
+		err := o.setColumn(f, sheetName, action, col.col, col.data)
+		if err != nil {
+			return fmt.Errorf("setColumn[%d] %#v: %w", col.col, col, err)
+		}
+	}
+
+	return nil
+}
+
+func (o *output) setColumn(f *excelize.File, sheetName string, action, colNo int, data []string) error {
+	startCell, err := excelize.CoordinatesToCellName(colNo, 1)
+	if err != nil {
+		return fmt.Errorf("%d:1 to cell name: %w", colNo, err)
+	}
+
+	// set values
+	err = f.SetSheetCol(sheetName, startCell, &data)
+	if err != nil {
+		return fmt.Errorf("set column %#v: %w", data, err)
+	}
+
+	// set style
+	_len := len(data)
+	if _len > 0 {
+		endCell, err := excelize.CoordinatesToCellName(colNo, _len)
+		if err != nil {
+			return fmt.Errorf("%d:%d to cell name %w", _len, colNo, err)
+		}
+
+		err = f.SetCellStyle(sheetName, startCell, endCell, o.cellStyles[action])
+		if err != nil {
+			return fmt.Errorf("set column style %w", err)
 		}
 	}
 

@@ -15,7 +15,7 @@ func TestByRows_CompareFilePath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = _output.SaveAs(fmt.Sprintf("./testdata/test.%s.xlsx", time.Now().Format("20060102.150405")))
+	err = _output.SaveAs(fmt.Sprintf("./testdata/test.rows.%s.xlsx", time.Now().Format("20060102.150405")))
 	if err != nil {
 		t.Fatal(err)
 	}
