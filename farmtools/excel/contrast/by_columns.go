@@ -5,12 +5,12 @@ import "fmt"
 type ByColumns struct {
 	excel
 
-	columns *ByColumnsColumns
+	columns *ByColumnComparator
 }
 
 func NewByColumns() *ByColumns {
 	return &ByColumns{
-		columns: &ByColumnsColumns{},
+		columns: &ByColumnComparator{},
 	}
 }
 

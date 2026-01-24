@@ -5,12 +5,12 @@ import "fmt"
 type ByRows struct {
 	excel
 
-	rows *ByRowsRows
+	rows *ByRowComparator
 }
 
 func NewByRows() *ByRows {
 	return &ByRows{
-		rows: &ByRowsRows{},
+		rows: &ByRowComparator{},
 	}
 }
 

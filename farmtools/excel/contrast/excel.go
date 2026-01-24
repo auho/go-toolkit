@@ -8,10 +8,11 @@ import (
 
 type excel struct{}
 
+// Compare sheets between base and compare files
 func (e *excel) compareSheets(input Input) CatalogResult {
 	var catalogRet CatalogResult
 
-	input.initSheets()
+	input.initSheets() // Initialize sheet information
 
 	baseSheets := input.getSheetList(input.Base)
 	compareSheets := input.getSheetList(input.Compare)
@@ -45,6 +46,7 @@ func (e *excel) compareSheets(input Input) CatalogResult {
 	return catalogRet
 }
 
+// Open Excel files for comparison
 func (e *excel) inputOpenFile(input InputFilePath) (Input, error) {
 	var err error
 	var inputExcelFile Input

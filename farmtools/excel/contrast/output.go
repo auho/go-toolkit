@@ -51,25 +51,30 @@ func (o *output) setCatalogResult(f *excelize.File, ret CatalogResult) error {
 
 // int: next row index
 func (o *output) setCatalog(f *excelize.File, sheetName string, rowIndex int, ret []CatalogItemResult) (int, error) {
-	var cellsRet []CellResult
-
 	var rowNo = o.indexToNo(rowIndex)
 
 	for cellIndex, _ir := range ret {
-		cellsRet = append(cellsRet, CellResult{
+		cellRet := CellResult{
 			row:    rowNo,
 			col:    o.indexToNo(cellIndex),
 			action: _ir.action,
 			value:  _ir.sheetName,
-		})
+		}
+
+		cell, err := o.setCellResult(f, sheetName, cellRet)
+		if err != nil {
+			return 0, fmt.Errorf("setCellsResult: %w", err)
+		}
+
+		if _ir.action != actionUnchanged {
+			err = f.SetCellHyperLink(sheetName, cell, fmt.Sprintf("%s!A1", _ir.sheetName), "Location")
+			if err != nil {
+				return 0, fmt.Errorf("SetCellHyperLink: %w", err)
+			}
+		}
 	}
 
 	rowIndex++
-
-	err := o.setCellsResult(f, sheetName, cellsRet)
-	if err != nil {
-		return 0, fmt.Errorf("setCellsResult: %w", err)
-	}
 
 	return rowIndex, nil
 }
@@ -78,7 +83,7 @@ func (o *output) setCellsResult(f *excelize.File, sheetName string, cellsRet []C
 	var err error
 
 	for _, cellRet := range cellsRet {
-		err = o.setCellResult(f, sheetName, cellRet)
+		_, err = o.setCellResult(f, sheetName, cellRet)
 		if err != nil {
 			return fmt.Errorf("setCellResult: %w", err)
 		}
@@ -87,23 +92,23 @@ func (o *output) setCellsResult(f *excelize.File, sheetName string, cellsRet []C
 	return nil
 }
 
-func (o *output) setCellResult(f *excelize.File, sheetName string, cellRet CellResult) error {
+func (o *output) setCellResult(f *excelize.File, sheetName string, cellRet CellResult) (string, error) {
 	cell, err := excelize.CoordinatesToCellName(cellRet.col, cellRet.row)
 	if err != nil {
-		return fmt.Errorf("%+v to cell name %w", cellRet, err)
+		return cell, fmt.Errorf("%+v to cell name %w", cellRet, err)
 	}
 
 	err = f.SetCellValue(sheetName, cell, cellRet.value)
 	if err != nil {
-		return fmt.Errorf("%#v set cell value %w", cellRet, err)
+		return cell, fmt.Errorf("%#v set cell value %w", cellRet, err)
 	}
 
 	err = f.SetCellStyle(sheetName, cell, cell, o.cellStyles[cellRet.action])
 	if err != nil {
-		return fmt.Errorf("%#v set cell style %w", cellRet, err)
+		return cell, fmt.Errorf("%#v set cell style %w", cellRet, err)
 	}
 
-	return nil
+	return cell, nil
 }
 
 func (o *output) setRowsData(f *excelize.File, sheetName string, action int, rows []RowData) error {

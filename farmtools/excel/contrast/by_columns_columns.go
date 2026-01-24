@@ -1,12 +1,12 @@
 package contrast
 
-type ByColumnsColumns struct {
+type ByColumnComparator struct {
 	by
 }
 
 // bool: columns has changed
-func (c *ByColumnsColumns) compare(baseData, compareData [][]string) (ByColumnsColumnsResult, bool) {
-	var ret ByColumnsColumnsResult
+func (c *ByColumnComparator) compare(baseData, compareData [][]string) (ByColumnsColumnsResult, bool) {
+	var result ByColumnsColumnsResult
 	var hasChanged bool
 
 	baseTotalCols := len(baseData)
@@ -14,7 +14,7 @@ func (c *ByColumnsColumns) compare(baseData, compareData [][]string) (ByColumnsC
 
 	smallerTotalCols := min(baseTotalCols, compareTotalCols)
 
-	// Compare common columns
+	// Compare common columns (present in both columns)
 	for i := 0; i < smallerTotalCols; i++ {
 		baseCol := baseData[i]
 		compareCol := compareData[i]
@@ -24,7 +24,7 @@ func (c *ByColumnsColumns) compare(baseData, compareData [][]string) (ByColumnsC
 			continue
 		}
 
-		ret.addModifiedColumn(c.indexToNo(i), cellsRet)
+		result.addModifiedColumn(c.indexToNo(i), cellsRet)
 		hasChanged = true
 	}
 
@@ -32,7 +32,7 @@ func (c *ByColumnsColumns) compare(baseData, compareData [][]string) (ByColumnsC
 	if baseTotalCols > compareTotalCols {
 		for i := smallerTotalCols; i < baseTotalCols; i++ {
 			baseCol := baseData[i]
-			ret.addDeletedColumn(c.indexToNo(i), baseCol)
+			result.addDeletedColumn(c.indexToNo(i), baseCol)
 			hasChanged = true
 		}
 
@@ -40,18 +40,18 @@ func (c *ByColumnsColumns) compare(baseData, compareData [][]string) (ByColumnsC
 		// base columns < compare columns
 		for i := smallerTotalCols; i < compareTotalCols; i++ {
 			compareCol := compareData[i]
-			ret.addAddedColumn(c.indexToNo(i), compareCol)
+			result.addAddedColumn(c.indexToNo(i), compareCol)
 			hasChanged = true
 		}
 
 	}
 
-	return ret, hasChanged
+	return result, hasChanged
 }
 
 // bool: has changed
-func (c *ByColumnsColumns) compareColumn(baseCol, compareCol []string) ([]ColCellResult, bool) {
-	var cellsRet []ColCellResult
+func (c *ByColumnComparator) compareColumn(baseCol, compareCol []string) ([]ColCellResult, bool) {
+	var cellResults []ColCellResult
 	var hasChanged bool
 
 	baseLen := len(baseCol)
@@ -59,29 +59,29 @@ func (c *ByColumnsColumns) compareColumn(baseCol, compareCol []string) ([]ColCel
 
 	smallerLen := min(baseLen, compareLen)
 
-	// common rows
+	// Compare common cells (present in both columns)
 	for i := 0; i < smallerLen; i++ {
-		cellRet := ColCellResult{
+		cellResult := ColCellResult{
 			row: c.indexToNo(i),
 		}
 
 		if baseCol[i] == compareCol[i] {
-			cellRet.action = actionUnchanged
-			cellRet.value = baseCol[i]
+			cellResult.action = actionUnchanged
+			cellResult.value = baseCol[i]
 		} else {
-			cellRet.action = actionModify
-			cellRet.value = compareCol[i]
+			cellResult.action = actionModify
+			cellResult.value = compareCol[i]
 
 			hasChanged = true
 		}
 
-		cellsRet = append(cellsRet, cellRet)
+		cellResults = append(cellResults, cellResult)
 	}
 
-	// base len > compare len
+	// Base column has more cells than compare column
 	if baseLen > compareLen {
 		for i := smallerLen; i < baseLen; i++ {
-			cellsRet = append(cellsRet, ColCellResult{
+			cellResults = append(cellResults, ColCellResult{
 				row:    c.indexToNo(i),
 				action: actionDelete,
 				value:  baseCol[i],
@@ -90,9 +90,9 @@ func (c *ByColumnsColumns) compareColumn(baseCol, compareCol []string) ([]ColCel
 
 		hasChanged = true
 	} else if baseLen < compareLen {
-		// base len < compare len
+		// Base column has fewer cells than compare column
 		for i := smallerLen; i < compareLen; i++ {
-			cellsRet = append(cellsRet, ColCellResult{
+			cellResults = append(cellResults, ColCellResult{
 				row:    c.indexToNo(i),
 				action: actionAdd,
 				value:  compareCol[i],
@@ -102,5 +102,5 @@ func (c *ByColumnsColumns) compareColumn(baseCol, compareCol []string) ([]ColCel
 		hasChanged = true
 	}
 
-	return cellsRet, hasChanged
+	return cellResults, hasChanged
 }
