@@ -14,7 +14,13 @@ func NewByRows() *ByRows {
 	}
 }
 
+// CompareFilePath Default comparison method, using default mapping
 func (r *ByRows) CompareFilePath(input InputFilePath) (ByRowsOutput, error) {
+	return r.CompareFilePathWithMapping(input, nil)
+}
+
+// CompareFilePathWithMapping Comparison method using specified mapping
+func (r *ByRows) CompareFilePathWithMapping(input InputFilePath, mapping SheetMapping) (ByRowsOutput, error) {
 	var ret ByRowsOutput
 
 	inputExcelFile, err := r.inputOpenFile(input)
@@ -24,7 +30,7 @@ func (r *ByRows) CompareFilePath(input InputFilePath) (ByRowsOutput, error) {
 
 	defer func() { _ = inputExcelFile.close() }()
 
-	ret, err = r.Compare(inputExcelFile)
+	ret, err = r.CompareWithMapping(inputExcelFile, mapping)
 	if err != nil {
 		return ret, fmt.Errorf("compare: %w", err)
 	}
@@ -32,22 +38,36 @@ func (r *ByRows) CompareFilePath(input InputFilePath) (ByRowsOutput, error) {
 	return ret, nil
 }
 
+// Compare Default comparison method, using default mapping
 func (r *ByRows) Compare(input Input) (ByRowsOutput, error) {
+	return r.CompareWithMapping(input, nil)
+}
+
+// CompareWithMapping Comparison method using specified mapping
+func (r *ByRows) CompareWithMapping(input Input, mapping SheetMapping) (ByRowsOutput, error) {
 	var ret ByRowsResult
 
-	sheetsRet := r.compareSheets(input)
+	sheetsRet := r.compareSheets(input, mapping)
 
-	for _, sheet := range sheetsRet.bothHave {
-		sheetRet, err := r.compareSheet(input, sheet)
+	// Check if no mappings found
+	if len(sheetsRet.mappings) == 0 {
+		return ByRowsOutput{}, fmt.Errorf("no sheets to compare")
+	}
+
+	// Use mappings from CatalogResult
+	for _, item := range sheetsRet.mappings {
+		baseSheet := item.BaseSheet
+		compareSheet := item.CompareSheet
+		sheetRet, err := r.compareSheet(input, baseSheet, compareSheet)
 		if err != nil {
-			return ByRowsOutput{}, fmt.Errorf("compareSheet[%s]: %w", sheet, err)
+			return ByRowsOutput{}, fmt.Errorf("compareSheet[%s,%s]: %w", baseSheet, compareSheet, err)
 		}
 
 		if sheetRet.hasChanged {
 			ret.sheets = append(ret.sheets, sheetRet)
-			sheetsRet.addModified(sheet)
+			sheetsRet.addModified(baseSheet)
 		} else {
-			sheetsRet.addUnchanged(sheet)
+			sheetsRet.addUnchanged(baseSheet)
 		}
 	}
 
@@ -56,11 +76,11 @@ func (r *ByRows) Compare(input Input) (ByRowsOutput, error) {
 	return newByRowsOutput(ret), nil
 }
 
-func (r *ByRows) compareSheet(input Input, sheet string) (ByRowsSheetResult, error) {
+func (r *ByRows) compareSheet(input Input, baseSheet, compareSheet string) (ByRowsSheetResult, error) {
 	var sheetRet ByRowsSheetResult
-	sheetRet.sheetName = sheet
+	sheetRet.sheetName = baseSheet
 
-	sheetData, err := input.sheetRowsData(sheet)
+	sheetData, err := input.sheetRowsData(baseSheet, compareSheet)
 	if err != nil {
 		return sheetRet, fmt.Errorf("sheetRowsData: %w", err)
 	}
