@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/auho/go-toolkit/farmtools/convert/types/reflects/values/floats"
-	"github.com/auho/go-toolkit/farmtools/convert/types/reflects/values/ints"
-	"github.com/auho/go-toolkit/farmtools/convert/types/reflects/values/strings"
-	"github.com/auho/go-toolkit/farmtools/convert/types/reflects/values/structs"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/reflects/values/floats"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/reflects/values/ints"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/reflects/values/strings"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/reflects/values/structs"
 
 	"reflect"
 )

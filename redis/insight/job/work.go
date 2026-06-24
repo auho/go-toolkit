@@ -6,10 +6,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/auho/go-toolkit/farmtools/sort/maps"
 	"github.com/auho/go-toolkit/flow/storage"
 	"github.com/auho/go-toolkit/flow/task"
 	"github.com/auho/go-toolkit/redis/client"
+	"github.com/auho/go-toolkit/v2/farmtools/sort/maps"
 )
 
 type Worker[E storage.Entry] interface {

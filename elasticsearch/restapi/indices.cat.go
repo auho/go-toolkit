@@ -1,7 +1,7 @@
 package restapi
 
 import (
-	"github.com/auho/go-toolkit/elasticsearch/restapi/entity"
+	"github.com/auho/go-toolkit/v2/elasticsearch/restapi/entity"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 )
 

@@ -3,7 +3,7 @@ package strings
 import (
 	"encoding/json"
 
-	"github.com/auho/go-toolkit/farmtools/convert/types/structs/maps"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/structs/maps"
 )
 
 // JsonToStruct convert string to any struct

@@ -1,6 +1,6 @@
-module github.com/auho/go-toolkit
+module github.com/auho/go-toolkit/v2
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/auho/go-simple-db/v2 v2.0.2
@@ -23,6 +23,8 @@ require (
 	github.com/ClickHouse/ch-go v0.53.0 // indirect
 	github.com/ClickHouse/clickhouse-go/v2 v2.6.5 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/auho/go-toolkit/console v0.0.0-20260624112608-9618194ec02e // indirect
+	github.com/auho/go-toolkit/time v0.0.0-20240420150334-bf0d46ed2616 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-faster/city v1.0.1 // indirect

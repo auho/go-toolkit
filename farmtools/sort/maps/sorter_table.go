@@ -1,6 +1,6 @@
 package maps
 
-import "github.com/auho/go-toolkit/farmtools/sort"
+import "github.com/auho/go-toolkit/v2/farmtools/sort"
 
 func SorterTableAsc[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT, val func(key KT) VT) ([]KT, []VT) {
 	return newSortByValue(x, val, sort.SortedOrderAsc)

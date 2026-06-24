@@ -1,6 +1,6 @@
 package beautify
 
-import "github.com/auho/go-toolkit/farmtools/convert/beautify/decode"
+import "github.com/auho/go-toolkit/v2/farmtools/convert/beautify/decode"
 
 var _ decode.Beautifier = (*Json)(nil)
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	simpleDb "github.com/auho/go-simple-db/v2"
-	"github.com/auho/go-toolkit/mysql/datarow/insight/diff"
+	"github.com/auho/go-toolkit/v2/mysql/datarow/insight/diff"
 )
 
 var _db *simpleDb.SimpleDB

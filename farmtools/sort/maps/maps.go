@@ -3,7 +3,7 @@ package maps
 import (
 	sort2 "sort"
 
-	"github.com/auho/go-toolkit/farmtools/sort"
+	"github.com/auho/go-toolkit/v2/farmtools/sort"
 )
 
 func newSortByKey[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT, sortedOrder string) []KT {

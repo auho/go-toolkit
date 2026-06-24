@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	simpleDb "github.com/auho/go-simple-db/v2"
-	"github.com/auho/go-toolkit/mysql/datarow/insight/analysis"
-	"github.com/auho/go-toolkit/mysql/schema"
+	"github.com/auho/go-toolkit/v2/mysql/datarow/insight/analysis"
+	"github.com/auho/go-toolkit/v2/mysql/schema"
 )
 
 func Explore(db *simpleDb.SimpleDB, table string) (*analysis.Analysis, error) {

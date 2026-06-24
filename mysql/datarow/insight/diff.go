@@ -1,7 +1,7 @@
 package insight
 
 import (
-	"github.com/auho/go-toolkit/mysql/datarow/insight/diff"
+	"github.com/auho/go-toolkit/v2/mysql/datarow/insight/diff"
 )
 
 func Diff(tables ...diff.Source) (*diff.Differ, error) {

@@ -3,8 +3,8 @@ package strings
 import (
 	"encoding/json"
 
-	"github.com/auho/go-toolkit/farmtools/convert/types/ints"
-	"github.com/auho/go-toolkit/farmtools/convert/types/strings"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/ints"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/types/strings"
 )
 
 func JsonToSlicesString(from string) ([]string, error) {

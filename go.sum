@@ -12,10 +12,14 @@ github.com/andybalholm/brotli v1.0.5 h1:8uQZIdzKmjc/iuPu7O2ioW48L81FgatrcpfFmiq/
 github.com/andybalholm/brotli v1.0.5/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/auho/go-simple-db/v2 v2.0.2 h1:PCDON+eRe2kU7Xp1t95uTCMAHpKyJjNNOosJUVjjG+o=
 github.com/auho/go-simple-db/v2 v2.0.2/go.mod h1:ksWZ0vdMYSDNWPWUP1MY4N83OLOHqTwOugpjDVq+UHI=
+github.com/auho/go-toolkit/console v0.0.0-20260624112608-9618194ec02e h1:S7475M2SoGq+2FNu1CEgiTMFKuhfvWWRkj845xEHnOM=
+github.com/auho/go-toolkit/console v0.0.0-20260624112608-9618194ec02e/go.mod h1:GbyPjwDniq2mT91rPTpLpKi/KuFzRKjgLXMmD7EINnE=
 github.com/auho/go-toolkit/flow v0.0.0-20260624112608-9618194ec02e h1:UI/ZZg06TY1NTOrDHB7bYi9JqKdgJ1ZTcWGbI2iX93Y=
 github.com/auho/go-toolkit/flow v0.0.0-20260624112608-9618194ec02e/go.mod h1:cYF5iRNuhwn5KCc6dnME2U2DHbDgEWBxYQhtY0eApNY=
 github.com/auho/go-toolkit/redis/client v0.0.0-20240420150334-bf0d46ed2616 h1:GCQ9lz3BXz9sj6qw3ChclrEfMMW10mMzenPbsbPD1Fc=
 github.com/auho/go-toolkit/redis/client v0.0.0-20240420150334-bf0d46ed2616/go.mod h1:zeCrVR1B9j01EPk94pPYlh8OPbfIGHArIyVMd8exd0o=
+github.com/auho/go-toolkit/time v0.0.0-20240420150334-bf0d46ed2616 h1:ufTgrPUOlc5qj7pxe5KDLFiG0dA6b/NfIqWuiHJimk4=
+github.com/auho/go-toolkit/time v0.0.0-20240420150334-bf0d46ed2616/go.mod h1:bkpYGleE+ATwcAryjTbzMiv8D1uu6J8zEFON1gwg/qw=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/bkaradzic/go-lz4 v1.0.0/go.mod h1:0YdlkowM3VswSROI7qDxhRvJ3sLhlFrRRwjwegp5jy4=
 github.com/bsm/redislock v0.7.2 h1:jggqOio8JyX9FJBKIfjF3fTxAu/v7zC5mAID9LveqG4=

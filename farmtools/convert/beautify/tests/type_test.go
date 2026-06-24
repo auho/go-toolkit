@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/auho/go-toolkit/farmtools/convert/beautify"
+	"github.com/auho/go-toolkit/v2/farmtools/convert/beautify"
 )
 
 // struct
@@ -131,5 +131,5 @@ var _struct = structType{
 	chanMultiPtr1: make(chan anyMultiPtr1),
 }
 
-//var _decoder = beautify.NewJsonDecoder()
+// var _decoder = beautify.NewJsonDecoder()
 var _decoder = beautify.NewOutputDecoder()

@@ -1,7 +1,7 @@
 package summary
 
 import (
-	"github.com/auho/go-toolkit/elasticsearch/restapi"
+	"github.com/auho/go-toolkit/v2/elasticsearch/restapi"
 	"github.com/elastic/go-elasticsearch/v7"
 )
 

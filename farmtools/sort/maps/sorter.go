@@ -1,7 +1,7 @@
 package maps
 
 import (
-	"github.com/auho/go-toolkit/farmtools/sort"
+	"github.com/auho/go-toolkit/v2/farmtools/sort"
 )
 
 func SortKeyAsc[KT sort.KeyEntity, VT sort.ValEntity](x map[KT]VT) []KT {
