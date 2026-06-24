@@ -1,8 +1,9 @@
 package client
 
 import (
-	"github.com/streadway/amqp"
 	"sync"
+
+	"github.com/streadway/amqp"
 )
 
 type connection struct {

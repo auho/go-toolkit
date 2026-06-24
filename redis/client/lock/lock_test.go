@@ -3,11 +3,12 @@ package lock
 import (
 	"context"
 	"fmt"
-	redis2 "github.com/go-redis/redis/v8"
 	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 var locker *RedisLocker
@@ -15,7 +16,7 @@ var locker *RedisLocker
 func setup() {
 	var err error
 
-	client := redis2.NewClient(&redis2.Options{
+	client := redis.NewClient(&redis.Options{
 		Network:  "tcp",
 		Addr:     "127.0.0.1:6379",
 		Password: "123456",

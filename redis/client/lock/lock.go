@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/bsm/redislock"
 	"time"
+
+	"github.com/bsm/redislock"
 )
 
 var ErrLockNotExists = errors.New("lock not exists")

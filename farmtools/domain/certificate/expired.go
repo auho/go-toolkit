@@ -3,8 +3,9 @@ package certificate
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/fatih/color"
 	"time"
+
+	"github.com/fatih/color"
 )
 
 func QuickCheckExpired(domains []string, alarmDays int) {

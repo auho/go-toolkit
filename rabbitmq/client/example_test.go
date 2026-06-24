@@ -2,8 +2,9 @@ package client
 
 import (
 	"fmt"
-	"github.com/streadway/amqp"
 	"log"
+
+	"github.com/streadway/amqp"
 )
 
 // Consumer 使用示例

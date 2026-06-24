@@ -2,9 +2,10 @@ package describes
 
 import (
 	"fmt"
+	"sort"
+
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/segmentio/kafka-go"
-	"sort"
 )
 
 func DescribeBrokers(network, address string) (table.Writer, error) {

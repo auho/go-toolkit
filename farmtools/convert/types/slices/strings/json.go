@@ -2,6 +2,7 @@ package strings
 
 import (
 	"encoding/json"
+
 	"github.com/auho/go-toolkit/farmtools/convert/types/ints"
 	"github.com/auho/go-toolkit/farmtools/convert/types/strings"
 )

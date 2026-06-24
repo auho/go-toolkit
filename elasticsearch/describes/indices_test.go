@@ -1,8 +1,9 @@
 package describes
 
 import (
-	"github.com/elastic/go-elasticsearch/v7"
 	"testing"
+
+	"github.com/elastic/go-elasticsearch/v7"
 )
 
 func TestDescribeAllIndices(t *testing.T) {

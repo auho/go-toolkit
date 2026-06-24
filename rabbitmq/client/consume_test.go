@@ -2,11 +2,12 @@ package client
 
 import (
 	"fmt"
-	"github.com/streadway/amqp"
 	"log"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 func (c *consumeChannel) publish(queue string) {

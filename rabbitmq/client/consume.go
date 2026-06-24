@@ -3,9 +3,10 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/streadway/amqp"
 	"sync"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 // Consumer 监测 connection 状态，连接断开或异常，重新连接；

@@ -1,9 +1,10 @@
 package strings
 
 import (
+	"strings"
+
 	"github.com/auho/go-toolkit/farmtools/convert/types/ints"
 	strings2 "github.com/auho/go-toolkit/farmtools/convert/types/strings"
-	"strings"
 )
 
 func SpiltToSliceString(from string, sep string) ([]string, error) {

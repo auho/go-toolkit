@@ -3,11 +3,12 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/streadway/amqp"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 var (

@@ -2,11 +2,12 @@ package describes
 
 import (
 	"fmt"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/segmentio/kafka-go"
 	"slices"
 	"sort"
 	"strings"
+
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/segmentio/kafka-go"
 )
 
 func DescribeAllTopics(network, address string) (table.Writer, error) {

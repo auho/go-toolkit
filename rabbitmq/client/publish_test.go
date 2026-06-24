@@ -2,11 +2,12 @@ package client
 
 import (
 	"fmt"
-	"github.com/streadway/amqp"
 	"log"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 var queues = []string{"testOne", "testTwo", "testThree"}
